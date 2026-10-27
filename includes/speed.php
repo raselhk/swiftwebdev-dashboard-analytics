@@ -4,7 +4,7 @@
  * plain-language advice on what to fix. Read only: Swift Dash never changes the site.
  *
  * Tests run through the Swift Dash API with our Google key, so users never need one.
- * Free: homepage only. Other pages of the same site need Swift Dash Pro (the
+ * Free: homepage only. Other pages of the same site need Swift Dash PRO (the
  * swiftdash_speed_fetch filter). Addresses outside this site are always refused.
  *
  * @package SwiftDash
@@ -61,7 +61,7 @@ function swiftdash_speed_url() {
 }
 
 /**
- * Whether Swift Dash Pro can test any page of this site (Pro hooks swiftdash_speed_fetch while licensed).
+ * Whether Swift Dash PRO can test any page of this site (Pro hooks swiftdash_speed_fetch while licensed).
  *
  * @return bool
  */
@@ -124,7 +124,7 @@ function swiftdash_speed_fetch( $url, $strategy ) {
 	}
 	$is_home = swiftdash_speed_is_home( $url );
 	if ( ! $is_home && ! swiftdash_speed_pro_active() ) {
-		return new WP_Error( 'pro_required', __( 'Testing other pages needs Swift Dash Pro.', 'swift-dashboard-analytics' ), array( 'status' => 403 ) );
+		return new WP_Error( 'pro_required', __( 'Testing other pages needs Swift Dash PRO.', 'swift-dashboard-analytics' ), array( 'status' => 403 ) );
 	}
 	if ( ! swiftdash_speed_is_public( $url ) ) {
 		return new WP_Error( 'not_public', __( 'Google cannot test a local site. Speed tests work once the site is online at a public address.', 'swift-dashboard-analytics' ), array( 'status' => 400 ) );
@@ -132,7 +132,7 @@ function swiftdash_speed_fetch( $url, $strategy ) {
 
 	if ( swiftdash_speed_pro_active() ) {
 		/**
-		 * Runs a speed test through Swift Dash Pro (any page of this site).
+		 * Runs a speed test through Swift Dash PRO (any page of this site).
 		 *
 		 * @param array|WP_Error|null $result   Null to fall back to the free homepage test.
 		 * @param string              $url      Address on this site.
@@ -143,7 +143,7 @@ function swiftdash_speed_fetch( $url, $strategy ) {
 			return $result;
 		}
 		if ( ! $is_home ) {
-			return new WP_Error( 'pro_required', __( 'Testing other pages needs an active Swift Dash Pro license.', 'swift-dashboard-analytics' ), array( 'status' => 403 ) );
+			return new WP_Error( 'pro_required', __( 'Testing other pages needs an active Swift Dash PRO license.', 'swift-dashboard-analytics' ), array( 'status' => 403 ) );
 		}
 	}
 
@@ -195,7 +195,7 @@ function swiftdash_speed_api_result( $response ) {
 	$wait  = isset( $error['retry_after'] ) ? max( 1, (int) $error['retry_after'] ) : 0;
 	$texts = array(
 		'outside_site' => __( 'Only pages of this website can be tested.', 'swift-dashboard-analytics' ),
-		'pro_required' => __( 'Testing other pages needs Swift Dash Pro.', 'swift-dashboard-analytics' ),
+		'pro_required' => __( 'Testing other pages needs Swift Dash PRO.', 'swift-dashboard-analytics' ),
 		'not_public'   => __( 'Google cannot test a local site. Speed tests work once the site is online at a public address.', 'swift-dashboard-analytics' ),
 		'rate_limited' => sprintf(
 			/* translators: %d: minutes to wait. */
@@ -610,7 +610,7 @@ function swiftdash_screen_speed( $screen ) {
 			<?php
 			if ( has_action( 'swiftdash_speed_pro' ) ) {
 				/**
-				 * Prints the scheduled tests and score history card (Swift Dash Pro).
+				 * Prints the scheduled tests and score history card (Swift Dash PRO).
 				 */
 				do_action( 'swiftdash_speed_pro' );
 			} else {

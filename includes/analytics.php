@@ -429,7 +429,7 @@ function swiftdash_screen_analytics( $screen ) {
 					<?php esc_html_e( 'Export report', 'swift-dashboard-analytics' ); ?>
 					<span class="sd-badge sd-badge--pro"><?php esc_html_e( 'Pro', 'swift-dashboard-analytics' ); ?></span>
 				</button>
-				<span class="sd-tip__text" role="tooltip" id="sd-an-export-tip"><?php esc_html_e( 'Download your reports as a file with Swift Dash Pro.', 'swift-dashboard-analytics' ); ?></span>
+				<span class="sd-tip__text" role="tooltip" id="sd-an-export-tip"><?php esc_html_e( 'Download your reports as a file with Swift Dash PRO.', 'swift-dashboard-analytics' ); ?></span>
 			</span>
 			<?php
 		}
@@ -524,7 +524,7 @@ function swiftdash_render_analytics_locked_tab( $key, $tab ) {
 			</div>
 			<div class="sd-an-locked__info">
 				<span class="sd-locked__icon"><?php echo swiftdash_icon( 'lock-simple' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped markup. ?></span>
-				<p><?php esc_html_e( 'This report is part of Swift Dash Pro. It shows:', 'swift-dashboard-analytics' ); ?></p>
+				<p><?php esc_html_e( 'This report is part of Swift Dash PRO. It shows:', 'swift-dashboard-analytics' ); ?></p>
 				<ul class="sd-an-locked__list">
 					<?php foreach ( $tab['items'] as $item ) : ?>
 						<li><?php echo swiftdash_icon( 'check-circle' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped markup. ?><?php echo esc_html( $item ); ?></li>

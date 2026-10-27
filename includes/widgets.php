@@ -394,7 +394,7 @@ function swiftdash_render_upgrade( $variant = 'banner' ) {
 		SWIFTDASH_PRICING_URL
 	);
 	?>
-	<aside class="sd-upgrade sd-upgrade--<?php echo esc_attr( $variant ); ?>" aria-label="<?php esc_attr_e( 'Swift Dash Pro', 'swift-dashboard-analytics' ); ?>" data-sd-upgrade>
+	<aside class="sd-upgrade sd-upgrade--<?php echo esc_attr( $variant ); ?>" aria-label="<?php esc_attr_e( 'Swift Dash PRO', 'swift-dashboard-analytics' ); ?>" data-sd-upgrade>
 		<button type="button" class="sd-icon-btn sd-upgrade__close" data-sd-dismiss-upgrade aria-label="<?php esc_attr_e( 'Hide for 30 days', 'swift-dashboard-analytics' ); ?>">
 			<?php echo swiftdash_icon( 'x' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped markup. ?>
 		</button>

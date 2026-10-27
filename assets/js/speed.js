@@ -1,6 +1,6 @@
 /**
  * Speed & Optimize screen and dashboard speed widgets. Shows real Google PageSpeed results only.
- * Free: homepage. Other pages of this site: Swift Dash Pro. Other sites: never.
+ * Free: homepage. Other pages of this site: Swift Dash PRO. Other sites: never.
  */
 ( function () {
 	'use strict';
@@ -210,7 +210,7 @@
 			return 'home';
 		}
 		if ( ! data.isPro ) {
-			notice( box, 'pro', __( 'Testing other pages needs Swift Dash Pro.', 'swift-dashboard-analytics' ), true );
+			notice( box, 'pro', __( 'Testing other pages needs Swift Dash PRO.', 'swift-dashboard-analytics' ), true );
 			return null;
 		}
 		return u.href;

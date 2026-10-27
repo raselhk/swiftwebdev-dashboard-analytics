@@ -22,7 +22,7 @@ The dashboard also shows pending updates, your PHP version, the Site Health stat
 
 For administrators, Swift Dash also gives the WordPress admin menu a matching modern style on every admin page, with your own logo and name at the top. Other users see the normal WordPress admin.
 
-= Swift Dash Pro =
+= Swift Dash PRO =
 
 Pro is a separate add-on that adds full analytics (real-time visitors, countries, devices, traffic sources, top pages, forms, clicks, bots, events, session recordings), longer date ranges, exports and scheduled speed tests with alerts. Pro features are shown in the free plugin as locked cards that link to the Pro plans. The free plugin works fully on its own.
 
@@ -69,7 +69,7 @@ Google can only test websites that are reachable on the public internet. Run the
 
 = Do I need a Google API key for speed tests? =
 
-No. Speed tests run through the Swift Dash service with our own key. The free version tests your homepage; Swift Dash Pro can test any page of your site.
+No. Speed tests run through the Swift Dash service with our own key. The free version tests your homepage; Swift Dash PRO can test any page of your site.
 
 = Can I still use the normal WordPress dashboard? =
 
