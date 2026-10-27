@@ -1,0 +1,141 @@
+/*
+ * Swift Dash design tokens. Source of truth: docs/ux-guideline.md section 2.
+ * Every component reads these; never hard-code a colour, size or radius elsewhere.
+ * Scoped to .swiftdash so nothing leaks into other admin screens.
+ */
+
+/* Plus Jakarta Sans, SIL Open Font License 1.1 (see ../fonts/OFL.txt). Bundled, no CDN. */
+@font-face {
+	font-family: "Plus Jakarta Sans";
+	font-style: normal;
+	font-weight: 200 800;
+	font-display: swap;
+	src: url("../fonts/PlusJakartaSans-normal-latin-ext.woff2") format("woff2");
+	unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+@font-face {
+	font-family: "Plus Jakarta Sans";
+	font-style: normal;
+	font-weight: 200 800;
+	font-display: swap;
+	src: url("../fonts/PlusJakartaSans-normal-latin.woff2") format("woff2");
+	unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+.swiftdash {
+	/* Colour (guideline 2.1) */
+	--sd-primary: #4f5bff;
+	--sd-primary-hover: #3f49e8;
+	--sd-nav-bg: #172437;
+	--sd-bg: #f5f7fb;
+	--sd-card: #fff;
+	--sd-text: #111827;
+	--sd-text-2: #64748b;
+	--sd-border: #e5eaf2;
+	--sd-success: #059669;
+	--sd-warning: #d97706;
+	--sd-danger: #dc2626;
+	--sd-info: #0284c7;
+	--sd-purple: #7c3aed;
+	--sd-blue-50: #eff6ff;
+	--sd-green-50: #ecfdf5;
+	--sd-orange-50: #fff7ed;
+	--sd-red-50: #fef2f2;
+	--sd-purple-50: #f5f3ff;
+	--sd-border-strong: #cfd6e3;
+
+	/* Pastel icon tiles (KPI cards, activity and health rows) */
+	--sd-tile-blue: #e8eeff;
+	--sd-tile-green: #e1f6ec;
+	--sd-tile-purple: #efe8ff;
+	--sd-tile-orange: #ffeedc;
+	--sd-tile-red: #ffe7e9;
+	--sd-tile-neutral: #eef1f6;
+	--sd-orange: #f97316;
+	--sd-red: #f43f5e;
+
+	/* Type (guideline 2.2) */
+	--sd-font: "Plus Jakarta Sans", -apple-system, blinkmacsystemfont, "Segoe UI", roboto, sans-serif;
+	--sd-fs-page: 34px;
+	--sd-fs-section: 19px;
+	--sd-fs-card: 20px;
+	--sd-fs-kpi-label: 15px;
+	--sd-fs-kpi: 32px;
+	--sd-fs-body: 14px;
+	--sd-fs-nav: 14px;
+	--sd-fs-label: 13px;
+	--sd-fs-help: 12px;
+	--sd-fw-regular: 400;
+	--sd-fw-medium: 500;
+	--sd-fw-semibold: 600;
+	--sd-fw-section: 650;
+	--sd-fw-bold: 700;
+	--sd-fw-heavy: 800;
+	--sd-lh: 1.5;
+
+	/* Spacing, 4px scale (guideline 2.3) */
+	--sd-space-1: 4px;
+	--sd-space-2: 8px;
+	--sd-space-3: 12px;
+	--sd-space-4: 16px;
+	--sd-space-5: 20px;
+	--sd-space-6: 24px;
+	--sd-space-8: 32px;
+
+	/* Layout */
+	--sd-sidebar-w: 220px;
+	--sd-sidebar-w-collapsed: 68px;
+	--sd-header-h: 60px;
+	--sd-content-pad: 24px;
+	--sd-control-h: 40px;
+
+	/* Shape + elevation */
+	--sd-radius-card: 16px;
+	--sd-radius-tile: 16px;
+	--sd-card-pad: 24px;
+	--sd-radius-control: 8px;
+	--sd-radius-pill: 999px;
+	--sd-border-w: 1px;
+	--sd-shadow-pop: 0 8px 24px rgba(17, 24, 39, 0.12);
+	--sd-shadow-card: 0 1px 2px rgba(23, 36, 55, 0.04), 0 8px 24px rgba(79, 91, 255, 0.06);
+	--sd-shadow-drag: 0 2px 4px rgba(23, 36, 55, 0.06), 0 18px 40px rgba(79, 91, 255, 0.18);
+
+	/* Motion (respects reduced motion below) */
+	--sd-ease: cubic-bezier(0.16, 1, 0.3, 1);
+	--sd-dur-fast: 120ms;
+	--sd-dur: 200ms;
+
+	font-family: var(--sd-font);
+	font-size: var(--sd-fs-body);
+	line-height: var(--sd-lh);
+	color: var(--sd-text);
+	font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 1024px) {
+
+	.swiftdash {
+		--sd-content-pad: 16px;
+		--sd-card-pad: 20px;
+	}
+}
+
+@media (max-width: 600px) {
+
+	.swiftdash {
+		--sd-content-pad: 12px;
+		--sd-fs-page: 26px;
+		--sd-fs-card: 18px;
+		--sd-fs-kpi: 28px;
+		--sd-card-pad: 16px;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+	.swiftdash {
+		--sd-dur-fast: 0ms;
+		--sd-dur: 0ms;
+	}
+}

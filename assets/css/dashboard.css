@@ -1,0 +1,96 @@
+/* Swift Dash: dashboard page title + Recent Activity and Updates & Health rows. Tokens only. */
+
+/* Decorative wave after "Welcome back, Name" (empty alt text keeps it out of screen readers). */
+.swiftdash .sd-page-head__title::after {
+	content: "\1F44B" / "";
+	margin-left: var(--sd-space-2);
+}
+
+.swiftdash .sd-dw-list {
+	margin: calc(var(--sd-space-2) * -1) 0;
+	padding: 0;
+	list-style: none;
+}
+
+.swiftdash .sd-dw-row {
+	display: flex;
+	align-items: center;
+	gap: var(--sd-space-4);
+	margin: 0;
+	padding: var(--sd-space-3) 0;
+	border-top: var(--sd-border-w) solid var(--sd-border);
+}
+
+.swiftdash .sd-dw-row:first-child {
+	border-top: 0;
+}
+
+.swiftdash .sd-dw-chip {
+	display: grid;
+	flex: none;
+	place-items: center;
+	width: 44px;
+	height: 44px;
+	border-radius: 50%;
+	background: var(--sd-tile-blue);
+	color: var(--sd-primary);
+}
+
+.swiftdash .sd-dw-chip .sd-icon {
+	width: 22px;
+	height: 22px;
+}
+
+.swiftdash .sd-dw-chip--green { background: var(--sd-tile-green); color: var(--sd-success); }
+.swiftdash .sd-dw-chip--orange { background: var(--sd-tile-orange); color: var(--sd-orange); }
+.swiftdash .sd-dw-chip--red { background: var(--sd-tile-red); color: var(--sd-red); }
+.swiftdash .sd-dw-chip--purple { background: var(--sd-tile-purple); color: var(--sd-purple); }
+.swiftdash .sd-dw-chip--neutral { background: var(--sd-tile-neutral); color: var(--sd-text-2); }
+
+.swiftdash .sd-dw-row__text {
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	gap: 2px;
+	min-width: 0;
+}
+
+.swiftdash .sd-dw-row__name {
+	font-weight: var(--sd-fw-bold);
+	color: var(--sd-text);
+}
+
+.swiftdash .sd-dw-row__detail,
+.swiftdash .sd-dw-row__time {
+	font-size: var(--sd-fs-label);
+	color: var(--sd-text-2);
+	overflow-wrap: break-word;
+}
+
+.swiftdash .sd-dw-row__time {
+	flex: none;
+	white-space: nowrap;
+}
+
+.swiftdash .sd-dw-row__end {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: flex-end;
+	align-items: center;
+	gap: var(--sd-space-2);
+	max-width: 50%;
+}
+
+@media (max-width: 480px) {
+
+	.swiftdash .sd-dw-row {
+		flex-wrap: wrap;
+	}
+
+	.swiftdash .sd-dw-row__end {
+		justify-content: flex-start;
+		max-width: none;
+		padding-left: calc(44px + var(--sd-space-4));
+		width: 100%;
+	}
+}
