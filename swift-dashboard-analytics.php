@@ -1,6 +1,6 @@
 <?php
 /**
- * Plugin Name:       Swift Dash: Admin Dashboard & Analytics, Visitor Stats, PageSpeed & Site Health
+ * Plugin Name:       Swift Dash: Admin Dashboard & Analytics, Visitor Statistics, PageSpeed & Site Health
  * Plugin URI:        https://swiftwebdev.com/
  * Description:       Admin dashboard and cookieless analytics for WordPress: visitor stats, Google PageSpeed scores, site health and a modern admin menu.
  * Version:           1.0.0

@@ -1,4 +1,4 @@
-=== Swift Dash: Admin Dashboard & Analytics, Visitor Stats, PageSpeed & Site Health ===
+=== Swift Dash: Admin Dashboard & Analytics, Visitor Statistics, PageSpeed & Site Health ===
 Contributors: raselhk
 Tags: dashboard, analytics, cookieless analytics, statistics, pagespeed
 Requires at least: 6.5

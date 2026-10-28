@@ -1,4 +1,4 @@
-# Swift Dash: Admin Dashboard & Analytics, Visitor Stats, PageSpeed & Site Health
+# Swift Dash: Admin Dashboard & Analytics, Visitor Statistics, PageSpeed & Site Health
 
 Free WordPress plugin by [Swift Web Dev](https://swiftwebdev.com/). Cookieless visitor stats, Google PageSpeed scores with Core Web Vitals, quick links, updates and site health in one modern admin dashboard.
 
