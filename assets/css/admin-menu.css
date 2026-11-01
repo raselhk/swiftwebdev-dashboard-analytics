@@ -1,0 +1,641 @@
+/*
+ * SwiftWebDev Dashboard restyle of the native WordPress admin menu (#adminmenu), loaded on every
+ * admin page for users who can use SwiftWebDev Dashboard. Matches the former plugin sidebar:
+ * 220px wide (68px folded), navy, 40px rounded items, brand on top, collapse at
+ * the bottom. WordPress keeps its own behaviour (flyouts, folding, saved fold state).
+ * Menu rules are prefixed with #adminmenumain so they beat every admin colour scheme.
+ */
+
+/* ---------- Width: 220px, 68px folded (manual, or auto between 783px and 960px) ---------- */
+#wpwrap {
+	--sdm-w: 220px;
+}
+
+.folded #wpwrap {
+	--sdm-w: 68px;
+}
+
+@media only screen and (min-width: 783px) and (max-width: 960px) {
+
+	.auto-fold #wpwrap {
+		--sdm-w: 68px;
+	}
+}
+
+#adminmenumain #adminmenuback,
+#adminmenumain #adminmenuwrap,
+#adminmenumain #adminmenu {
+	width: var(--sdm-w);
+}
+
+#wpwrap #wpcontent,
+#wpwrap #wpfooter {
+	margin-left: var(--sdm-w);
+}
+
+/* Layouts in other screens that assume the 160px / 36px WordPress menu. */
+@media (min-width: 783px) {
+
+	body:not(.is-fullscreen-mode) .interface-interface-skeleton {
+		left: var(--sdm-w);
+	}
+
+	#wpwrap .woocommerce-layout__header {
+		width: calc(100% - var(--sdm-w));
+	}
+}
+
+/* ---------- Tokens + surface ---------- */
+#adminmenumain {
+	--sdm-bg: #172437;
+	--sdm-text: #c8d1e0;
+	--sdm-hover: rgba(255, 255, 255, 0.07);
+	--sdm-active: #4f5bff;
+	--sdm-flyout: #1f2f47;
+	--sdm-line: rgba(255, 255, 255, 0.1);
+	--sdm-badge: #ef4444;
+	--sdm-radius: 8px;
+	--sdm-dur: 120ms;
+	font-family: "Plus Jakarta Sans", -apple-system, blinkmacsystemfont, "Segoe UI", roboto, sans-serif;
+}
+
+#adminmenumain #adminmenuback,
+#adminmenumain #adminmenuwrap,
+#adminmenumain #adminmenu {
+	background: var(--sdm-bg);
+}
+
+#adminmenumain #adminmenu {
+	box-sizing: border-box;
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	min-height: calc(100vh - 32px);
+	margin: 0;
+	padding: 16px 12px;
+}
+
+/* ---------- Items: 40px, 8px 12px, radius 8px, 14px/500, 20px icons, 12px gap ---------- */
+#adminmenumain #adminmenu li.menu-top,
+.folded #adminmenumain #adminmenu li.menu-top {
+	width: auto;
+	min-height: 0;
+	background: transparent;
+}
+
+#adminmenumain #adminmenu a.menu-top,
+#adminmenumain #collapse-button {
+	box-sizing: border-box;
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	width: 100%;
+	min-height: 40px;
+	height: auto;
+	padding: 8px 12px;
+	border-radius: var(--sdm-radius);
+	background: none;
+	color: var(--sdm-text);
+	font-family: inherit;
+	font-size: 14px;
+	font-weight: 500;
+	line-height: 1.3;
+	text-align: left;
+	box-shadow: none;
+	transition: background var(--sdm-dur) ease, color var(--sdm-dur) ease;
+}
+
+#adminmenumain #adminmenu div.wp-menu-image {
+	position: static;
+	display: grid;
+	flex: none;
+	place-items: center;
+	float: none;
+	width: 20px;
+	height: 20px;
+	background-position: center;
+	background-size: 20px auto;
+}
+
+#adminmenumain #adminmenu div.wp-menu-image:before {
+	width: 20px;
+	height: 20px;
+	padding: 0;
+	color: var(--sdm-text);
+	font-size: 20px;
+	line-height: 1;
+	transition: color var(--sdm-dur) ease;
+}
+
+#adminmenumain #adminmenu div.wp-menu-image img {
+	max-width: 20px;
+	max-height: 20px;
+	padding: 0;
+	opacity: 0.8;
+}
+
+#adminmenumain #adminmenu div.wp-menu-name {
+	flex: 1;
+	min-width: 0;
+	padding: 0;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+#adminmenumain #adminmenu li.menu-top:hover > a.menu-top,
+#adminmenumain #adminmenu li.opensub > a.menu-top,
+#adminmenumain #adminmenu a.menu-top:focus,
+#adminmenumain #collapse-button:hover,
+#adminmenumain #collapse-button:focus-visible {
+	background: var(--sdm-hover);
+	color: #fff;
+	box-shadow: none;
+}
+
+#adminmenumain #adminmenu li.menu-top:hover div.wp-menu-image:before,
+#adminmenumain #adminmenu li.opensub div.wp-menu-image:before,
+#adminmenumain #adminmenu a.menu-top:focus div.wp-menu-image:before {
+	color: #fff;
+}
+
+/* Active item: primary background, white text. */
+#adminmenumain #adminmenu li.current a.menu-top,
+#adminmenumain #adminmenu li.wp-has-current-submenu a.wp-has-current-submenu,
+#adminmenumain #adminmenu li.wp-has-current-submenu:hover a.wp-has-current-submenu {
+	background: var(--sdm-active);
+	color: #fff;
+}
+
+#adminmenumain #adminmenu li.current div.wp-menu-image:before,
+#adminmenumain #adminmenu li.wp-has-current-submenu div.wp-menu-image:before {
+	color: #fff;
+}
+
+#adminmenumain #adminmenu li.wp-has-current-submenu div.wp-menu-image img {
+	opacity: 1;
+}
+
+/* Core arrows pointing into the content do not fit rounded items. */
+#adminmenumain ul#adminmenu a.wp-has-current-submenu:after,
+#adminmenumain ul#adminmenu > li.current > a.current:after,
+#adminmenumain #adminmenu li.wp-has-submenu.wp-not-current-submenu:hover:after,
+#adminmenumain #adminmenu li.wp-has-submenu.wp-not-current-submenu:focus-within:after {
+	display: none;
+}
+
+/* Divider: 1px, 12px 8px. */
+#adminmenumain #adminmenu li.wp-menu-separator {
+	flex: none;
+	height: 1px;
+	margin: 12px 8px;
+	padding: 0;
+	background: var(--sdm-line);
+}
+
+#adminmenumain #adminmenu div.separator {
+	display: none;
+}
+
+/* ---------- Submenus ---------- */
+#adminmenumain #adminmenu .wp-submenu {
+	width: auto;
+}
+
+#adminmenumain #adminmenu .wp-submenu a {
+	padding: 8px 12px;
+	border-radius: var(--sdm-radius);
+	color: var(--sdm-text);
+	font-size: 13px;
+	line-height: 1.4;
+	box-shadow: none;
+	transition: background var(--sdm-dur) ease, color var(--sdm-dur) ease;
+}
+
+#adminmenumain #adminmenu .wp-submenu a:hover,
+#adminmenumain #adminmenu .wp-submenu a:focus {
+	background: var(--sdm-hover);
+	color: #fff;
+}
+
+#adminmenumain #adminmenu .wp-submenu li.current a {
+	background: var(--sdm-hover);
+	color: #fff;
+	font-weight: 600;
+}
+
+/* Submenu of the current item: inline, aligned with the label. */
+#adminmenumain #adminmenu .wp-has-current-submenu .wp-submenu,
+#adminmenumain #adminmenu .wp-has-current-submenu.opensub .wp-submenu {
+	margin: 0;
+	padding: 2px 0 4px;
+	background: transparent;
+	box-shadow: none;
+}
+
+#adminmenumain #adminmenu .wp-has-current-submenu .wp-submenu li {
+	margin-top: 2px;
+}
+
+#adminmenumain #adminmenu .wp-has-current-submenu .wp-submenu a {
+	padding-left: 44px;
+}
+
+/* Hover flyout (every submenu when folded): dark rounded panel at the menu edge.
+   The transparent 12px border bridges the menu padding so the pointer never leaves it. */
+#adminmenumain #adminmenu .wp-not-current-submenu .wp-submenu,
+.folded #adminmenumain #adminmenu .wp-has-current-submenu .wp-submenu {
+	left: 100%;
+	min-width: 180px;
+	padding: 6px;
+	border: 0;
+	border-left: 12px solid transparent;
+	border-radius: 0 10px 10px 0;
+	background: var(--sdm-flyout);
+	background-clip: padding-box;
+	box-shadow: none;
+	filter: drop-shadow(0 12px 20px rgba(8, 15, 28, 0.3));
+}
+
+#adminmenumain #adminmenu .wp-not-current-submenu .wp-submenu li,
+.folded #adminmenumain #adminmenu .wp-has-current-submenu .wp-submenu li {
+	margin-top: 0;
+}
+
+#adminmenumain #adminmenu .wp-not-current-submenu .wp-submenu a,
+.folded #adminmenumain #adminmenu .wp-has-current-submenu .wp-submenu a {
+	padding: 8px 12px;
+}
+
+#adminmenumain #adminmenu .wp-submenu .wp-submenu-head {
+	margin: 0 0 2px;
+	padding: 8px 12px;
+	border: 0;
+	color: #fff;
+	font-size: 14px;
+	font-weight: 600;
+}
+
+/* ---------- Counters ---------- */
+#adminmenumain #adminmenu .awaiting-mod,
+#adminmenumain #adminmenu .update-plugins {
+	background: var(--sdm-badge);
+	color: #fff;
+}
+
+#adminmenumain #adminmenu li.current a .awaiting-mod,
+#adminmenumain #adminmenu li a.wp-has-current-submenu .update-plugins {
+	background: #fff;
+	color: var(--sdm-active);
+}
+
+/* ---------- Focus (keyboard) ---------- */
+#adminmenumain #adminmenu a:focus-visible,
+#adminmenumain #collapse-button:focus-visible {
+	outline: 2px solid #fff;
+	outline-offset: -2px;
+}
+
+/* ---------- Brand block (first): logo + 18px bold name, 4px 8px 16px ---------- */
+#adminmenumain #adminmenu li.sd-menu-brand {
+	order: -1;
+	padding: 4px 8px 16px;
+}
+
+#adminmenumain #adminmenu li.sd-menu-brand,
+#adminmenumain #adminmenu li.sd-menu-brand a,
+#adminmenumain #adminmenu li.sd-menu-brand a:hover,
+#adminmenumain #adminmenu li.sd-menu-brand a:focus {
+	background: none;
+	color: #fff;
+}
+
+#adminmenumain #adminmenu li.sd-menu-brand a {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 0;
+	color: #fff;
+	box-shadow: none;
+}
+
+#adminmenumain .sd-menu-brand__logo {
+	flex: none;
+	width: 28px;
+	height: 28px;
+	border-radius: 6px;
+	object-fit: contain;
+}
+
+#adminmenumain .sd-menu-brand__name {
+	min-width: 0;
+	overflow: hidden;
+	font-size: 18px;
+	font-weight: 700;
+	line-height: 1.2;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+#adminmenumain #collapse-menu {
+	order: 3;
+	margin-top: auto;
+	padding-top: 8px;
+}
+
+/* Collapse control: same row as the items, caret-double-left icon, label. */
+#adminmenumain #collapse-button .collapse-button-icon,
+#adminmenumain #collapse-button .collapse-button-label {
+	position: static;
+	padding: 0;
+}
+
+#adminmenumain #collapse-button .collapse-button-icon {
+	flex: none;
+	width: 20px;
+	height: 20px;
+	background: currentColor;
+	-webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'%3E%3Cpath d='M205.66,202.34a8,8,0,0,1-11.32,11.32l-80-80a8,8,0,0,1,0-11.32l80-80a8,8,0,0,1,11.32,11.32L131.31,128ZM51.31,128l74.35-74.34a8,8,0,0,0-11.32-11.32l-80,80a8,8,0,0,0,0,11.32l80,80a8,8,0,0,0,11.32-11.32Z'/%3E%3C/svg%3E") center / 20px no-repeat;
+	mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'%3E%3Cpath d='M205.66,202.34a8,8,0,0,1-11.32,11.32l-80-80a8,8,0,0,1,0-11.32l80-80a8,8,0,0,1,11.32,11.32L131.31,128ZM51.31,128l74.35-74.34a8,8,0,0,0-11.32-11.32l-80,80a8,8,0,0,0,0,11.32l80,80a8,8,0,0,0,11.32-11.32Z'/%3E%3C/svg%3E") center / 20px no-repeat;
+	transition: transform 200ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+#adminmenumain #collapse-button .collapse-button-icon:after {
+	display: none;
+}
+
+#adminmenumain #collapse-button .collapse-button-label {
+	white-space: nowrap;
+}
+
+/* ---------- Folded: 68px, 40px centred icon items, logo only, labels in the flyout ---------- */
+.folded #adminmenumain #adminmenu a.menu-top,
+.folded #adminmenumain #collapse-button {
+	justify-content: center;
+	padding: 8px;
+}
+
+.folded #adminmenumain #collapse-button .collapse-button-icon {
+	transform: rotate(180deg);
+}
+
+.folded #adminmenumain #adminmenu li.sd-menu-brand {
+	padding: 4px 0 16px;
+}
+
+.folded #adminmenumain #adminmenu li.sd-menu-brand a {
+	justify-content: center;
+}
+
+.folded #adminmenumain .sd-menu-brand__name {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+	clip-path: inset(50%);
+}
+
+@media only screen and (min-width: 783px) and (max-width: 960px) {
+
+	.auto-fold #adminmenumain #adminmenu a.menu-top,
+	.auto-fold #adminmenumain #collapse-button {
+		justify-content: center;
+		padding: 8px;
+	}
+
+	.auto-fold #adminmenumain #collapse-button .collapse-button-icon {
+		transform: rotate(180deg);
+	}
+
+	.auto-fold #adminmenumain #collapse-button .collapse-button-label {
+		display: none;
+	}
+
+	.auto-fold #adminmenumain #adminmenu li.sd-menu-brand {
+		padding: 4px 0 16px;
+	}
+
+	.auto-fold #adminmenumain #adminmenu li.sd-menu-brand a {
+		justify-content: center;
+	}
+
+	.auto-fold #adminmenumain .sd-menu-brand__name {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		overflow: hidden;
+		clip-path: inset(50%);
+	}
+
+	.auto-fold #adminmenumain #adminmenu .wp-has-current-submenu .wp-submenu {
+		left: 100%;
+		min-width: 180px;
+		padding: 6px;
+		border: 0;
+		border-left: 12px solid transparent;
+		border-radius: 0 10px 10px 0;
+		background: var(--sdm-flyout);
+		background-clip: padding-box;
+		filter: drop-shadow(0 12px 20px rgba(8, 15, 28, 0.3));
+	}
+
+	.auto-fold #adminmenumain #adminmenu .wp-has-current-submenu .wp-submenu a {
+		padding: 8px 12px;
+	}
+}
+
+/* ---------- Phones and small tablets: WordPress overlay menu at 220px ---------- */
+@media screen and (max-width: 782px) {
+
+	.auto-fold #wpwrap,
+	.folded #wpwrap {
+		--sdm-w: 220px;
+	}
+
+	#wpwrap #wpcontent,
+	#wpwrap #wpfooter {
+		margin-left: 0;
+	}
+
+	.wp-responsive-open #wpbody {
+		right: -220px;
+	}
+
+	#adminmenumain #adminmenu {
+		min-height: 100vh;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+	#adminmenumain {
+		--sdm-dur: 0ms;
+	}
+
+	#adminmenumain #collapse-button .collapse-button-icon {
+		transition: none;
+	}
+}
+
+/* ==========================================================================
+   SwiftWebDev Dashboard screens only: keep the WordPress toolbar and left menu, our header below the toolbar.
+   ========================================================================== */
+body.swiftdash-screen {
+	background: #f5f7fb;
+}
+
+body.swiftdash-screen #wpfooter,
+body.swiftdash-screen #screen-meta-links,
+body.swiftdash-screen #screen-meta {
+	display: none;
+}
+
+body.swiftdash-screen #wpcontent {
+	padding-left: 0;
+}
+
+body.swiftdash-screen #wpbody-content {
+	padding-bottom: 0;
+}
+
+body.swiftdash-screen #wpbody {
+	padding-top: 0;
+}
+
+@media screen and (max-width: 782px) {
+
+	body.swiftdash-screen #wpcontent {
+		padding-left: 0;
+	}
+}
+
+/* Settings: menu logo chooser. */
+.swiftdash .sd-logo-field {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--sd-space-3);
+}
+
+.swiftdash .sd-logo-field__preview {
+	width: 40px;
+	height: 40px;
+	padding: 4px;
+	border: var(--sd-border-w) solid var(--sd-border);
+	border-radius: var(--sd-radius-control);
+	background: var(--sdm-bg, #172437);
+	object-fit: contain;
+}
+
+/* Header: Updates button count badge. */
+.swiftdash .sd-updates__count {
+	position: absolute;
+	top: 2px;
+	right: 0;
+	min-width: 18px;
+	height: 18px;
+	padding: 0 5px;
+	border-radius: var(--sd-radius-pill);
+	background: var(--sd-danger);
+	color: #fff;
+	font-size: 11px;
+	font-weight: var(--sd-fw-bold);
+	line-height: 18px;
+	text-align: center;
+	box-sizing: border-box;
+}
+
+/* Header: shortcut of the open screen. */
+.swiftdash .sd-header .sd-icon-btn[aria-current="page"] {
+	background: var(--sd-blue-50);
+	color: var(--sd-primary);
+}
+
+/* Small phones: the header holds up to eight buttons; keep them inside 375px. */
+@media screen and (max-width: 480px) {
+
+	body.swiftdash-screen .swiftdash .sd-header,
+	body.swiftdash-screen .swiftdash .sd-header__actions {
+		gap: 0;
+	}
+
+	body.swiftdash-screen .swiftdash .sd-header .sd-icon-btn {
+		width: 34px;
+	}
+}
+
+/* @phosphor-menu-icons:start (generated by tools/build-menu-icons.py) */
+
+/* Phosphor Icons regular, MIT License, Copyright (c) 2023 Phosphor Icons */
+
+#adminmenumain #adminmenu #toplevel_page_swift-dash div.wp-menu-image:before {
+	content: "";
+	background-color: currentColor;
+	-webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'%3E%3Cpath d='M219.31%2C108.68l-80-80a16%2C16%2C0%2C0%2C0-22.62%2C0l-80%2C80A15.87%2C15.87%2C0%2C0%2C0%2C32%2C120v96a8%2C8%2C0%2C0%2C0%2C8%2C8h64a8%2C8%2C0%2C0%2C0%2C8-8V160h32v56a8%2C8%2C0%2C0%2C0%2C8%2C8h64a8%2C8%2C0%2C0%2C0%2C8-8V120A15.87%2C15.87%2C0%2C0%2C0%2C219.31%2C108.68ZM208%2C208H160V152a8%2C8%2C0%2C0%2C0-8-8H104a8%2C8%2C0%2C0%2C0-8%2C8v56H48V120l80-80%2C80%2C80Z'/%3E%3C/svg%3E") center / 20px 20px no-repeat;
+	mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'%3E%3Cpath d='M219.31%2C108.68l-80-80a16%2C16%2C0%2C0%2C0-22.62%2C0l-80%2C80A15.87%2C15.87%2C0%2C0%2C0%2C32%2C120v96a8%2C8%2C0%2C0%2C0%2C8%2C8h64a8%2C8%2C0%2C0%2C0%2C8-8V160h32v56a8%2C8%2C0%2C0%2C0%2C8%2C8h64a8%2C8%2C0%2C0%2C0%2C8-8V120A15.87%2C15.87%2C0%2C0%2C0%2C219.31%2C108.68ZM208%2C208H160V152a8%2C8%2C0%2C0%2C0-8-8H104a8%2C8%2C0%2C0%2C0-8%2C8v56H48V120l80-80%2C80%2C80Z'/%3E%3C/svg%3E") center / 20px 20px no-repeat;
+}
+
+#adminmenumain #adminmenu #menu-posts div.wp-menu-image:before {
+	content: "";
+	background-color: currentColor;
+	-webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'%3E%3Cpath d='M213.66%2C82.34l-56-56A8%2C8%2C0%2C0%2C0%2C152%2C24H56A16%2C16%2C0%2C0%2C0%2C40%2C40V216a16%2C16%2C0%2C0%2C0%2C16%2C16H200a16%2C16%2C0%2C0%2C0%2C16-16V88A8%2C8%2C0%2C0%2C0%2C213.66%2C82.34ZM160%2C51.31%2C188.69%2C80H160ZM200%2C216H56V40h88V88a8%2C8%2C0%2C0%2C0%2C8%2C8h48V216Zm-32-80a8%2C8%2C0%2C0%2C1-8%2C8H96a8%2C8%2C0%2C0%2C1%2C0-16h64A8%2C8%2C0%2C0%2C1%2C168%2C136Zm0%2C32a8%2C8%2C0%2C0%2C1-8%2C8H96a8%2C8%2C0%2C0%2C1%2C0-16h64A8%2C8%2C0%2C0%2C1%2C168%2C168Z'/%3E%3C/svg%3E") center / 20px 20px no-repeat;
+	mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'%3E%3Cpath d='M213.66%2C82.34l-56-56A8%2C8%2C0%2C0%2C0%2C152%2C24H56A16%2C16%2C0%2C0%2C0%2C40%2C40V216a16%2C16%2C0%2C0%2C0%2C16%2C16H200a16%2C16%2C0%2C0%2C0%2C16-16V88A8%2C8%2C0%2C0%2C0%2C213.66%2C82.34ZM160%2C51.31%2C188.69%2C80H160ZM200%2C216H56V40h88V88a8%2C8%2C0%2C0%2C0%2C8%2C8h48V216Zm-32-80a8%2C8%2C0%2C0%2C1-8%2C8H96a8%2C8%2C0%2C0%2C1%2C0-16h64A8%2C8%2C0%2C0%2C1%2C168%2C136Zm0%2C32a8%2C8%2C0%2C0%2C1-8%2C8H96a8%2C8%2C0%2C0%2C1%2C0-16h64A8%2C8%2C0%2C0%2C1%2C168%2C168Z'/%3E%3C/svg%3E") center / 20px 20px no-repeat;
+}
+
+#adminmenumain #adminmenu #menu-media div.wp-menu-image:before {
+	content: "";
+	background-color: currentColor;
+	-webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'%3E%3Cpath d='M216%2C40H40A16%2C16%2C0%2C0%2C0%2C24%2C56V200a16%2C16%2C0%2C0%2C0%2C16%2C16H216a16%2C16%2C0%2C0%2C0%2C16-16V56A16%2C16%2C0%2C0%2C0%2C216%2C40Zm0%2C16V158.75l-26.07-26.06a16%2C16%2C0%2C0%2C0-22.63%2C0l-20%2C20-44-44a16%2C16%2C0%2C0%2C0-22.62%2C0L40%2C149.37V56ZM40%2C172l52-52%2C80%2C80H40Zm176%2C28H194.63l-36-36%2C20-20L216%2C181.38V200ZM144%2C100a12%2C12%2C0%2C1%2C1%2C12%2C12A12%2C12%2C0%2C0%2C1%2C144%2C100Z'/%3E%3C/svg%3E") center / 20px 20px no-repeat;
+	mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'%3E%3Cpath d='M216%2C40H40A16%2C16%2C0%2C0%2C0%2C24%2C56V200a16%2C16%2C0%2C0%2C0%2C16%2C16H216a16%2C16%2C0%2C0%2C0%2C16-16V56A16%2C16%2C0%2C0%2C0%2C216%2C40Zm0%2C16V158.75l-26.07-26.06a16%2C16%2C0%2C0%2C0-22.63%2C0l-20%2C20-44-44a16%2C16%2C0%2C0%2C0-22.62%2C0L40%2C149.37V56ZM40%2C172l52-52%2C80%2C80H40Zm176%2C28H194.63l-36-36%2C20-20L216%2C181.38V200ZM144%2C100a12%2C12%2C0%2C1%2C1%2C12%2C12A12%2C12%2C0%2C0%2C1%2C144%2C100Z'/%3E%3C/svg%3E") center / 20px 20px no-repeat;
+}
+
+#adminmenumain #adminmenu #menu-pages div.wp-menu-image:before {
+	content: "";
+	background-color: currentColor;
+	-webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'%3E%3Cpath d='M213.66%2C66.34l-40-40A8%2C8%2C0%2C0%2C0%2C168%2C24H88A16%2C16%2C0%2C0%2C0%2C72%2C40V56H56A16%2C16%2C0%2C0%2C0%2C40%2C72V216a16%2C16%2C0%2C0%2C0%2C16%2C16H168a16%2C16%2C0%2C0%2C0%2C16-16V200h16a16%2C16%2C0%2C0%2C0%2C16-16V72A8%2C8%2C0%2C0%2C0%2C213.66%2C66.34ZM168%2C216H56V72h76.69L168%2C107.31v84.53c0%2C.06%2C0%2C.11%2C0%2C.16s0%2C.1%2C0%2C.16V216Zm32-32H184V104a8%2C8%2C0%2C0%2C0-2.34-5.66l-40-40A8%2C8%2C0%2C0%2C0%2C136%2C56H88V40h76.69L200%2C75.31Zm-56-32a8%2C8%2C0%2C0%2C1-8%2C8H88a8%2C8%2C0%2C0%2C1%2C0-16h48A8%2C8%2C0%2C0%2C1%2C144%2C152Zm0%2C32a8%2C8%2C0%2C0%2C1-8%2C8H88a8%2C8%2C0%2C0%2C1%2C0-16h48A8%2C8%2C0%2C0%2C1%2C144%2C184Z'/%3E%3C/svg%3E") center / 20px 20px no-repeat;
+	mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'%3E%3Cpath d='M213.66%2C66.34l-40-40A8%2C8%2C0%2C0%2C0%2C168%2C24H88A16%2C16%2C0%2C0%2C0%2C72%2C40V56H56A16%2C16%2C0%2C0%2C0%2C40%2C72V216a16%2C16%2C0%2C0%2C0%2C16%2C16H168a16%2C16%2C0%2C0%2C0%2C16-16V200h16a16%2C16%2C0%2C0%2C0%2C16-16V72A8%2C8%2C0%2C0%2C0%2C213.66%2C66.34ZM168%2C216H56V72h76.69L168%2C107.31v84.53c0%2C.06%2C0%2C.11%2C0%2C.16s0%2C.1%2C0%2C.16V216Zm32-32H184V104a8%2C8%2C0%2C0%2C0-2.34-5.66l-40-40A8%2C8%2C0%2C0%2C0%2C136%2C56H88V40h76.69L200%2C75.31Zm-56-32a8%2C8%2C0%2C0%2C1-8%2C8H88a8%2C8%2C0%2C0%2C1%2C0-16h48A8%2C8%2C0%2C0%2C1%2C144%2C152Zm0%2C32a8%2C8%2C0%2C0%2C1-8%2C8H88a8%2C8%2C0%2C0%2C1%2C0-16h48A8%2C8%2C0%2C0%2C1%2C144%2C184Z'/%3E%3C/svg%3E") center / 20px 20px no-repeat;
+}
+
+#adminmenumain #adminmenu #menu-comments div.wp-menu-image:before {
+	content: "";
+	background-color: currentColor;
+	-webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'%3E%3Cpath d='M128%2C24A104%2C104%2C0%2C0%2C0%2C36.18%2C176.88L24.83%2C210.93a16%2C16%2C0%2C0%2C0%2C20.24%2C20.24l34.05-11.35A104%2C104%2C0%2C1%2C0%2C128%2C24Zm0%2C192a87.87%2C87.87%2C0%2C0%2C1-44.06-11.81%2C8%2C8%2C0%2C0%2C0-6.54-.67L40%2C216%2C52.47%2C178.6a8%2C8%2C0%2C0%2C0-.66-6.54A88%2C88%2C0%2C1%2C1%2C128%2C216Z'/%3E%3C/svg%3E") center / 20px 20px no-repeat;
+	mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'%3E%3Cpath d='M128%2C24A104%2C104%2C0%2C0%2C0%2C36.18%2C176.88L24.83%2C210.93a16%2C16%2C0%2C0%2C0%2C20.24%2C20.24l34.05-11.35A104%2C104%2C0%2C1%2C0%2C128%2C24Zm0%2C192a87.87%2C87.87%2C0%2C0%2C1-44.06-11.81%2C8%2C8%2C0%2C0%2C0-6.54-.67L40%2C216%2C52.47%2C178.6a8%2C8%2C0%2C0%2C0-.66-6.54A88%2C88%2C0%2C1%2C1%2C128%2C216Z'/%3E%3C/svg%3E") center / 20px 20px no-repeat;
+}
+
+#adminmenumain #adminmenu #menu-appearance div.wp-menu-image:before {
+	content: "";
+	background-color: currentColor;
+	-webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'%3E%3Cpath d='M232%2C32a8%2C8%2C0%2C0%2C0-8-8c-44.08%2C0-89.31%2C49.71-114.43%2C82.63A60%2C60%2C0%2C0%2C0%2C32%2C164c0%2C30.88-19.54%2C44.73-20.47%2C45.37A8%2C8%2C0%2C0%2C0%2C16%2C224H92a60%2C60%2C0%2C0%2C0%2C57.37-77.57C182.3%2C121.31%2C232%2C76.08%2C232%2C32ZM92%2C208H34.63C41.38%2C198.41%2C48%2C183.92%2C48%2C164a44%2C44%2C0%2C1%2C1%2C44%2C44Zm32.42-94.45q5.14-6.66%2C10.09-12.55A76.23%2C76.23%2C0%2C0%2C1%2C155%2C121.49q-5.9%2C4.94-12.55%2C10.09A60.54%2C60.54%2C0%2C0%2C0%2C124.42%2C113.55Zm42.7-2.68a92.57%2C92.57%2C0%2C0%2C0-22-22c31.78-34.53%2C55.75-45%2C69.9-47.91C212.17%2C55.12%2C201.65%2C79.09%2C167.12%2C110.87Z'/%3E%3C/svg%3E") center / 20px 20px no-repeat;
+	mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'%3E%3Cpath d='M232%2C32a8%2C8%2C0%2C0%2C0-8-8c-44.08%2C0-89.31%2C49.71-114.43%2C82.63A60%2C60%2C0%2C0%2C0%2C32%2C164c0%2C30.88-19.54%2C44.73-20.47%2C45.37A8%2C8%2C0%2C0%2C0%2C16%2C224H92a60%2C60%2C0%2C0%2C0%2C57.37-77.57C182.3%2C121.31%2C232%2C76.08%2C232%2C32ZM92%2C208H34.63C41.38%2C198.41%2C48%2C183.92%2C48%2C164a44%2C44%2C0%2C1%2C1%2C44%2C44Zm32.42-94.45q5.14-6.66%2C10.09-12.55A76.23%2C76.23%2C0%2C0%2C1%2C155%2C121.49q-5.9%2C4.94-12.55%2C10.09A60.54%2C60.54%2C0%2C0%2C0%2C124.42%2C113.55Zm42.7-2.68a92.57%2C92.57%2C0%2C0%2C0-22-22c31.78-34.53%2C55.75-45%2C69.9-47.91C212.17%2C55.12%2C201.65%2C79.09%2C167.12%2C110.87Z'/%3E%3C/svg%3E") center / 20px 20px no-repeat;
+}
+
+#adminmenumain #adminmenu #menu-plugins div.wp-menu-image:before {
+	content: "";
+	background-color: currentColor;
+	-webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'%3E%3Cpath d='M237.66%2C66.34a8%2C8%2C0%2C0%2C0-11.32%2C0L192%2C100.69%2C155.31%2C64l34.35-34.34a8%2C8%2C0%2C1%2C0-11.32-11.32L144%2C52.69%2C117.66%2C26.34a8%2C8%2C0%2C0%2C0-11.32%2C11.32L112.69%2C44l-53%2C53a40%2C40%2C0%2C0%2C0%2C0%2C56.57l15.71%2C15.71L26.34%2C218.34a8%2C8%2C0%2C0%2C0%2C11.32%2C11.32l49.09-49.09%2C15.71%2C15.71a40%2C40%2C0%2C0%2C0%2C56.57%2C0l53-53%2C6.34%2C6.35a8%2C8%2C0%2C0%2C0%2C11.32-11.32L203.31%2C112l34.35-34.34A8%2C8%2C0%2C0%2C0%2C237.66%2C66.34ZM147.72%2C185a24%2C24%2C0%2C0%2C1-33.95%2C0L71%2C142.23a24%2C24%2C0%2C0%2C1%2C0-33.95l53-53L200.69%2C132Z'/%3E%3C/svg%3E") center / 20px 20px no-repeat;
+	mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'%3E%3Cpath d='M237.66%2C66.34a8%2C8%2C0%2C0%2C0-11.32%2C0L192%2C100.69%2C155.31%2C64l34.35-34.34a8%2C8%2C0%2C1%2C0-11.32-11.32L144%2C52.69%2C117.66%2C26.34a8%2C8%2C0%2C0%2C0-11.32%2C11.32L112.69%2C44l-53%2C53a40%2C40%2C0%2C0%2C0%2C0%2C56.57l15.71%2C15.71L26.34%2C218.34a8%2C8%2C0%2C0%2C0%2C11.32%2C11.32l49.09-49.09%2C15.71%2C15.71a40%2C40%2C0%2C0%2C0%2C56.57%2C0l53-53%2C6.34%2C6.35a8%2C8%2C0%2C0%2C0%2C11.32-11.32L203.31%2C112l34.35-34.34A8%2C8%2C0%2C0%2C0%2C237.66%2C66.34ZM147.72%2C185a24%2C24%2C0%2C0%2C1-33.95%2C0L71%2C142.23a24%2C24%2C0%2C0%2C1%2C0-33.95l53-53L200.69%2C132Z'/%3E%3C/svg%3E") center / 20px 20px no-repeat;
+}
+
+#adminmenumain #adminmenu #menu-users div.wp-menu-image:before {
+	content: "";
+	background-color: currentColor;
+	-webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'%3E%3Cpath d='M117.25%2C157.92a60%2C60%2C0%2C1%2C0-66.5%2C0A95.83%2C95.83%2C0%2C0%2C0%2C3.53%2C195.63a8%2C8%2C0%2C1%2C0%2C13.4%2C8.74%2C80%2C80%2C0%2C0%2C1%2C134.14%2C0%2C8%2C8%2C0%2C0%2C0%2C13.4-8.74A95.83%2C95.83%2C0%2C0%2C0%2C117.25%2C157.92ZM40%2C108a44%2C44%2C0%2C1%2C1%2C44%2C44A44.05%2C44.05%2C0%2C0%2C1%2C40%2C108Zm210.14%2C98.7a8%2C8%2C0%2C0%2C1-11.07-2.33A79.83%2C79.83%2C0%2C0%2C0%2C172%2C168a8%2C8%2C0%2C0%2C1%2C0-16%2C44%2C44%2C0%2C1%2C0-16.34-84.87%2C8%2C8%2C0%2C1%2C1-5.94-14.85%2C60%2C60%2C0%2C0%2C1%2C55.53%2C105.64%2C95.83%2C95.83%2C0%2C0%2C1%2C47.22%2C37.71A8%2C8%2C0%2C0%2C1%2C250.14%2C206.7Z'/%3E%3C/svg%3E") center / 20px 20px no-repeat;
+	mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'%3E%3Cpath d='M117.25%2C157.92a60%2C60%2C0%2C1%2C0-66.5%2C0A95.83%2C95.83%2C0%2C0%2C0%2C3.53%2C195.63a8%2C8%2C0%2C1%2C0%2C13.4%2C8.74%2C80%2C80%2C0%2C0%2C1%2C134.14%2C0%2C8%2C8%2C0%2C0%2C0%2C13.4-8.74A95.83%2C95.83%2C0%2C0%2C0%2C117.25%2C157.92ZM40%2C108a44%2C44%2C0%2C1%2C1%2C44%2C44A44.05%2C44.05%2C0%2C0%2C1%2C40%2C108Zm210.14%2C98.7a8%2C8%2C0%2C0%2C1-11.07-2.33A79.83%2C79.83%2C0%2C0%2C0%2C172%2C168a8%2C8%2C0%2C0%2C1%2C0-16%2C44%2C44%2C0%2C1%2C0-16.34-84.87%2C8%2C8%2C0%2C1%2C1-5.94-14.85%2C60%2C60%2C0%2C0%2C1%2C55.53%2C105.64%2C95.83%2C95.83%2C0%2C0%2C1%2C47.22%2C37.71A8%2C8%2C0%2C0%2C1%2C250.14%2C206.7Z'/%3E%3C/svg%3E") center / 20px 20px no-repeat;
+}
+
+#adminmenumain #adminmenu #menu-tools div.wp-menu-image:before {
+	content: "";
+	background-color: currentColor;
+	-webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'%3E%3Cpath d='M226.76%2C69a8%2C8%2C0%2C0%2C0-12.84-2.88l-40.3%2C37.19-17.23-3.7-3.7-17.23%2C37.19-40.3A8%2C8%2C0%2C0%2C0%2C187%2C29.24%2C72%2C72%2C0%2C0%2C0%2C88%2C96%2C72.34%2C72.34%2C0%2C0%2C0%2C94%2C124.94L33.79%2C177c-.15.12-.29.26-.43.39a32%2C32%2C0%2C0%2C0%2C45.26%2C45.26c.13-.13.27-.28.39-.42L131.06%2C162A72%2C72%2C0%2C0%2C0%2C232%2C96%2C71.56%2C71.56%2C0%2C0%2C0%2C226.76%2C69ZM160%2C152a56.14%2C56.14%2C0%2C0%2C1-27.07-7%2C8%2C8%2C0%2C0%2C0-9.92%2C1.77L67.11%2C211.51a16%2C16%2C0%2C0%2C1-22.62-22.62L109.18%2C133a8%2C8%2C0%2C0%2C0%2C1.77-9.93%2C56%2C56%2C0%2C0%2C1%2C58.36-82.31l-31.2%2C33.81a8%2C8%2C0%2C0%2C0-1.94%2C7.1L141.83%2C108a8%2C8%2C0%2C0%2C0%2C6.14%2C6.14l26.35%2C5.66a8%2C8%2C0%2C0%2C0%2C7.1-1.94l33.81-31.2A56.06%2C56.06%2C0%2C0%2C1%2C160%2C152Z'/%3E%3C/svg%3E") center / 20px 20px no-repeat;
+	mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'%3E%3Cpath d='M226.76%2C69a8%2C8%2C0%2C0%2C0-12.84-2.88l-40.3%2C37.19-17.23-3.7-3.7-17.23%2C37.19-40.3A8%2C8%2C0%2C0%2C0%2C187%2C29.24%2C72%2C72%2C0%2C0%2C0%2C88%2C96%2C72.34%2C72.34%2C0%2C0%2C0%2C94%2C124.94L33.79%2C177c-.15.12-.29.26-.43.39a32%2C32%2C0%2C0%2C0%2C45.26%2C45.26c.13-.13.27-.28.39-.42L131.06%2C162A72%2C72%2C0%2C0%2C0%2C232%2C96%2C71.56%2C71.56%2C0%2C0%2C0%2C226.76%2C69ZM160%2C152a56.14%2C56.14%2C0%2C0%2C1-27.07-7%2C8%2C8%2C0%2C0%2C0-9.92%2C1.77L67.11%2C211.51a16%2C16%2C0%2C0%2C1-22.62-22.62L109.18%2C133a8%2C8%2C0%2C0%2C0%2C1.77-9.93%2C56%2C56%2C0%2C0%2C1%2C58.36-82.31l-31.2%2C33.81a8%2C8%2C0%2C0%2C0-1.94%2C7.1L141.83%2C108a8%2C8%2C0%2C0%2C0%2C6.14%2C6.14l26.35%2C5.66a8%2C8%2C0%2C0%2C0%2C7.1-1.94l33.81-31.2A56.06%2C56.06%2C0%2C0%2C1%2C160%2C152Z'/%3E%3C/svg%3E") center / 20px 20px no-repeat;
+}
+
+#adminmenumain #adminmenu #menu-settings div.wp-menu-image:before {
+	content: "";
+	background-color: currentColor;
+	-webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'%3E%3Cpath d='M128%2C80a48%2C48%2C0%2C1%2C0%2C48%2C48A48.05%2C48.05%2C0%2C0%2C0%2C128%2C80Zm0%2C80a32%2C32%2C0%2C1%2C1%2C32-32A32%2C32%2C0%2C0%2C1%2C128%2C160Zm109.94-52.79a8%2C8%2C0%2C0%2C0-3.89-5.4l-29.83-17-.12-33.62a8%2C8%2C0%2C0%2C0-2.83-6.08%2C111.91%2C111.91%2C0%2C0%2C0-36.72-20.67%2C8%2C8%2C0%2C0%2C0-6.46.59L128%2C41.85%2C97.88%2C25a8%2C8%2C0%2C0%2C0-6.47-.6A112.1%2C112.1%2C0%2C0%2C0%2C54.73%2C45.15a8%2C8%2C0%2C0%2C0-2.83%2C6.07l-.15%2C33.65-29.83%2C17a8%2C8%2C0%2C0%2C0-3.89%2C5.4%2C106.47%2C106.47%2C0%2C0%2C0%2C0%2C41.56%2C8%2C8%2C0%2C0%2C0%2C3.89%2C5.4l29.83%2C17%2C.12%2C33.62a8%2C8%2C0%2C0%2C0%2C2.83%2C6.08%2C111.91%2C111.91%2C0%2C0%2C0%2C36.72%2C20.67%2C8%2C8%2C0%2C0%2C0%2C6.46-.59L128%2C214.15%2C158.12%2C231a7.91%2C7.91%2C0%2C0%2C0%2C3.9%2C1%2C8.09%2C8.09%2C0%2C0%2C0%2C2.57-.42%2C112.1%2C112.1%2C0%2C0%2C0%2C36.68-20.73%2C8%2C8%2C0%2C0%2C0%2C2.83-6.07l.15-33.65%2C29.83-17a8%2C8%2C0%2C0%2C0%2C3.89-5.4A106.47%2C106.47%2C0%2C0%2C0%2C237.94%2C107.21Zm-15%2C34.91-28.57%2C16.25a8%2C8%2C0%2C0%2C0-3%2C3c-.58%2C1-1.19%2C2.06-1.81%2C3.06a7.94%2C7.94%2C0%2C0%2C0-1.22%2C4.21l-.15%2C32.25a95.89%2C95.89%2C0%2C0%2C1-25.37%2C14.3L134%2C199.13a8%2C8%2C0%2C0%2C0-3.91-1h-.19c-1.21%2C0-2.43%2C0-3.64%2C0a8.08%2C8.08%2C0%2C0%2C0-4.1%2C1l-28.84%2C16.1A96%2C96%2C0%2C0%2C1%2C67.88%2C201l-.11-32.2a8%2C8%2C0%2C0%2C0-1.22-4.22c-.62-1-1.23-2-1.8-3.06a8.09%2C8.09%2C0%2C0%2C0-3-3.06l-28.6-16.29a90.49%2C90.49%2C0%2C0%2C1%2C0-28.26L61.67%2C97.63a8%2C8%2C0%2C0%2C0%2C3-3c.58-1%2C1.19-2.06%2C1.81-3.06a7.94%2C7.94%2C0%2C0%2C0%2C1.22-4.21l.15-32.25a95.89%2C95.89%2C0%2C0%2C1%2C25.37-14.3L122%2C56.87a8%2C8%2C0%2C0%2C0%2C4.1%2C1c1.21%2C0%2C2.43%2C0%2C3.64%2C0a8.08%2C8.08%2C0%2C0%2C0%2C4.1-1l28.84-16.1A96%2C96%2C0%2C0%2C1%2C188.12%2C55l.11%2C32.2a8%2C8%2C0%2C0%2C0%2C1.22%2C4.22c.62%2C1%2C1.23%2C2%2C1.8%2C3.06a8.09%2C8.09%2C0%2C0%2C0%2C3%2C3.06l28.6%2C16.29A90.49%2C90.49%2C0%2C0%2C1%2C222.9%2C142.12Z'/%3E%3C/svg%3E") center / 20px 20px no-repeat;
+	mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'%3E%3Cpath d='M128%2C80a48%2C48%2C0%2C1%2C0%2C48%2C48A48.05%2C48.05%2C0%2C0%2C0%2C128%2C80Zm0%2C80a32%2C32%2C0%2C1%2C1%2C32-32A32%2C32%2C0%2C0%2C1%2C128%2C160Zm109.94-52.79a8%2C8%2C0%2C0%2C0-3.89-5.4l-29.83-17-.12-33.62a8%2C8%2C0%2C0%2C0-2.83-6.08%2C111.91%2C111.91%2C0%2C0%2C0-36.72-20.67%2C8%2C8%2C0%2C0%2C0-6.46.59L128%2C41.85%2C97.88%2C25a8%2C8%2C0%2C0%2C0-6.47-.6A112.1%2C112.1%2C0%2C0%2C0%2C54.73%2C45.15a8%2C8%2C0%2C0%2C0-2.83%2C6.07l-.15%2C33.65-29.83%2C17a8%2C8%2C0%2C0%2C0-3.89%2C5.4%2C106.47%2C106.47%2C0%2C0%2C0%2C0%2C41.56%2C8%2C8%2C0%2C0%2C0%2C3.89%2C5.4l29.83%2C17%2C.12%2C33.62a8%2C8%2C0%2C0%2C0%2C2.83%2C6.08%2C111.91%2C111.91%2C0%2C0%2C0%2C36.72%2C20.67%2C8%2C8%2C0%2C0%2C0%2C6.46-.59L128%2C214.15%2C158.12%2C231a7.91%2C7.91%2C0%2C0%2C0%2C3.9%2C1%2C8.09%2C8.09%2C0%2C0%2C0%2C2.57-.42%2C112.1%2C112.1%2C0%2C0%2C0%2C36.68-20.73%2C8%2C8%2C0%2C0%2C0%2C2.83-6.07l.15-33.65%2C29.83-17a8%2C8%2C0%2C0%2C0%2C3.89-5.4A106.47%2C106.47%2C0%2C0%2C0%2C237.94%2C107.21Zm-15%2C34.91-28.57%2C16.25a8%2C8%2C0%2C0%2C0-3%2C3c-.58%2C1-1.19%2C2.06-1.81%2C3.06a7.94%2C7.94%2C0%2C0%2C0-1.22%2C4.21l-.15%2C32.25a95.89%2C95.89%2C0%2C0%2C1-25.37%2C14.3L134%2C199.13a8%2C8%2C0%2C0%2C0-3.91-1h-.19c-1.21%2C0-2.43%2C0-3.64%2C0a8.08%2C8.08%2C0%2C0%2C0-4.1%2C1l-28.84%2C16.1A96%2C96%2C0%2C0%2C1%2C67.88%2C201l-.11-32.2a8%2C8%2C0%2C0%2C0-1.22-4.22c-.62-1-1.23-2-1.8-3.06a8.09%2C8.09%2C0%2C0%2C0-3-3.06l-28.6-16.29a90.49%2C90.49%2C0%2C0%2C1%2C0-28.26L61.67%2C97.63a8%2C8%2C0%2C0%2C0%2C3-3c.58-1%2C1.19-2.06%2C1.81-3.06a7.94%2C7.94%2C0%2C0%2C0%2C1.22-4.21l.15-32.25a95.89%2C95.89%2C0%2C0%2C1%2C25.37-14.3L122%2C56.87a8%2C8%2C0%2C0%2C0%2C4.1%2C1c1.21%2C0%2C2.43%2C0%2C3.64%2C0a8.08%2C8.08%2C0%2C0%2C0%2C4.1-1l28.84-16.1A96%2C96%2C0%2C0%2C1%2C188.12%2C55l.11%2C32.2a8%2C8%2C0%2C0%2C0%2C1.22%2C4.22c.62%2C1%2C1.23%2C2%2C1.8%2C3.06a8.09%2C8.09%2C0%2C0%2C0%2C3%2C3.06l28.6%2C16.29A90.49%2C90.49%2C0%2C0%2C1%2C222.9%2C142.12Z'/%3E%3C/svg%3E") center / 20px 20px no-repeat;
+}
+
+/* @phosphor-menu-icons:end */

@@ -1,0 +1,320 @@
+/* SwiftWebDev Dashboard visitor widgets: KPI cards, visitors over time, busiest days, engagement. Tokens only. */
+
+/* ---------- KPI card (reference: tile left, label, big value, change pill, sparkline right) ---------- */
+.swiftdash .sd-widget--kpi {
+	display: grid;
+	grid-template-columns: auto minmax(0, 1fr);
+	grid-template-rows: auto 1fr;
+	gap: var(--sd-space-1) var(--sd-space-4);
+	align-content: start;
+	padding: var(--sd-card-pad);
+}
+
+.swiftdash .sd-widget--kpi > .sd-kpi__icon {
+	grid-row: 1 / 3;
+	align-self: start;
+}
+
+.swiftdash .sd-widget--kpi > .sd-card__head,
+.swiftdash .sd-widget--kpi > .sd-card__body {
+	grid-column: 2;
+	min-height: 0;
+	padding: 0;
+}
+
+.swiftdash .sd-widget--kpi .sd-card__title {
+	font-size: var(--sd-fs-kpi-label);
+	font-weight: var(--sd-fw-medium);
+	letter-spacing: 0;
+	color: var(--sd-text-2);
+}
+
+.swiftdash .sd-widget--kpi .sd-an-kpi {
+	grid-template-columns: minmax(0, 1fr) auto;
+	gap: var(--sd-space-2) var(--sd-space-3);
+}
+
+.swiftdash .sd-widget--kpi .sd-an-kpi__row {
+	display: contents;
+}
+
+.swiftdash .sd-widget--kpi .sd-an-kpi > p {
+	grid-column: 1 / -1;
+}
+
+.swiftdash .sd-widget--kpi .sd-an-spark {
+	grid-column: 2;
+	grid-row: 1 / 3;
+	align-self: center;
+	width: 76px;
+	height: 40px;
+}
+
+.swiftdash .sd-widget--kpi .sd-kpi__meta {
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 6px;
+}
+
+.sd-an-spark {
+	flex: 0 1 88px;
+	min-width: 48px;
+	height: 32px;
+	color: var(--sd-primary);
+	stroke-width: 2.5;
+}
+
+.sd-an-kpi--purple .sd-an-spark { color: var(--sd-purple); }
+.sd-an-kpi--green .sd-an-spark { color: var(--sd-success); }
+
+.swiftdash .sd-an-kpi__empty {
+	font-weight: var(--sd-fw-semibold);
+	color: var(--sd-text);
+}
+
+@media (max-width: 600px) {
+
+	.swiftdash .sd-grid .sd-span-6 {
+		grid-column: span 12;
+	}
+}
+
+/* ---------- Visitors over time ---------- */
+.sd-an-trend {
+	display: flex;
+	flex-direction: column;
+	gap: var(--sd-space-3);
+}
+
+.swiftdash .sd-an-legend {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--sd-space-2) var(--sd-space-4);
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	font-size: var(--sd-fs-label);
+	color: var(--sd-text-2);
+}
+
+.sd-an-legend li {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--sd-space-2);
+	margin: 0;
+}
+
+.sd-an-legend__visitors::before,
+.sd-an-legend__views::before {
+	content: "";
+	width: 12px;
+	height: 12px;
+	border-radius: 3px;
+	background: var(--sd-primary);
+}
+
+.sd-an-legend__views::before {
+	height: 3px;
+	border-radius: 2px;
+	background: var(--sd-orange);
+}
+
+.sd-an-legend__unit {
+	margin-left: auto !important;
+}
+
+.sd-an-trend__plot {
+	position: relative;
+	padding-top: 18px;
+	border-bottom: var(--sd-border-w) solid var(--sd-border);
+	background: repeating-linear-gradient(to top, transparent 0 39px, var(--sd-border) 39px 40px);
+}
+
+.sd-an-trend__max {
+	position: absolute;
+	top: 0;
+	left: 0;
+	font-size: var(--sd-fs-help);
+	color: var(--sd-text-2);
+}
+
+.sd-an-trend__svg {
+	display: block;
+	width: 100%;
+	height: 180px;
+}
+
+.sd-an-trend__bar {
+	fill: var(--sd-primary);
+	opacity: 0.85;
+	transition: opacity var(--sd-dur-fast) var(--sd-ease);
+}
+
+.sd-an-trend__bar:hover {
+	opacity: 1;
+	fill: var(--sd-primary-hover);
+}
+
+.sd-an-trend__line {
+	color: var(--sd-orange);
+	pointer-events: none;
+}
+
+.sd-an-trend__axis {
+	display: flex;
+	justify-content: space-between;
+	gap: var(--sd-space-2);
+	font-size: var(--sd-fs-help);
+	color: var(--sd-text-2);
+}
+
+/* ---------- Busiest days ---------- */
+.swiftdash .sd-an-weekdays__lead {
+	margin: 0 0 var(--sd-space-3);
+	font-weight: var(--sd-fw-semibold);
+	color: var(--sd-text);
+}
+
+.swiftdash .sd-an-weekdays {
+	display: flex;
+	flex-direction: column;
+	gap: var(--sd-space-2);
+	margin: 0 0 var(--sd-space-3);
+	padding: 0;
+	list-style: none;
+}
+
+.sd-an-weekdays li {
+	display: grid;
+	grid-template-columns: 40px minmax(0, 1fr) auto;
+	align-items: center;
+	gap: var(--sd-space-3);
+	margin: 0;
+	font-size: var(--sd-fs-label);
+}
+
+.sd-an-weekdays__day {
+	font-weight: var(--sd-fw-semibold);
+	color: var(--sd-text-2);
+}
+
+.sd-an-weekdays__track {
+	height: 10px;
+	overflow: hidden;
+	border-radius: var(--sd-radius-pill);
+	background: var(--sd-tile-neutral);
+}
+
+.sd-an-weekdays__fill {
+	display: block;
+	height: 100%;
+	border-radius: inherit;
+	background: #a5abff;
+}
+
+.sd-an-weekdays li.is-best .sd-an-weekdays__day,
+.sd-an-weekdays li.is-best .sd-an-weekdays__value {
+	color: var(--sd-primary);
+	font-weight: var(--sd-fw-bold);
+}
+
+.sd-an-weekdays li.is-best .sd-an-weekdays__fill {
+	background: linear-gradient(90deg, var(--sd-primary), var(--sd-purple));
+}
+
+.sd-an-weekdays__value {
+	min-width: 56px;
+	text-align: right;
+	color: var(--sd-text-2);
+	font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Engagement ---------- */
+.swiftdash .sd-an-engage {
+	display: grid;
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+	gap: var(--sd-space-4);
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.sd-an-engage li {
+	display: flex;
+	align-items: flex-start;
+	gap: var(--sd-space-3);
+	margin: 0;
+	padding: var(--sd-space-4);
+	border-radius: var(--sd-radius-tile);
+	background: var(--sd-bg);
+}
+
+.sd-an-engage__icon {
+	display: grid;
+	flex: none;
+	place-items: center;
+	width: 40px;
+	height: 40px;
+	border-radius: 12px;
+}
+
+.sd-an-engage__icon.sd-kpi__icon--blue {
+	background: var(--sd-tile-blue);
+	color: var(--sd-primary);
+}
+
+.swiftdash .sd-an-engage__icon .sd-icon {
+	width: 22px;
+	height: 22px;
+}
+
+.sd-an-engage__text {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+}
+
+.sd-an-engage__label {
+	font-size: var(--sd-fs-label);
+	font-weight: var(--sd-fw-medium);
+	color: var(--sd-text-2);
+}
+
+.sd-an-engage__value {
+	font-size: 24px;
+	font-weight: var(--sd-fw-heavy);
+	line-height: 1.3;
+	color: var(--sd-text);
+	font-variant-numeric: tabular-nums;
+}
+
+.sd-an-engage__hint {
+	font-size: var(--sd-fs-help);
+	color: var(--sd-text-2);
+}
+
+@media (max-width: 1280px) {
+
+	.swiftdash .sd-an-engage {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+}
+
+@media (max-width: 600px) {
+
+	.swiftdash .sd-an-engage {
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+	.sd-an-trend__svg {
+		height: 140px;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+	.sd-an-trend__bar {
+		transition: none;
+	}
+}
