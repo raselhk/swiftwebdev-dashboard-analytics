@@ -1,4 +1,4 @@
-=== SwiftWebDev Dashboard & Analytics ===
+=== SwiftWebDev Dashboard & Analytics - Visitor Statistics & PageSpeed ===
 Contributors: raselhk
 Tags: dashboard, analytics, cookieless analytics, statistics, pagespeed
 Requires at least: 6.5

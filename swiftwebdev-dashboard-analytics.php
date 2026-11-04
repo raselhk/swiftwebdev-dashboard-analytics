@@ -1,6 +1,6 @@
 <?php
 /**
- * Plugin Name:       SwiftWebDev Dashboard & Analytics
+ * Plugin Name:       SwiftWebDev Dashboard & Analytics - Visitor Statistics & PageSpeed
  * Plugin URI:        https://swiftwebdev.com/swiftwebdev-dashboard-docs/
  * Description:       Admin dashboard and cookieless analytics for WordPress: visitor stats, Google PageSpeed scores, site health and a modern admin menu.
  * Version:           1.0.0
