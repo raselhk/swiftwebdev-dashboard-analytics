@@ -62,7 +62,7 @@ The plugin is lightweight by design. The front end gets one small counter script
 
 = 🏆 PRO add-on =
 
-Everything described above is included in this plugin, with no limits, license keys or time restrictions. For extra reports, SwiftWebDev Dashboard PRO is a separate add-on plugin, sold and downloaded from our website: real-time visitors, countries and devices, traffic sources and referrers, top pages, form and click tracking, session recordings, CSV export and weekly scheduled speed tests. [Learn more about the PRO add-on](https://swiftwebdev.com/swift-dash-pro/)
+Everything described above is included in this plugin, with no limits, license keys or time restrictions. For extra reports, SwiftWebDev Dashboard PRO is a separate add-on plugin, sold and downloaded from our website: real-time visitors, countries and devices, traffic sources and referrers, top pages, form and click tracking, session recordings, CSV export and weekly scheduled speed tests. [Learn more about the PRO add-on](https://swiftwebdev.com/swiftwebdev-dashboard-pro/)
 
 = 🔒 Privacy =
 

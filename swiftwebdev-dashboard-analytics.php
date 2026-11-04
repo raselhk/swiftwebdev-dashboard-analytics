@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name:       SwiftWebDev Dashboard & Analytics
- * Plugin URI:        https://swiftwebdev.com/swift-dash-docs/
+ * Plugin URI:        https://swiftwebdev.com/swiftwebdev-dashboard-docs/
  * Description:       Admin dashboard and cookieless analytics for WordPress: visitor stats, Google PageSpeed scores, site health and a modern admin menu.
  * Version:           1.0.0
  * Requires at least: 6.5
@@ -21,8 +21,8 @@ define( 'SWIFTDASH_VERSION', '1.0.0' );
 define( 'SWIFTDASH_FILE', __FILE__ );
 define( 'SWIFTDASH_DIR', plugin_dir_path( __FILE__ ) );
 define( 'SWIFTDASH_URL', plugin_dir_url( __FILE__ ) );
-define( 'SWIFTDASH_ADDON_URL', 'https://swiftwebdev.com/swift-dash-pro/' );
-define( 'SWIFTDASH_DOCS_URL', 'https://swiftwebdev.com/swift-dash-docs/' );
+define( 'SWIFTDASH_ADDON_URL', 'https://swiftwebdev.com/swiftwebdev-dashboard-pro/' );
+define( 'SWIFTDASH_DOCS_URL', 'https://swiftwebdev.com/swiftwebdev-dashboard-docs/' );
 
 require_once SWIFTDASH_DIR . 'includes/install.php';
 require_once SWIFTDASH_DIR . 'includes/settings.php';
