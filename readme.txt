@@ -74,7 +74,7 @@ This plugin connects to one external service, and only when an administrator ask
 
 **SwiftWebDev speed test service (swdashapi.swiftoutbox.com), which uses the Google PageSpeed Insights API**
 
-Used to measure the speed scores shown on the Speed & Optimize screen and the dashboard. A request is sent only when an administrator clicks "Run test". The request contains your site address, the address of the page to test (your homepage or another page of your site) and the test type (mobile or desktop). Our service checks that the page belongs to your site, then asks Google PageSpeed Insights to test it with our own Google API key and returns the result. No visitor data is sent, and the service does not store the result.
+Used to measure the speed scores shown on the Speed & Optimize screen and the dashboard. A request is sent only when an administrator clicks "Run test". The request contains your site address, the address of the page to test (your homepage or another page of your site) and the test type (mobile or desktop). Our service checks that the page belongs to your site, then asks Google PageSpeed Insights to test it with our own Google API key and returns the result. No visitor data is sent. The service keeps the result in memory for up to 10 minutes, so a repeat test of the same page returns quickly, then discards it; results are never saved to disk or a database.
 
 * Swift Web Dev terms of service: https://swiftwebdev.com/terms/
 * Swift Web Dev privacy policy: https://swiftwebdev.com/privacy-policy/
