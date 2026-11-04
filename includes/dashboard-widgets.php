@@ -4,7 +4,7 @@
  *
  * Everything reads cached WordPress data only; nothing here triggers a remote request.
  *
- * @package SwiftDash
+ * @package SwiftWebDevDashboard
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -16,8 +16,8 @@ function swiftdash_register_site_widgets() {
 	swiftdash_register_widget(
 		'updates-health',
 		array(
-			'title'       => __( 'Updates & Health', 'swift-dashboard-analytics' ),
-			'description' => __( 'See pending WordPress, plugin and theme updates, your PHP version and Site Health results.', 'swift-dashboard-analytics' ),
+			'title'       => __( 'Updates & Health', 'swiftwebdev-dashboard-analytics' ),
+			'description' => __( 'See pending WordPress, plugin and theme updates, your PHP version and Site Health results.', 'swiftwebdev-dashboard-analytics' ),
 			'screen'      => 'dashboard',
 			'area'        => 'site',
 			'order'       => 10,
@@ -30,8 +30,8 @@ function swiftdash_register_site_widgets() {
 	swiftdash_register_widget(
 		'recent-activity',
 		array(
-			'title'       => __( 'Recent Activity', 'swift-dashboard-analytics' ),
-			'description' => __( 'See the latest posts, new users, orders and plugin changes on your site.', 'swift-dashboard-analytics' ),
+			'title'       => __( 'Recent Activity', 'swiftwebdev-dashboard-analytics' ),
+			'description' => __( 'See the latest posts, new users, orders and plugin changes on your site.', 'swiftwebdev-dashboard-analytics' ),
 			'screen'      => 'dashboard',
 			'area'        => 'site',
 			'order'       => 20,
@@ -76,7 +76,7 @@ function swiftdash_pending_updates( $name ) {
  */
 function swiftdash_health_rows() {
 	$rows      = array();
-	$not_check = __( 'Not checked yet', 'swift-dashboard-analytics' );
+	$not_check = __( 'Not checked yet', 'swiftwebdev-dashboard-analytics' );
 
 	// WordPress core.
 	$version = get_bloginfo( 'version' );
@@ -93,11 +93,11 @@ function swiftdash_health_rows() {
 	$row = array(
 		'icon'   => 'arrow-clockwise-fill',
 		'tone'   => 'blue',
-		'name'   => __( 'WordPress', 'swift-dashboard-analytics' ),
+		'name'   => __( 'WordPress', 'swiftwebdev-dashboard-analytics' ),
 		/* translators: %s: WordPress version number. */
-		'detail' => sprintf( __( 'Version %s', 'swift-dashboard-analytics' ), $version ),
+		'detail' => sprintf( __( 'Version %s', 'swiftwebdev-dashboard-analytics' ), $version ),
 		'status' => 'success',
-		'label'  => __( 'Up to date', 'swift-dashboard-analytics' ),
+		'label'  => __( 'Up to date', 'swiftwebdev-dashboard-analytics' ),
 		'action' => null,
 	);
 	if ( ! is_object( $core ) ) {
@@ -105,19 +105,19 @@ function swiftdash_health_rows() {
 		$row['label']  = $not_check;
 	} elseif ( $newest ) {
 		$row['status'] = 'warning';
-		$row['label']  = __( 'Update available', 'swift-dashboard-analytics' );
+		$row['label']  = __( 'Update available', 'swiftwebdev-dashboard-analytics' );
 		/* translators: 1: installed version, 2: available version. */
-		$row['detail'] = sprintf( __( 'Version %1$s, %2$s available', 'swift-dashboard-analytics' ), $version, $newest );
+		$row['detail'] = sprintf( __( 'Version %1$s, %2$s available', 'swiftwebdev-dashboard-analytics' ), $version, $newest );
 		if ( current_user_can( 'update_core' ) ) {
-			$row['action'] = array( admin_url( 'update-core.php' ), __( 'Update', 'swift-dashboard-analytics' ), __( 'WordPress', 'swift-dashboard-analytics' ) );
+			$row['action'] = array( admin_url( 'update-core.php' ), __( 'Update', 'swiftwebdev-dashboard-analytics' ), __( 'WordPress', 'swiftwebdev-dashboard-analytics' ) );
 		}
 	}
 	$rows[] = $row;
 
 	// Plugins and themes.
 	$kinds = array(
-		'plugins' => array( 'puzzle-piece-fill', 'blue', __( 'Plugins', 'swift-dashboard-analytics' ), 'update_plugins', 'plugins.php?plugin_status=upgrade' ),
-		'themes'  => array( 'paint-brush-fill', 'purple', __( 'Themes', 'swift-dashboard-analytics' ), 'update_themes', 'themes.php' ),
+		'plugins' => array( 'puzzle-piece-fill', 'blue', __( 'Plugins', 'swiftwebdev-dashboard-analytics' ), 'update_plugins', 'plugins.php?plugin_status=upgrade' ),
+		'themes'  => array( 'paint-brush-fill', 'purple', __( 'Themes', 'swiftwebdev-dashboard-analytics' ), 'update_themes', 'themes.php' ),
 	);
 	foreach ( $kinds as $kind ) {
 		list( $icon, $tone, $name, $transient, $url ) = $kind;
@@ -127,22 +127,22 @@ function swiftdash_health_rows() {
 			'icon'   => $icon,
 			'tone'   => $tone,
 			'name'   => $name,
-			'detail' => __( 'No updates available', 'swift-dashboard-analytics' ),
+			'detail' => __( 'No updates available', 'swiftwebdev-dashboard-analytics' ),
 			'status' => 'success',
-			'label'  => __( 'Up to date', 'swift-dashboard-analytics' ),
+			'label'  => __( 'Up to date', 'swiftwebdev-dashboard-analytics' ),
 			'action' => null,
 		);
 		if ( null === $count ) {
-			$row['detail'] = __( 'WordPress has not checked for updates yet', 'swift-dashboard-analytics' );
+			$row['detail'] = __( 'WordPress has not checked for updates yet', 'swiftwebdev-dashboard-analytics' );
 			$row['status'] = 'neutral';
 			$row['label']  = $not_check;
 		} elseif ( $count > 0 ) {
 			/* translators: %s: number of updates. */
-			$row['detail'] = sprintf( _n( '%s update available', '%s updates available', $count, 'swift-dashboard-analytics' ), number_format_i18n( $count ) );
+			$row['detail'] = sprintf( _n( '%s update available', '%s updates available', $count, 'swiftwebdev-dashboard-analytics' ), number_format_i18n( $count ) );
 			$row['status'] = 'warning';
-			$row['label']  = __( 'Update available', 'swift-dashboard-analytics' );
+			$row['label']  = __( 'Update available', 'swiftwebdev-dashboard-analytics' );
 			if ( current_user_can( $transient ) ) {
-				$row['action'] = array( admin_url( $url ), __( 'Update', 'swift-dashboard-analytics' ), $name );
+				$row['action'] = array( admin_url( $url ), __( 'Update', 'swiftwebdev-dashboard-analytics' ), $name );
 			}
 		}
 		$rows[] = $row;
@@ -157,26 +157,26 @@ function swiftdash_health_rows() {
 	$row = array(
 		'icon'   => 'code-fill',
 		'tone'   => 'blue',
-		'name'   => __( 'PHP version', 'swift-dashboard-analytics' ),
+		'name'   => __( 'PHP version', 'swiftwebdev-dashboard-analytics' ),
 		'detail' => PHP_VERSION,
 		'status' => 'neutral',
-		'label'  => __( 'Version check unavailable', 'swift-dashboard-analytics' ),
+		'label'  => __( 'Version check unavailable', 'swiftwebdev-dashboard-analytics' ),
 		'action' => null,
 	);
 	if ( is_array( $php ) ) {
 		if ( empty( $php['is_acceptable'] ) ) {
 			$row['status'] = 'danger';
-			$row['label']  = __( 'Update required', 'swift-dashboard-analytics' );
+			$row['label']  = __( 'Update required', 'swiftwebdev-dashboard-analytics' );
 		} elseif ( empty( $php['is_secure'] ) ) {
 			$row['status'] = 'warning';
-			$row['label']  = __( 'Update recommended', 'swift-dashboard-analytics' );
+			$row['label']  = __( 'Update recommended', 'swiftwebdev-dashboard-analytics' );
 		} else {
 			$row['status'] = 'success';
-			$row['label']  = __( 'Supported', 'swift-dashboard-analytics' );
+			$row['label']  = __( 'Supported', 'swiftwebdev-dashboard-analytics' );
 		}
 		if ( ! empty( $php['recommended_version'] ) && version_compare( PHP_VERSION, $php['recommended_version'], '<' ) ) {
 			/* translators: 1: current PHP version, 2: recommended PHP version. */
-			$row['detail'] = sprintf( __( '%1$s, %2$s or newer recommended', 'swift-dashboard-analytics' ), PHP_VERSION, $php['recommended_version'] );
+			$row['detail'] = sprintf( __( '%1$s, %2$s or newer recommended', 'swiftwebdev-dashboard-analytics' ), PHP_VERSION, $php['recommended_version'] );
 		}
 	}
 	$rows[] = $row;
@@ -186,8 +186,8 @@ function swiftdash_health_rows() {
 	$row    = array(
 		'icon'   => 'heart-fill',
 		'tone'   => 'red',
-		'name'   => __( 'Site Health', 'swift-dashboard-analytics' ),
-		'detail' => __( 'Open Site Health once to run the checks', 'swift-dashboard-analytics' ),
+		'name'   => __( 'Site Health', 'swiftwebdev-dashboard-analytics' ),
+		'detail' => __( 'Open Site Health once to run the checks', 'swiftwebdev-dashboard-analytics' ),
 		'status' => 'neutral',
 		'label'  => $not_check,
 		'action' => null,
@@ -197,27 +197,27 @@ function swiftdash_health_rows() {
 		$recommended   = (int) $health['recommended'];
 		$row['detail'] = sprintf(
 			/* translators: 1: passed tests, 2: recommended improvements, 3: critical issues. */
-			__( '%1$s passed, %2$s recommended, %3$s critical', 'swift-dashboard-analytics' ),
+			__( '%1$s passed, %2$s recommended, %3$s critical', 'swiftwebdev-dashboard-analytics' ),
 			number_format_i18n( (int) $health['good'] ),
 			number_format_i18n( $recommended ),
 			number_format_i18n( $critical )
 		);
 		if ( $critical > 0 ) {
 			$row['status'] = 'danger';
-			$row['label']  = __( 'Critical issues', 'swift-dashboard-analytics' );
+			$row['label']  = __( 'Critical issues', 'swiftwebdev-dashboard-analytics' );
 		} elseif ( $recommended > 0 ) {
 			$row['status'] = 'warning';
-			$row['label']  = __( 'Should be improved', 'swift-dashboard-analytics' );
+			$row['label']  = __( 'Should be improved', 'swiftwebdev-dashboard-analytics' );
 		} else {
 			$row['status'] = 'success';
-			$row['label']  = __( 'Good', 'swift-dashboard-analytics' );
+			$row['label']  = __( 'Good', 'swiftwebdev-dashboard-analytics' );
 		}
 	}
 	if ( current_user_can( 'view_site_health_checks' ) ) {
 		$row['action'] = array(
 			admin_url( 'site-health.php' ),
-			'neutral' === $row['status'] ? __( 'Run checks', 'swift-dashboard-analytics' ) : __( 'View details', 'swift-dashboard-analytics' ),
-			__( 'Site Health', 'swift-dashboard-analytics' ),
+			'neutral' === $row['status'] ? __( 'Run checks', 'swiftwebdev-dashboard-analytics' ) : __( 'View details', 'swiftwebdev-dashboard-analytics' ),
+			__( 'Site Health', 'swiftwebdev-dashboard-analytics' ),
 			'tertiary',
 		);
 	}
@@ -260,9 +260,9 @@ function swiftdash_render_health_status() {
 		}
 	);
 	$pill      = $attention
-		? swiftdash_status_pill( 'warning', __( 'Needs attention', 'swift-dashboard-analytics' ) )
-		: swiftdash_status_pill( 'success', __( 'All good', 'swift-dashboard-analytics' ) );
-	echo $pill; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- swiftdash_status_pill() returns escaped markup.
+		? swiftdash_status_pill( 'warning', __( 'Needs attention', 'swiftwebdev-dashboard-analytics' ) )
+		: swiftdash_status_pill( 'success', __( 'All good', 'swiftwebdev-dashboard-analytics' ) );
+	echo wp_kses( $pill, swiftdash_icon_kses() );
 }
 
 /**
@@ -273,7 +273,7 @@ function swiftdash_render_updates_health() {
 	echo '<ul class="sd-dw-list">';
 	foreach ( $rows as $row ) {
 		echo '<li class="sd-dw-row">';
-		printf( '<span class="sd-dw-chip sd-dw-chip--%s">%s</span>', esc_attr( $row['tone'] ), swiftdash_icon( $row['icon'] ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped markup.
+		printf( '<span class="sd-dw-chip sd-dw-chip--%s">%s</span>', esc_attr( $row['tone'] ), wp_kses( swiftdash_icon( $row['icon'] ), swiftdash_icon_kses() ) );
 		printf(
 			'<span class="sd-dw-row__text"><span class="sd-dw-row__name">%s</span><span class="sd-dw-row__detail">%s</span></span>',
 			esc_html( $row['name'] ),
@@ -289,7 +289,7 @@ function swiftdash_render_updates_health() {
 				esc_html( $row['action'][2] )
 			);
 		} else {
-			echo swiftdash_status_pill( $row['status'], $row['label'] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped markup.
+			echo wp_kses( swiftdash_status_pill( $row['status'], $row['label'] ), swiftdash_icon_kses() );
 			if ( $row['action'] ) {
 				printf(
 					'<a class="sd-btn sd-btn--neutral sd-btn--sm" href="%s">%s<span class="screen-reader-text"> %s</span></a>',
@@ -312,8 +312,8 @@ function swiftdash_render_recent_activity() {
 	if ( ! $rows ) {
 		swiftdash_render_empty_state(
 			'clock',
-			__( 'No activity recorded yet', 'swift-dashboard-analytics' ),
-			__( 'New posts, users and updates will appear here. Swift Dash records activity from the moment it was activated.', 'swift-dashboard-analytics' )
+			__( 'No activity recorded yet', 'swiftwebdev-dashboard-analytics' ),
+			__( 'New posts, users and updates will appear here. SwiftWebDev Dashboard records activity from the moment it was activated.', 'swiftwebdev-dashboard-analytics' )
 		);
 		return;
 	}
@@ -331,7 +331,7 @@ function swiftdash_render_recent_activity() {
 		$type = isset( $types[ $row->type ] ) ? $types[ $row->type ] : array( 'bell-fill', 'blue' );
 		$time = strtotime( $row->created . ' UTC' );
 		echo '<li class="sd-dw-row">';
-		printf( '<span class="sd-dw-chip sd-dw-chip--%s">%s</span>', esc_attr( $type[1] ), swiftdash_icon( $type[0] ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped markup.
+		printf( '<span class="sd-dw-chip sd-dw-chip--%s">%s</span>', esc_attr( $type[1] ), wp_kses( swiftdash_icon( $type[0] ), swiftdash_icon_kses() ) );
 		printf(
 			'<span class="sd-dw-row__text"><span class="sd-dw-row__name">%s</span><span class="sd-dw-row__detail">%s</span></span>',
 			esc_html( $row->title ),
@@ -342,7 +342,7 @@ function swiftdash_render_recent_activity() {
 			esc_attr( gmdate( 'c', $time ) ),
 			esc_attr( wp_date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), $time ) ),
 			/* translators: %s: human readable time difference, e.g. "2 hours". */
-			esc_html( sprintf( __( '%s ago', 'swift-dashboard-analytics' ), human_time_diff( $time ) ) )
+			esc_html( sprintf( __( '%s ago', 'swiftwebdev-dashboard-analytics' ), human_time_diff( $time ) ) )
 		);
 		echo '</li>';
 	}

@@ -2,7 +2,7 @@
 /**
  * Activity log: records site events (from activation onward) into {prefix}swiftdash_activity.
  *
- * @package SwiftDash
+ * @package SwiftWebDevDashboard
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -112,15 +112,15 @@ function swiftdash_activity_on_publish( $new_status, $old_status, $post ) {
 		return;
 	}
 	if ( 'page' === $post->post_type ) {
-		$title = __( 'Page published', 'swift-dashboard-analytics' );
+		$title = __( 'Page published', 'swiftwebdev-dashboard-analytics' );
 	} elseif ( 'post' === $post->post_type ) {
-		$title = __( 'Post published', 'swift-dashboard-analytics' );
+		$title = __( 'Post published', 'swiftwebdev-dashboard-analytics' );
 	} else {
 		/* translators: %s: post type singular name. */
-		$title = sprintf( __( '%s published', 'swift-dashboard-analytics' ), $type->labels->singular_name );
+		$title = sprintf( __( '%s published', 'swiftwebdev-dashboard-analytics' ), $type->labels->singular_name );
 	}
 	$name = get_the_title( $post );
-	swiftdash_log_activity( 'publish', $title, '' !== $name ? $name : __( '(no title)', 'swift-dashboard-analytics' ), $post->ID );
+	swiftdash_log_activity( 'publish', $title, '' !== $name ? $name : __( '(no title)', 'swiftwebdev-dashboard-analytics' ), $post->ID );
 }
 add_action( 'transition_post_status', 'swiftdash_activity_on_publish', 10, 3 );
 
@@ -131,7 +131,7 @@ add_action( 'transition_post_status', 'swiftdash_activity_on_publish', 10, 3 );
  */
 function swiftdash_activity_on_user( $user_id ) {
 	$user = get_userdata( $user_id );
-	swiftdash_log_activity( 'user', __( 'New user registered', 'swift-dashboard-analytics' ), $user ? $user->display_name : '', $user_id );
+	swiftdash_log_activity( 'user', __( 'New user registered', 'swiftwebdev-dashboard-analytics' ), $user ? $user->display_name : '', $user_id );
 }
 add_action( 'user_register', 'swiftdash_activity_on_user' );
 
@@ -148,13 +148,13 @@ function swiftdash_activity_on_upgrade( $upgrader, $extra ) {
 	if ( 'core' === $extra['type'] ) {
 		// The global $wp_version is still the old one in this request, so read the new file.
 		$version = preg_match( "/wp_version = '([^']+)'/", (string) file_get_contents( ABSPATH . WPINC . '/version.php' ), $m ) ? $m[1] : '';
-		swiftdash_log_activity( 'core', __( 'WordPress updated', 'swift-dashboard-analytics' ), $version ? 'WordPress ' . $version : '' );
+		swiftdash_log_activity( 'core', __( 'WordPress updated', 'swiftwebdev-dashboard-analytics' ), $version ? 'WordPress ' . $version : '' );
 		return;
 	}
 	if ( 'plugin' === $extra['type'] ) {
 		$items = isset( $extra['plugins'] ) ? (array) $extra['plugins'] : ( isset( $extra['plugin'] ) ? array( $extra['plugin'] ) : array() );
 		foreach ( $items as $file ) {
-			swiftdash_log_activity( 'plugin', __( 'Plugin updated', 'swift-dashboard-analytics' ), swiftdash_activity_plugin_name( $file, true ) );
+			swiftdash_log_activity( 'plugin', __( 'Plugin updated', 'swiftwebdev-dashboard-analytics' ), swiftdash_activity_plugin_name( $file, true ) );
 		}
 		return;
 	}
@@ -163,7 +163,7 @@ function swiftdash_activity_on_upgrade( $upgrader, $extra ) {
 		foreach ( $items as $slug ) {
 			$theme = wp_get_theme( $slug );
 			$name  = $theme->exists() ? $theme->get( 'Name' ) . ' ' . $theme->get( 'Version' ) : $slug;
-			swiftdash_log_activity( 'theme', __( 'Theme updated', 'swift-dashboard-analytics' ), $name );
+			swiftdash_log_activity( 'theme', __( 'Theme updated', 'swiftwebdev-dashboard-analytics' ), $name );
 		}
 	}
 }
@@ -192,7 +192,7 @@ function swiftdash_activity_plugin_name( $file, $with_version = false ) {
  * @param string $file Plugin basename.
  */
 function swiftdash_activity_on_activate( $file ) {
-	swiftdash_log_activity( 'plugin', __( 'Plugin activated', 'swift-dashboard-analytics' ), swiftdash_activity_plugin_name( $file ) );
+	swiftdash_log_activity( 'plugin', __( 'Plugin activated', 'swiftwebdev-dashboard-analytics' ), swiftdash_activity_plugin_name( $file ) );
 }
 add_action( 'activated_plugin', 'swiftdash_activity_on_activate' );
 
@@ -202,7 +202,7 @@ add_action( 'activated_plugin', 'swiftdash_activity_on_activate' );
  * @param string $file Plugin basename.
  */
 function swiftdash_activity_on_deactivate( $file ) {
-	swiftdash_log_activity( 'plugin-off', __( 'Plugin deactivated', 'swift-dashboard-analytics' ), swiftdash_activity_plugin_name( $file ) );
+	swiftdash_log_activity( 'plugin-off', __( 'Plugin deactivated', 'swiftwebdev-dashboard-analytics' ), swiftdash_activity_plugin_name( $file ) );
 }
 add_action( 'deactivated_plugin', 'swiftdash_activity_on_deactivate' );
 
@@ -217,6 +217,6 @@ function swiftdash_activity_on_order( $order_id ) {
 		return;
 	}
 	$total = html_entity_decode( wp_strip_all_tags( wc_price( $order->get_total(), array( 'currency' => $order->get_currency() ) ) ), ENT_QUOTES, 'UTF-8' );
-	swiftdash_log_activity( 'order', __( 'New order received', 'swift-dashboard-analytics' ), '#' . $order->get_order_number() . ', ' . $total, $order_id );
+	swiftdash_log_activity( 'order', __( 'New order received', 'swiftwebdev-dashboard-analytics' ), '#' . $order->get_order_number() . ', ' . $total, $order_id );
 }
 add_action( 'woocommerce_new_order', 'swiftdash_activity_on_order' );

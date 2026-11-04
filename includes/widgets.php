@@ -1,11 +1,8 @@
 <?php
 /**
- * Widget registry and card rendering.
+ * Widget registry and card rendering. Add-ons register their own widgets on swiftdash_register_widgets.
  *
- * Free registers its own widgets plus locked slots for Pro widget ids. The Pro add-on
- * registers the same ids later (priority 20 on swiftdash_register_widgets) to replace them.
- *
- * @package SwiftDash
+ * @package SwiftWebDevDashboard
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -27,16 +24,14 @@ function &swiftdash_widget_registry() {
  * @param array  $args {
  *     Widget settings.
  *     @type string        $title       Card heading.
- *     @type string        $description One sentence: what the widget shows (used by locked cards and the customize panel).
+ *     @type string        $description One sentence: what the widget shows (tooltip and customize panel).
  *     @type string        $screen      Screen key: dashboard, analytics, speed, links.
  *     @type string        $area        Area within the screen.
  *     @type int           $order       Sort order inside the area.
  *     @type int           $span        Grid columns out of 12.
- *     @type string        $tier        'free' or 'pro'.
- *     @type string        $placeholder Locked preview shape: kpi, chart, table, donut, map.
- *     @type callable|null $render      Prints the card body. Null on a pro widget = locked slot.
- *     @type string        $state       '' or 'expired' (set by the Pro add-on).
+ *     @type callable      $render      Prints the card body. Widgets without one are not shown.
  *     @type callable|null $actions     Prints extra header content (status pill, links), right aligned.
+ *     @type array|null    $kpi         KPI card style { icon, tone } for widgets not listed in swiftdash_kpi_card().
  * }
  */
 function swiftdash_register_widget( $id, $args ) {
@@ -51,11 +46,9 @@ function swiftdash_register_widget( $id, $args ) {
 			'area'        => 'main',
 			'order'       => 10,
 			'span'        => 12,
-			'tier'        => 'free',
-			'placeholder' => 'chart',
 			'render'      => null,
-			'state'       => '',
 			'actions'     => null,
+			'kpi'         => null,
 		)
 	);
 	$registry[ $id ]['id'] = $id;
@@ -72,7 +65,7 @@ function swiftdash_get_widgets( $screen, $area = null ) {
 	$widgets = array_filter(
 		swiftdash_widget_registry(),
 		function ( $w ) use ( $screen, $area ) {
-			return $w['screen'] === $screen && ( null === $area || $w['area'] === $area );
+			return $w['screen'] === $screen && ( null === $area || $w['area'] === $area ) && is_callable( $w['render'] );
 		}
 	);
 	uasort(
@@ -85,52 +78,37 @@ function swiftdash_get_widgets( $screen, $area = null ) {
 }
 
 /**
- * Print a widget area as a 12-column grid.
+ * KPI card style of a widget: its own 'kpi' args, else the built-in visitor KPIs
+ * (the "an-" analytics copies share them).
  *
- * @param string $screen Screen key.
- * @param string $area   Area key.
- */
-function swiftdash_render_area( $screen, $area ) {
-	$widgets = swiftdash_get_widgets( $screen, $area );
-	if ( ! $widgets ) {
-		return;
-	}
-	$hidden = swiftdash_prefs()['hidden'];
-	echo '<div class="sd-grid" data-sd-area="' . esc_attr( $area ) . '">';
-	foreach ( $widgets as $widget ) {
-		swiftdash_render_widget( $widget, in_array( $widget['id'], $hidden, true ) );
-	}
-	echo '</div>';
-}
-
-/**
- * KPI card widgets: icon and tone per widget id (the "an-" analytics copies share them).
- *
- * @param string $id Widget id.
+ * @param array $widget Widget args.
  * @return array|null { icon, tone } or null when the widget is not a KPI card.
  */
-function swiftdash_kpi_card( $id ) {
+function swiftdash_kpi_card( $widget ) {
+	if ( is_array( $widget['kpi'] ) && isset( $widget['kpi']['icon'], $widget['kpi']['tone'] ) ) {
+		return $widget['kpi'];
+	}
 	$cards = array(
-		'visitors'     => array( 'users-fill', 'blue' ),
-		'page-views'   => array( 'chart-bar-fill', 'purple' ),
-		'sessions'     => array( 'clock-fill', 'green' ),
-		'new-visitors' => array( 'user-plus-fill', 'orange' ),
+		'visitors'   => array( 'users-fill', 'blue' ),
+		'page-views' => array( 'chart-bar-fill', 'purple' ),
+		'sessions'   => array( 'clock-fill', 'green' ),
 	);
-	$key   = preg_replace( '/^an-/', '', $id );
+	$key   = preg_replace( '/^an-/', '', $widget['id'] );
 	return isset( $cards[ $key ] ) ? array_combine( array( 'icon', 'tone' ), $cards[ $key ] ) : null;
 }
 
 /**
  * Saved card order per screen for the current user.
  *
- * @return array { dashboard: string[], analytics: string[] }
+ * @return array Card ids per screen key, e.g. { dashboard: string[] }.
  */
 function swiftdash_layout() {
 	$saved  = get_user_meta( get_current_user_id(), 'swiftdash_layout', true );
-	$layout = array();
-	foreach ( array( 'dashboard', 'analytics' ) as $screen ) {
-		$ids               = is_array( $saved ) && isset( $saved[ $screen ] ) && is_array( $saved[ $screen ] ) ? $saved[ $screen ] : array();
-		$layout[ $screen ] = array_values( array_filter( array_map( 'sanitize_key', $ids ) ) );
+	$layout = array( 'dashboard' => array() );
+	foreach ( is_array( $saved ) ? $saved : array() as $screen => $ids ) {
+		if ( is_array( $ids ) ) {
+			$layout[ sanitize_key( $screen ) ] = array_values( array_filter( array_map( 'sanitize_key', $ids ) ) );
+		}
 	}
 	return $layout;
 }
@@ -154,7 +132,6 @@ function swiftdash_register_layout_meta() {
 			'single'        => true,
 			'default'       => array(
 				'dashboard' => array(),
-				'analytics' => array(),
 			),
 			'auth_callback' => function ( $allowed, $meta_key, $user_id ) {
 				return current_user_can( 'edit_user', $user_id );
@@ -164,9 +141,8 @@ function swiftdash_register_layout_meta() {
 					'type'                 => 'object',
 					'properties'           => array(
 						'dashboard' => $ids,
-						'analytics' => $ids,
 					),
-					'additionalProperties' => false,
+					'additionalProperties' => $ids,
 				),
 			),
 		)
@@ -175,32 +151,13 @@ function swiftdash_register_layout_meta() {
 add_action( 'init', 'swiftdash_register_layout_meta' );
 
 /**
- * Widgets of a screen in default order: area order, then widget order, with locked Pro cards
- * moved to the end (the New Visitors KPI stays in the KPI row).
+ * Print every widget of a screen in one sortable 12-column grid (user order on top of the
+ * default order: area by area, then widget order).
  *
- * @param string $screen_key Screen key.
- * @return array[]
- */
-function swiftdash_default_widget_order( $screen_key ) {
-	$open   = array();
-	$locked = array();
-	foreach ( swiftdash_get_screen_widgets( $screen_key ) as $widget ) {
-		if ( swiftdash_widget_is_locked( $widget ) && ! swiftdash_kpi_card( $widget['id'] ) ) {
-			$locked[] = $widget;
-		} else {
-			$open[] = $widget;
-		}
-	}
-	return array_merge( $open, $locked );
-}
-
-/**
- * Print every widget of a screen in one sortable 12-column grid (user order on top of the default).
- *
- * @param string $screen_key Screen key: dashboard or analytics.
+ * @param string $screen_key Screen key, e.g. dashboard.
  */
 function swiftdash_render_screen_widgets( $screen_key ) {
-	$widgets = swiftdash_default_widget_order( $screen_key );
+	$widgets = swiftdash_get_screen_widgets( $screen_key );
 	if ( ! $widgets ) {
 		return;
 	}
@@ -230,22 +187,27 @@ function swiftdash_render_screen_widgets( $screen_key ) {
 		swiftdash_render_widget( $widget, in_array( $widget['id'], $hidden, true ), true );
 	}
 	echo '</div>';
-	echo '<p class="screen-reader-text" id="sd-drag-help">' . esc_html__( 'Drag to move this card, or press the up and down arrow keys.', 'swift-dashboard-analytics' ) . '</p>';
+	echo '<p class="screen-reader-text" id="sd-drag-help">' . esc_html__( 'Drag to move this card, or press the up and down arrow keys.', 'swiftwebdev-dashboard-analytics' ) . '</p>';
 	echo '<div class="screen-reader-text" aria-live="polite" data-sd-sort-live></div>';
 }
 
 /**
- * Card order assets on the dashboard and analytics screens.
+ * Card order assets on screens with a sortable widget grid.
  *
  * @param string $screen_key Current screen key.
  */
 function swiftdash_enqueue_sortable( $screen_key ) {
-	if ( ! in_array( $screen_key, array( 'dashboard', 'analytics' ), true ) ) {
+	/**
+	 * Filters the screen keys that print a sortable widget grid.
+	 *
+	 * @param string[] $screens Default array( 'dashboard' ).
+	 */
+	if ( ! in_array( $screen_key, (array) apply_filters( 'swiftdash_sortable_screens', array( 'dashboard' ) ), true ) ) {
 		return;
 	}
-	wp_enqueue_script( 'swiftdash-sortable-lib', SWIFTDASH_URL . 'assets/vendor/sortable/Sortable.min.js', array(), SWIFTDASH_VERSION, true );
+	wp_enqueue_script( 'swiftdash-sortable-lib', SWIFTDASH_URL . 'assets/vendor/sortable/Sortable.min.js', array(), '1.15.7', true );
 	wp_enqueue_script( 'swiftdash-widgets-sortable', SWIFTDASH_URL . 'assets/js/widgets-sortable.js', array( 'swiftdash-app', 'wp-api-fetch', 'wp-i18n', 'swiftdash-sortable-lib' ), SWIFTDASH_VERSION, true );
-	wp_set_script_translations( 'swiftdash-widgets-sortable', 'swift-dashboard-analytics' );
+	wp_set_script_translations( 'swiftdash-widgets-sortable', 'swiftwebdev-dashboard-analytics' );
 	wp_add_inline_script(
 		'swiftdash-widgets-sortable',
 		'window.swiftdashLayout = ' . wp_json_encode( swiftdash_layout() ) . ';',
@@ -255,16 +217,6 @@ function swiftdash_enqueue_sortable( $screen_key ) {
 add_action( 'swiftdash_enqueue_assets', 'swiftdash_enqueue_sortable' );
 
 /**
- * Whether a widget renders as a locked (or expired) slot.
- *
- * @param array $widget Widget args.
- * @return bool
- */
-function swiftdash_widget_is_locked( $widget ) {
-	return 'pro' === $widget['tier'] && ( ! is_callable( $widget['render'] ) || 'expired' === $widget['state'] );
-}
-
-/**
  * Print one widget card.
  *
  * @param array $widget   Widget args.
@@ -272,10 +224,18 @@ function swiftdash_widget_is_locked( $widget ) {
  * @param bool  $sortable Print a drag handle in the header.
  */
 function swiftdash_render_widget( $widget, $hidden = false, $sortable = false ) {
+	$widget = wp_parse_args(
+		$widget,
+		array(
+			'description' => '',
+			'span'        => 12,
+			'actions'     => null,
+			'kpi'         => null,
+		)
+	);
 	$id     = 'sd-w-' . $widget['id'];
-	$locked = swiftdash_widget_is_locked( $widget );
-	$kpi    = swiftdash_kpi_card( $widget['id'] );
-	$class  = 'sd-card sd-widget sd-span-' . absint( $widget['span'] ) . ( $locked ? ' sd-locked' : '' ) . ( $kpi ? ' sd-widget--kpi' : '' );
+	$kpi    = swiftdash_kpi_card( $widget );
+	$class  = 'sd-card sd-widget sd-span-' . absint( $widget['span'] ) . ( $kpi ? ' sd-widget--kpi' : '' );
 
 	printf(
 		'<section class="%1$s" id="%2$s" data-sd-widget="%3$s" aria-labelledby="%2$s-title"%4$s>',
@@ -285,7 +245,7 @@ function swiftdash_render_widget( $widget, $hidden = false, $sortable = false ) 
 		$hidden ? ' hidden' : ''
 	);
 	if ( $kpi ) {
-		printf( '<span class="sd-kpi__icon sd-kpi__icon--%s">%s</span>', esc_attr( $kpi['tone'] ), swiftdash_icon( $kpi['icon'] ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- swiftdash_icon() returns escaped markup.
+		printf( '<span class="sd-kpi__icon sd-kpi__icon--%s">%s</span>', esc_attr( $kpi['tone'] ), wp_kses( swiftdash_icon( $kpi['icon'] ), swiftdash_icon_kses() ) );
 	}
 	echo '<header class="sd-card__head">';
 	printf( '<h2 class="sd-card__title" id="%s-title">%s</h2>', esc_attr( $id ), esc_html( $widget['title'] ) );
@@ -293,15 +253,13 @@ function swiftdash_render_widget( $widget, $hidden = false, $sortable = false ) 
 		printf(
 			'<button type="button" class="sd-tip" aria-label="%1$s" aria-describedby="%2$s-tip">%3$s<span class="sd-tip__text" role="tooltip" id="%2$s-tip">%4$s</span></button>',
 			/* translators: %s: metric name. */
-			esc_attr( sprintf( __( 'About %s', 'swift-dashboard-analytics' ), $widget['title'] ) ),
+			esc_attr( sprintf( __( 'About %s', 'swiftwebdev-dashboard-analytics' ), $widget['title'] ) ),
 			esc_attr( $id ),
-			swiftdash_icon( 'info' ), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped markup.
+			wp_kses( swiftdash_icon( 'info' ), swiftdash_icon_kses() ),
 			esc_html( $widget['description'] )
 		);
 	}
-	if ( 'pro' === $widget['tier'] ) {
-		echo '<span class="sd-badge sd-badge--pro">' . esc_html__( 'Pro', 'swift-dashboard-analytics' ) . '</span>';
-	} elseif ( isset( $widget['actions'] ) && is_callable( $widget['actions'] ) ) {
+	if ( is_callable( $widget['actions'] ) ) {
 		echo '<div class="sd-card__actions">';
 		call_user_func( $widget['actions'], $widget );
 		echo '</div>';
@@ -310,66 +268,25 @@ function swiftdash_render_widget( $widget, $hidden = false, $sortable = false ) 
 		printf(
 			'<button type="button" class="sd-drag" data-sd-drag aria-label="%1$s" aria-describedby="sd-drag-help">%2$s</button>',
 			/* translators: %s: card title. */
-			esc_attr( sprintf( __( 'Move %s', 'swift-dashboard-analytics' ), $widget['title'] ) ),
-			swiftdash_icon( 'dots-six-vertical' ) // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped markup.
+			esc_attr( sprintf( __( 'Move %s', 'swiftwebdev-dashboard-analytics' ), $widget['title'] ) ),
+			wp_kses( swiftdash_icon( 'dots-six-vertical' ), swiftdash_icon_kses() )
 		);
 	}
 	echo '</header>';
-
-	if ( $locked ) {
-		swiftdash_render_locked_body( $widget );
-	} else {
-		echo '<div class="sd-card__body">';
-		call_user_func( $widget['render'], $widget );
-		echo '</div>';
-	}
+	echo '<div class="sd-card__body">';
+	call_user_func( $widget['render'], $widget );
+	echo '</div>';
 	echo '</section>';
 }
 
 /**
- * Locked or expired slot body: blurred placeholder shape (never real or sample figures) + overlay.
- *
- * @param array $widget Widget args.
- */
-function swiftdash_render_locked_body( $widget ) {
-	$expired = 'expired' === $widget['state'];
-	$url     = $expired
-		? SWIFTDASH_ACCOUNT_URL
-		: add_query_arg(
-			array(
-				'utm_source'  => 'plugin',
-				'utm_medium'  => 'locked-widget',
-				'utm_content' => $widget['id'],
-			),
-			SWIFTDASH_PRICING_URL
-		);
-
-	echo '<div class="sd-card__body sd-locked__body">';
-	printf( '<div class="sd-ph sd-ph--%s" aria-hidden="true"></div>', esc_attr( sanitize_key( $widget['placeholder'] ) ) );
-	echo '<div class="sd-locked__overlay">';
-	echo '<span class="sd-locked__icon">' . swiftdash_icon( $expired ? 'warning' : 'lock-simple' ) . '</span>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- swiftdash_icon() returns escaped markup.
-	if ( $expired ) {
-		echo '<p class="sd-locked__text"><strong>' . esc_html__( 'License expired. Please renew.', 'swift-dashboard-analytics' ) . '</strong></p>';
-	} elseif ( $widget['description'] ) {
-		echo '<p class="sd-locked__text">' . esc_html( $widget['description'] ) . '</p>';
-	}
-	printf(
-		'<a class="sd-btn sd-btn--primary sd-btn--sm" href="%s" target="_blank" rel="noopener noreferrer">%s<span class="screen-reader-text"> %s</span></a>',
-		esc_url( $url ),
-		$expired ? esc_html__( 'Renew license', 'swift-dashboard-analytics' ) : esc_html__( 'Unlock with Pro', 'swift-dashboard-analytics' ),
-		esc_html__( '(opens in a new tab)', 'swift-dashboard-analytics' )
-	);
-	echo '</div></div>';
-}
-
-/**
- * Whether upgrade prompts should show for the current user.
+ * Whether the add-on notice should show for the current user.
  *
  * @return bool
  */
 function swiftdash_show_upgrade() {
 	/**
-	 * Filters whether upgrade prompts are shown. The Pro add-on returns false when licensed.
+	 * Filters whether the add-on notice is shown. An installed add-on can return false.
 	 *
 	 * @param bool $show Default true.
 	 */
@@ -378,40 +295,56 @@ function swiftdash_show_upgrade() {
 }
 
 /**
- * Upgrade prompt, dismissible for 30 days.
+ * Banner at the end of the dashboard about the separate PRO add-on: what it adds, one link
+ * to learn more. Dismissible for 30 days; never shown elsewhere.
  *
- * @param string $variant 'banner' (end of dashboard) or 'sidebar'.
+ * @param string $screen_key Screen the banner is on, for the link's campaign tag.
  */
-function swiftdash_render_upgrade( $variant = 'banner' ) {
+function swiftdash_render_upgrade( $screen_key = 'dashboard' ) {
 	if ( ! swiftdash_show_upgrade() ) {
 		return;
 	}
-	$url = add_query_arg(
+	$url      = add_query_arg(
 		array(
 			'utm_source' => 'plugin',
-			'utm_medium' => 'upgrade-' . $variant,
+			'utm_medium' => sanitize_key( $screen_key ) . '-banner',
 		),
-		SWIFTDASH_PRICING_URL
+		SWIFTDASH_ADDON_URL
 	);
+	$features = array(
+		__( 'Real-time visitors', 'swiftwebdev-dashboard-analytics' ),
+		__( 'Traffic sources and referrers', 'swiftwebdev-dashboard-analytics' ),
+		__( 'Top pages and new visitors', 'swiftwebdev-dashboard-analytics' ),
+		__( 'Countries, devices and browsers', 'swiftwebdev-dashboard-analytics' ),
+		__( 'Form and click tracking', 'swiftwebdev-dashboard-analytics' ),
+		__( 'Session recordings with private fields hidden', 'swiftwebdev-dashboard-analytics' ),
+		__( 'Custom date ranges and CSV export', 'swiftwebdev-dashboard-analytics' ),
+		__( 'Weekly speed tests with email alerts', 'swiftwebdev-dashboard-analytics' ),
+	);
+	$title_id = 'sd-promo-title-' . sanitize_key( $screen_key );
 	?>
-	<aside class="sd-upgrade sd-upgrade--<?php echo esc_attr( $variant ); ?>" aria-label="<?php esc_attr_e( 'Swift Dash PRO', 'swift-dashboard-analytics' ); ?>" data-sd-upgrade>
-		<button type="button" class="sd-icon-btn sd-upgrade__close" data-sd-dismiss-upgrade aria-label="<?php esc_attr_e( 'Hide for 30 days', 'swift-dashboard-analytics' ); ?>">
-			<?php echo swiftdash_icon( 'x' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped markup. ?>
+	<aside class="sd-promo" aria-labelledby="<?php echo esc_attr( $title_id ); ?>" data-sd-upgrade>
+		<button type="button" class="sd-icon-btn sd-promo__close" data-sd-dismiss-upgrade aria-label="<?php esc_attr_e( 'Hide for 30 days', 'swiftwebdev-dashboard-analytics' ); ?>">
+			<?php echo wp_kses( swiftdash_icon( 'x' ), swiftdash_icon_kses() ); ?>
 		</button>
-		<span class="sd-upgrade__icon"><?php echo swiftdash_icon( 'crown' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped markup. ?></span>
-		<div class="sd-upgrade__text">
-			<p class="sd-upgrade__title"><?php esc_html_e( 'Upgrade to Pro', 'swift-dashboard-analytics' ); ?></p>
-			<p class="sd-upgrade__desc">
-				<?php
-				'banner' === $variant
-					? esc_html_e( 'Get full visitor analytics, real-time data, form and click tracking, session recordings and scheduled speed tests.', 'swift-dashboard-analytics' )
-					: esc_html_e( 'Unlock full analytics and scheduled speed tests.', 'swift-dashboard-analytics' );
-				?>
-			</p>
+		<div class="sd-promo__intro">
+			<span class="sd-promo__eyebrow"><?php echo wp_kses( swiftdash_icon( 'puzzle-piece-fill' ), swiftdash_icon_kses() ); ?><?php esc_html_e( 'Optional add-on', 'swiftwebdev-dashboard-analytics' ); ?></span>
+			<h2 class="sd-promo__title" id="<?php echo esc_attr( $title_id ); ?>"><?php esc_html_e( 'See the full story behind your visitors', 'swiftwebdev-dashboard-analytics' ); ?></h2>
+			<p class="sd-promo__desc"><?php esc_html_e( 'SwiftWebDev Dashboard PRO is a separate plugin that adds detailed reports to this dashboard. Everything you use today stays free.', 'swiftwebdev-dashboard-analytics' ); ?></p>
+			<div class="sd-promo__actions">
+				<a class="sd-btn sd-btn--light" href="<?php echo esc_url( $url ); ?>" target="_blank" rel="noopener noreferrer">
+					<?php esc_html_e( 'Explore PRO', 'swiftwebdev-dashboard-analytics' ); ?>
+					<?php echo wp_kses( swiftdash_icon( 'arrow-square-out' ), swiftdash_icon_kses() ); ?>
+					<span class="screen-reader-text"><?php esc_html_e( '(opens in a new tab)', 'swiftwebdev-dashboard-analytics' ); ?></span>
+				</a>
+				<button type="button" class="sd-promo__later" data-sd-dismiss-upgrade><?php esc_html_e( 'Maybe later', 'swiftwebdev-dashboard-analytics' ); ?></button>
+			</div>
 		</div>
-		<a class="sd-btn <?php echo 'banner' === $variant ? 'sd-btn--primary' : 'sd-btn--light'; ?>" href="<?php echo esc_url( $url ); ?>" target="_blank" rel="noopener noreferrer">
-			<?php esc_html_e( 'See Pro plans', 'swift-dashboard-analytics' ); ?><span class="screen-reader-text"> <?php esc_html_e( '(opens in a new tab)', 'swift-dashboard-analytics' ); ?></span>
-		</a>
+		<ul class="sd-promo__list" aria-label="<?php esc_attr_e( 'What PRO adds', 'swiftwebdev-dashboard-analytics' ); ?>">
+			<?php foreach ( $features as $feature ) : ?>
+				<li><?php echo wp_kses( swiftdash_icon( 'check-circle-fill' ), swiftdash_icon_kses() ); ?><span><?php echo esc_html( $feature ); ?></span></li>
+			<?php endforeach; ?>
+		</ul>
 	</aside>
 	<?php
 }

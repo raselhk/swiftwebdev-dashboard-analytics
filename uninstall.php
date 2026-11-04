@@ -1,14 +1,14 @@
 <?php
 /**
- * Remove everything Swift Dash stored when the plugin is deleted.
+ * Remove everything SwiftWebDev Dashboard stored when the plugin is deleted.
  *
- * @package SwiftDash
+ * @package SwiftWebDevDashboard
  */
 
 defined( 'WP_UNINSTALL_PLUGIN' ) || exit;
 
 /**
- * Delete Swift Dash data for the current site.
+ * Delete SwiftWebDev Dashboard data for the current site.
  */
 function swiftdash_uninstall_site() {
 	global $wpdb;

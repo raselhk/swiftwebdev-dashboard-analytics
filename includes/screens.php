@@ -1,8 +1,8 @@
 <?php
 /**
- * Swift Dash screens: definitions, assets, screen bodies. The left menu lives in admin-menu.php.
+ * SwiftWebDev Dashboard screens: definitions, assets, screen bodies. The left menu lives in admin-menu.php.
  *
- * @package SwiftDash
+ * @package SwiftWebDevDashboard
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -17,50 +17,42 @@ defined( 'ABSPATH' ) || exit;
  */
 function swiftdash_screens() {
 	$screens = array(
-		'swift-dash'           => array(
+		'swift-dash'          => array(
 			'key'         => 'dashboard',
-			'menu'        => __( 'Dashboard', 'swift-dashboard-analytics' ),
-			'title'       => __( 'Dashboard', 'swift-dashboard-analytics' ),
-			'description' => __( 'Here is what is happening on your website today.', 'swift-dashboard-analytics' ),
+			'menu'        => __( 'Dashboard', 'swiftwebdev-dashboard-analytics' ),
+			'title'       => __( 'Dashboard', 'swiftwebdev-dashboard-analytics' ),
+			'description' => __( 'Here is what is happening on your website today.', 'swiftwebdev-dashboard-analytics' ),
 			'icon'        => 'house',
 			'location'    => 'left',
 		),
-		'swift-dash-analytics' => array(
-			'key'         => 'analytics',
-			'menu'        => __( 'Analytics', 'swift-dashboard-analytics' ),
-			'title'       => __( 'Analytics Overview', 'swift-dashboard-analytics' ),
-			'description' => __( 'Understand visitor behavior, popular pages, and engagement across your website.', 'swift-dashboard-analytics' ),
-			'icon'        => 'chart-line-up',
-			'location'    => 'left',
-		),
-		'swift-dash-speed'     => array(
+		'swift-dash-speed'    => array(
 			'key'         => 'speed',
-			'menu'        => __( 'Speed & Optimize', 'swift-dashboard-analytics' ),
-			'title'       => __( 'Speed & Optimize', 'swift-dashboard-analytics' ),
-			'description' => __( 'See your mobile and desktop speed scores and what to fix to reach 90+.', 'swift-dashboard-analytics' ),
+			'menu'        => __( 'Speed & Optimize', 'swiftwebdev-dashboard-analytics' ),
+			'title'       => __( 'Speed & Optimize', 'swiftwebdev-dashboard-analytics' ),
+			'description' => __( 'See your mobile and desktop speed scores and what to fix to reach 90+.', 'swiftwebdev-dashboard-analytics' ),
 			'icon'        => 'gauge',
 			'location'    => 'user',
 		),
-		'swift-dash-links'     => array(
+		'swift-dash-links'    => array(
 			'key'         => 'links',
-			'menu'        => __( 'Quick Links', 'swift-dashboard-analytics' ),
-			'title'       => __( 'Quick Links', 'swift-dashboard-analytics' ),
-			'description' => __( 'Shortcuts to the WordPress tasks you use most.', 'swift-dashboard-analytics' ),
+			'menu'        => __( 'Quick Links', 'swiftwebdev-dashboard-analytics' ),
+			'title'       => __( 'Quick Links', 'swiftwebdev-dashboard-analytics' ),
+			'description' => __( 'Shortcuts to the WordPress tasks you use most.', 'swiftwebdev-dashboard-analytics' ),
 			'icon'        => 'link-simple',
 			'location'    => 'user',
 		),
-		'swift-dash-settings'  => array(
+		'swift-dash-settings' => array(
 			'key'         => 'settings',
-			'menu'        => __( 'Swift Dash settings', 'swift-dashboard-analytics' ),
-			'title'       => __( 'Swift Dash Settings', 'swift-dashboard-analytics' ),
-			'description' => __( 'Choose how Swift Dash behaves on this site.', 'swift-dashboard-analytics' ),
+			'menu'        => __( 'SwiftWebDev Dashboard settings', 'swiftwebdev-dashboard-analytics' ),
+			'title'       => __( 'SwiftWebDev Dashboard Settings', 'swiftwebdev-dashboard-analytics' ),
+			'description' => __( 'Choose how SwiftWebDev Dashboard behaves on this site.', 'swiftwebdev-dashboard-analytics' ),
 			'icon'        => 'gear-six',
 			'location'    => 'user',
 		),
 	);
 
 	/**
-	 * Filters the Swift Dash screens.
+	 * Filters the SwiftWebDev Dashboard screens.
 	 *
 	 * @param array $screens Screens keyed by admin page slug.
 	 */
@@ -68,7 +60,7 @@ function swiftdash_screens() {
 }
 
 /**
- * Hook suffixes of Swift Dash screens.
+ * Hook suffixes of SwiftWebDev Dashboard screens.
  *
  * @param string|null $add Hook suffix to record.
  * @return string[]
@@ -95,7 +87,7 @@ function swiftdash_screen_location( $screen ) {
 }
 
 /**
- * Whether the current admin request is a Swift Dash screen.
+ * Whether the current admin request is a SwiftWebDev Dashboard screen.
  *
  * @return bool
  */
@@ -105,7 +97,7 @@ function swiftdash_is_screen() {
 }
 
 /**
- * Body class that switches off the WordPress admin chrome on Swift Dash screens only.
+ * Body class that switches off the WordPress admin chrome on SwiftWebDev Dashboard screens only.
  *
  * @param string $classes Space-separated classes.
  * @return string
@@ -116,7 +108,7 @@ function swiftdash_admin_body_class( $classes ) {
 add_filter( 'admin_body_class', 'swiftdash_admin_body_class' );
 
 /**
- * Enqueue assets on Swift Dash screens only.
+ * Enqueue assets on SwiftWebDev Dashboard screens only.
  *
  * @param string $hook_suffix Current admin page hook.
  */
@@ -129,7 +121,7 @@ function swiftdash_enqueue_assets( $hook_suffix ) {
 	wp_enqueue_style( 'swiftdash-app', SWIFTDASH_URL . 'assets/css/app.css', array( 'swiftdash-tokens' ), SWIFTDASH_VERSION );
 
 	wp_enqueue_script( 'swiftdash-app', SWIFTDASH_URL . 'assets/js/app.js', array( 'wp-api-fetch', 'wp-i18n' ), SWIFTDASH_VERSION, true );
-	wp_set_script_translations( 'swiftdash-app', 'swift-dashboard-analytics' );
+	wp_set_script_translations( 'swiftdash-app', 'swiftwebdev-dashboard-analytics' );
 
 	wp_add_inline_script(
 		'swiftdash-app',
@@ -149,7 +141,7 @@ function swiftdash_enqueue_assets( $hook_suffix ) {
 	}
 
 	/**
-	 * Fires after the core Swift Dash assets are enqueued on a Swift Dash screen.
+	 * Fires after the core SwiftWebDev Dashboard assets are enqueued on a SwiftWebDev Dashboard screen.
 	 * Feature files enqueue their own CSS/JS here (depend on the 'swiftdash-app' script and style).
 	 *
 	 * @param string $screen_key Current screen key (dashboard, analytics, speed, links, settings).
@@ -159,7 +151,7 @@ function swiftdash_enqueue_assets( $hook_suffix ) {
 add_action( 'admin_enqueue_scripts', 'swiftdash_enqueue_assets' );
 
 /**
- * Optional: open Swift Dash instead of the WordPress dashboard.
+ * Optional: open SwiftWebDev Dashboard instead of the WordPress dashboard.
  */
 function swiftdash_maybe_redirect_dashboard() {
 	// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only opt-out flag on a GET link.
@@ -172,54 +164,17 @@ function swiftdash_maybe_redirect_dashboard() {
 add_action( 'load-index.php', 'swiftdash_maybe_redirect_dashboard' );
 
 /**
- * Register the free plugin's widgets and locked Pro slots, then let add-ons replace them.
+ * Register the widgets of every screen. Feature files and add-ons register or replace widgets here.
  */
 function swiftdash_setup_widgets() {
-	swiftdash_register_widget(
-		'new-visitors',
-		array(
-			'title'       => __( 'New Visitors', 'swift-dashboard-analytics' ),
-			'description' => __( 'See how many visitors came to your site for the first time.', 'swift-dashboard-analytics' ),
-			'area'        => 'kpis',
-			'order'       => 40,
-			'span'        => 3,
-			'tier'        => 'pro',
-			'placeholder' => 'kpi',
-		)
-	);
-	swiftdash_register_widget(
-		'visitor-trend',
-		array(
-			'title'       => __( 'Visitors & Page Views', 'swift-dashboard-analytics' ),
-			'description' => __( 'Track visitors, page views and sessions day by day for any date range.', 'swift-dashboard-analytics' ),
-			'area'        => 'overview',
-			'order'       => 10,
-			'span'        => 8,
-			'tier'        => 'pro',
-			'placeholder' => 'chart',
-		)
-	);
-	swiftdash_register_widget(
-		'top-pages',
-		array(
-			'title'       => __( 'Top Pages', 'swift-dashboard-analytics' ),
-			'description' => __( 'Find your most visited pages and where your traffic comes from.', 'swift-dashboard-analytics' ),
-			'area'        => 'overview',
-			'order'       => 20,
-			'span'        => 4,
-			'tier'        => 'pro',
-			'placeholder' => 'table',
-		)
-	);
-
 	/**
-	 * Fires after Swift Dash registers its widgets. Add-ons register or replace widgets here.
+	 * Fires before a screen renders. Register or replace widgets with swiftdash_register_widget().
 	 */
 	do_action( 'swiftdash_register_widgets' );
 }
 
 /**
- * Render any Swift Dash screen inside the shared shell.
+ * Render any SwiftWebDev Dashboard screen inside the shared shell.
  */
 function swiftdash_render_screen() {
 	global $plugin_page;
@@ -233,7 +188,7 @@ function swiftdash_render_screen() {
 
 	?>
 	<div class="swiftdash sd-app">
-		<a class="sd-skip" href="#sd-content"><?php esc_html_e( 'Skip to main content', 'swift-dashboard-analytics' ); ?></a>
+		<a class="sd-skip" href="#sd-content"><?php esc_html_e( 'Skip to main content', 'swiftwebdev-dashboard-analytics' ); ?></a>
 		<div class="sd-main">
 			<?php swiftdash_render_header(); ?>
 			<main class="sd-content" id="sd-content" tabindex="-1">
@@ -246,7 +201,7 @@ function swiftdash_render_screen() {
 						swiftdash_screen_pending( $screen );
 					} else {
 						/**
-						 * Prints the body of a Swift Dash screen added through the swiftdash_screens filter.
+						 * Prints the body of a SwiftWebDev Dashboard screen added through the swiftdash_screens filter.
 						 *
 						 * @param array $screen Screen definition.
 						 */
@@ -273,31 +228,26 @@ function swiftdash_screen_dashboard( $screen ) {
 
 	swiftdash_render_page_header(
 		/* translators: %s: user's first name. */
-		sprintf( __( 'Welcome back, %s', 'swift-dashboard-analytics' ), $name ),
+		sprintf( __( 'Welcome back, %s', 'swiftwebdev-dashboard-analytics' ), $name ),
 		$screen['description'],
 		function () {
+			swiftdash_render_range_picker();
 			?>
 			<button type="button" class="sd-btn sd-btn--secondary" data-sd-modal-open="sd-customize">
-				<?php echo swiftdash_icon( 'eye-slash' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped markup. ?>
-				<?php esc_html_e( 'Customize', 'swift-dashboard-analytics' ); ?>
+				<?php echo wp_kses( swiftdash_icon( 'eye-slash' ), swiftdash_icon_kses() ); ?>
+				<?php esc_html_e( 'Customize', 'swiftwebdev-dashboard-analytics' ); ?>
 			</button>
 			<a class="sd-btn sd-btn--secondary" href="<?php echo esc_url( home_url( '/' ) ); ?>" target="_blank" rel="noopener noreferrer">
-				<?php esc_html_e( 'View site', 'swift-dashboard-analytics' ); ?>
-				<?php echo swiftdash_icon( 'arrow-square-out' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped markup. ?>
-				<span class="screen-reader-text"><?php esc_html_e( '(opens in a new tab)', 'swift-dashboard-analytics' ); ?></span>
+				<?php esc_html_e( 'View site', 'swiftwebdev-dashboard-analytics' ); ?>
+				<?php echo wp_kses( swiftdash_icon( 'arrow-square-out' ), swiftdash_icon_kses() ); ?>
+				<span class="screen-reader-text"><?php esc_html_e( '(opens in a new tab)', 'swiftwebdev-dashboard-analytics' ); ?></span>
 			</a>
 			<?php
 		}
 	);
 
-	if ( function_exists( 'swiftdash_render_screen_widgets' ) ) {
-		swiftdash_render_screen_widgets( 'dashboard' );
-	} else {
-		foreach ( swiftdash_screen_areas( 'dashboard' ) as $area ) {
-			swiftdash_render_area( 'dashboard', $area );
-		}
-	}
-	swiftdash_render_upgrade( 'banner' );
+	swiftdash_render_screen_widgets( 'dashboard' );
+	swiftdash_render_upgrade( 'dashboard' );
 	swiftdash_render_customize_panel( 'dashboard' );
 }
 
@@ -344,8 +294,8 @@ function swiftdash_screen_pending( $screen ) {
 	swiftdash_render_page_header( $screen['title'], $screen['description'] );
 	swiftdash_render_empty_state(
 		'clock',
-		__( 'This screen is not ready yet', 'swift-dashboard-analytics' ),
-		__( 'It will be added in an upcoming version of Swift Dash.', 'swift-dashboard-analytics' )
+		__( 'This screen is not ready yet', 'swiftwebdev-dashboard-analytics' ),
+		__( 'It will be added in an upcoming version of SwiftWebDev Dashboard.', 'swiftwebdev-dashboard-analytics' )
 	);
 }
 
@@ -363,36 +313,36 @@ function swiftdash_screen_settings( $screen ) {
 			<div class="sd-field sd-field--switch">
 				<input type="checkbox" class="sd-switch" id="sd-open-after-login" name="open_after_login" <?php checked( swiftdash_setting( 'open_after_login' ) ); ?>>
 				<div>
-					<label class="sd-field__label" for="sd-open-after-login"><?php esc_html_e( 'Open Swift Dash after login', 'swift-dashboard-analytics' ); ?></label>
-					<p class="sd-field__help" id="sd-open-after-login-help"><?php esc_html_e( 'Shows Swift Dash instead of the WordPress dashboard. The WordPress dashboard stays available from your user menu.', 'swift-dashboard-analytics' ); ?></p>
+					<label class="sd-field__label" for="sd-open-after-login"><?php esc_html_e( 'Open SwiftWebDev Dashboard after login', 'swiftwebdev-dashboard-analytics' ); ?></label>
+					<p class="sd-field__help" id="sd-open-after-login-help"><?php esc_html_e( 'Shows SwiftWebDev Dashboard instead of the WordPress dashboard. The WordPress dashboard stays available from your user menu.', 'swiftwebdev-dashboard-analytics' ); ?></p>
 				</div>
 			</div>
 			<div class="sd-field sd-field--switch">
 				<input type="checkbox" class="sd-switch" id="sd-exclude-admins" name="exclude_admins" aria-describedby="sd-exclude-admins-help" <?php checked( swiftdash_setting( 'exclude_admins' ) ); ?>>
 				<div>
-					<label class="sd-field__label" for="sd-exclude-admins"><?php esc_html_e( 'Do not count logged-in users', 'swift-dashboard-analytics' ); ?></label>
-					<p class="sd-field__help" id="sd-exclude-admins-help"><?php esc_html_e( 'Visits by anyone logged in to WordPress (you and your team) are left out of visitor stats.', 'swift-dashboard-analytics' ); ?></p>
+					<label class="sd-field__label" for="sd-exclude-admins"><?php esc_html_e( 'Do not count logged-in users', 'swiftwebdev-dashboard-analytics' ); ?></label>
+					<p class="sd-field__help" id="sd-exclude-admins-help"><?php esc_html_e( 'Visits by anyone logged in to WordPress (you and your team) are left out of visitor stats.', 'swiftwebdev-dashboard-analytics' ); ?></p>
 				</div>
 			</div>
 			<div class="sd-field">
-				<label class="sd-field__label" for="sd-brand-name"><?php esc_html_e( 'Menu name', 'swift-dashboard-analytics' ); ?></label>
+				<label class="sd-field__label" for="sd-brand-name"><?php esc_html_e( 'Menu name', 'swiftwebdev-dashboard-analytics' ); ?></label>
 				<input type="text" class="sd-input" id="sd-brand-name" name="brand_name" maxlength="40" aria-describedby="sd-brand-name-help" value="<?php echo esc_attr( $brand['name'] ); ?>">
-				<p class="sd-field__help" id="sd-brand-name-help"><?php esc_html_e( 'Shown next to the logo at the top of the left menu.', 'swift-dashboard-analytics' ); ?></p>
+				<p class="sd-field__help" id="sd-brand-name-help"><?php esc_html_e( 'Shown next to the logo at the top of the left menu. Your site title is used by default.', 'swiftwebdev-dashboard-analytics' ); ?></p>
 			</div>
-			<div class="sd-field" data-sd-logo data-default="<?php echo esc_url( SWIFTDASH_URL . 'assets/img/brand.svg' ); ?>">
-				<span class="sd-field__label" id="sd-brand-logo-label"><?php esc_html_e( 'Menu logo', 'swift-dashboard-analytics' ); ?></span>
+			<div class="sd-field" data-sd-logo data-default="<?php echo esc_url( get_site_icon_url( 64 ) ? get_site_icon_url( 64 ) : SWIFTDASH_URL . 'assets/img/brand.svg' ); ?>">
+				<span class="sd-field__label" id="sd-brand-logo-label"><?php esc_html_e( 'Menu logo', 'swiftwebdev-dashboard-analytics' ); ?></span>
 				<div class="sd-logo-field">
 					<img class="sd-logo-field__preview" src="<?php echo esc_url( $brand['logo'] ); ?>" alt="" width="40" height="40">
-					<button type="button" class="sd-btn sd-btn--secondary" data-sd-logo-choose aria-describedby="sd-brand-logo-label"><?php esc_html_e( 'Choose image', 'swift-dashboard-analytics' ); ?></button>
-					<button type="button" class="sd-btn sd-btn--tertiary" data-sd-logo-reset<?php echo swiftdash_setting( 'brand_logo' ) ? '' : ' hidden'; ?>><?php esc_html_e( 'Use default', 'swift-dashboard-analytics' ); ?></button>
+					<button type="button" class="sd-btn sd-btn--secondary" data-sd-logo-choose aria-describedby="sd-brand-logo-label"><?php esc_html_e( 'Choose image', 'swiftwebdev-dashboard-analytics' ); ?></button>
+					<button type="button" class="sd-btn sd-btn--tertiary" data-sd-logo-reset<?php echo swiftdash_setting( 'brand_logo' ) ? '' : ' hidden'; ?>><?php esc_html_e( 'Use default', 'swiftwebdev-dashboard-analytics' ); ?></button>
 				</div>
 				<input type="hidden" name="brand_logo" value="<?php echo esc_attr( (string) swiftdash_setting( 'brand_logo' ) ); ?>">
-				<p class="sd-field__help"><?php esc_html_e( 'A square image works best. It is shown at the top of the left menu on every admin page.', 'swift-dashboard-analytics' ); ?></p>
+				<p class="sd-field__help"><?php esc_html_e( 'A square image works best. It is shown at the top of the left menu on every admin page. Your site icon is used by default.', 'swiftwebdev-dashboard-analytics' ); ?></p>
 			</div>
 			<p class="sd-form__error" role="alert" hidden></p>
 		</div>
 		<footer class="sd-card__foot">
-			<button type="submit" class="sd-btn sd-btn--primary" disabled><?php esc_html_e( 'Save changes', 'swift-dashboard-analytics' ); ?></button>
+			<button type="submit" class="sd-btn sd-btn--primary" disabled><?php esc_html_e( 'Save changes', 'swiftwebdev-dashboard-analytics' ); ?></button>
 		</footer>
 	</form>
 	<?php
@@ -408,7 +358,7 @@ function swiftdash_screen_settings( $screen ) {
 function swiftdash_render_empty_state( $icon, $title, $text ) {
 	?>
 	<div class="sd-empty">
-		<span class="sd-empty__icon"><?php echo swiftdash_icon( $icon ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped markup. ?></span>
+		<span class="sd-empty__icon"><?php echo wp_kses( swiftdash_icon( $icon ), swiftdash_icon_kses() ); ?></span>
 		<p class="sd-empty__title"><?php echo esc_html( $title ); ?></p>
 		<p class="sd-empty__text"><?php echo esc_html( $text ); ?></p>
 	</div>
@@ -426,11 +376,11 @@ function swiftdash_render_customize_panel( $screen_key ) {
 	<dialog class="sd-dialog sd-dialog--drawer" id="sd-customize" aria-labelledby="sd-customize-title">
 		<form method="dialog" class="sd-dialog__inner" data-sd-customize>
 			<header class="sd-dialog__head">
-				<h2 class="sd-dialog__title" id="sd-customize-title"><?php 'analytics' === $screen_key ? esc_html_e( 'Customize analytics', 'swift-dashboard-analytics' ) : esc_html_e( 'Customize dashboard', 'swift-dashboard-analytics' ); ?></h2>
-				<button type="submit" value="cancel" class="sd-icon-btn" aria-label="<?php esc_attr_e( 'Close', 'swift-dashboard-analytics' ); ?>"><?php echo swiftdash_icon( 'x' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped markup. ?></button>
+				<h2 class="sd-dialog__title" id="sd-customize-title"><?php 'dashboard' === $screen_key ? esc_html_e( 'Customize dashboard', 'swiftwebdev-dashboard-analytics' ) : esc_html_e( 'Customize this screen', 'swiftwebdev-dashboard-analytics' ); ?></h2>
+				<button type="submit" value="cancel" class="sd-icon-btn" aria-label="<?php esc_attr_e( 'Close', 'swiftwebdev-dashboard-analytics' ); ?>"><?php echo wp_kses( swiftdash_icon( 'x' ), swiftdash_icon_kses() ); ?></button>
 			</header>
 			<div class="sd-dialog__body">
-				<p class="sd-field__help"><?php esc_html_e( 'Choose which widgets you see. This only changes your own view.', 'swift-dashboard-analytics' ); ?></p>
+				<p class="sd-field__help"><?php esc_html_e( 'Choose which widgets you see. This only changes your own view.', 'swiftwebdev-dashboard-analytics' ); ?></p>
 				<ul class="sd-checklist">
 					<?php foreach ( swiftdash_get_screen_widgets( $screen_key ) as $widget ) : ?>
 						<li>
@@ -443,8 +393,8 @@ function swiftdash_render_customize_panel( $screen_key ) {
 				</ul>
 			</div>
 			<footer class="sd-dialog__foot">
-				<button type="button" class="sd-btn sd-btn--tertiary" data-sd-customize-reset><?php esc_html_e( 'Show all', 'swift-dashboard-analytics' ); ?></button>
-				<button type="submit" value="save" class="sd-btn sd-btn--primary"><?php esc_html_e( 'Save', 'swift-dashboard-analytics' ); ?></button>
+				<button type="button" class="sd-btn sd-btn--tertiary" data-sd-customize-reset><?php esc_html_e( 'Show all', 'swiftwebdev-dashboard-analytics' ); ?></button>
+				<button type="submit" value="save" class="sd-btn sd-btn--primary"><?php esc_html_e( 'Save', 'swiftwebdev-dashboard-analytics' ); ?></button>
 			</footer>
 		</form>
 	</dialog>
@@ -463,7 +413,7 @@ function swiftdash_render_confirm_dialog() {
 			</header>
 			<div class="sd-dialog__body"><p id="sd-confirm-text"></p></div>
 			<footer class="sd-dialog__foot">
-				<button type="submit" value="cancel" class="sd-btn sd-btn--secondary"><?php esc_html_e( 'Cancel', 'swift-dashboard-analytics' ); ?></button>
+				<button type="submit" value="cancel" class="sd-btn sd-btn--secondary"><?php esc_html_e( 'Cancel', 'swiftwebdev-dashboard-analytics' ); ?></button>
 				<button type="submit" value="confirm" class="sd-btn sd-btn--primary" data-sd-confirm-ok></button>
 			</footer>
 		</form>

@@ -1,5 +1,5 @@
 /*
- * Swift Dash design tokens. Source of truth: docs/ux-guideline.md section 2.
+ * SwiftWebDev Dashboard design tokens. Source of truth: docs/ux-guideline.md section 2.
  * Every component reads these; never hard-code a colour, size or radius elsewhere.
  * Scoped to .swiftdash so nothing leaks into other admin screens.
  */

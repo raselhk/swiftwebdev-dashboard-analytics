@@ -1,4 +1,4 @@
-/* Swift Dash: dashboard page title + Recent Activity and Updates & Health rows. Tokens only. */
+/* SwiftWebDev Dashboard: dashboard page title + Recent Activity and Updates & Health rows. Tokens only. */
 
 /* Decorative wave after "Welcome back, Name" (empty alt text keeps it out of screen readers). */
 .swiftdash .sd-page-head__title::after {

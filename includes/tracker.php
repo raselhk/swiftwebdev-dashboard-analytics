@@ -5,7 +5,7 @@
  * Nothing identifying is stored. A visitor is sha256( daily salt + IP + user agent ); the
  * salt rotates every site-local day, so hashes cannot be linked across days.
  *
- * @package SwiftDash
+ * @package SwiftWebDevDashboard
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -33,7 +33,6 @@ function swiftdash_tracker_schema( $schema, $prefix, $collate ) {
 	$schema[] = "CREATE TABLE {$prefix}hits (
   id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   visitor char(64) NOT NULL,
-  path varchar(255) NOT NULL,
   new_session tinyint(1) unsigned NOT NULL DEFAULT 0,
   created datetime NOT NULL,
   PRIMARY KEY  (id),
@@ -147,25 +146,26 @@ function swiftdash_rest_hit( $request ) {
 	global $wpdb;
 	$done = new WP_REST_Response( null, 204 );
 
-	$ua = isset( $_SERVER['HTTP_USER_AGENT'] ) ? (string) wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput
+	$ua = isset( $_SERVER['HTTP_USER_AGENT'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) ) : '';
 	if ( swiftdash_is_bot( $ua ) ) {
 		return $done;
 	}
 	foreach ( array( 'HTTP_SEC_PURPOSE', 'HTTP_PURPOSE' ) as $header ) {
-		if ( isset( $_SERVER[ $header ] ) && false !== stripos( (string) wp_unslash( $_SERVER[ $header ] ), 'prefetch' ) ) { // phpcs:ignore WordPress.Security.ValidatedSanitizedInput
+		if ( isset( $_SERVER[ $header ] ) && false !== stripos( sanitize_text_field( wp_unslash( $_SERVER[ $header ] ) ), 'prefetch' ) ) {
 			return $done;
 		}
 	}
 
 	$body = $request->get_body();
 	$data = strlen( $body ) < 2048 ? json_decode( $body, true ) : null;
+	// The page path only confirms the request came from a real page view; it is not stored.
 	$path = is_array( $data ) && isset( $data['p'] ) && is_string( $data['p'] ) ? $data['p'] : '';
 	$path = (string) preg_split( '/[?#]/', $path, 2 )[0];
 	if ( '' === $path || '/' !== $path[0] || strlen( $path ) > 255 || preg_match( '/[\x00-\x1f\x7f]/', $path ) ) {
 		return new WP_REST_Response( null, 400 );
 	}
 
-	$ip = isset( $_SERVER['REMOTE_ADDR'] ) ? (string) wp_unslash( $_SERVER['REMOTE_ADDR'] ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput
+	$ip = isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : '';
 	/**
 	 * Filters the client IP used for the (never stored) visitor hash, e.g. behind a proxy.
 	 *
@@ -183,11 +183,10 @@ function swiftdash_rest_hit( $request ) {
 		$hits,
 		array(
 			'visitor'     => $visitor,
-			'path'        => $path,
 			'new_session' => $recent ? 0 : 1,
 			'created'     => gmdate( 'Y-m-d H:i:s' ),
 		),
-		array( '%s', '%s', '%d', '%s' )
+		array( '%s', '%d', '%s' )
 	);
 	return $done;
 }
@@ -247,7 +246,9 @@ function swiftdash_rollup() {
 	}
 
 	$wpdb->query( $wpdb->prepare( 'DELETE FROM %i WHERE created < %s', $hits, gmdate( 'Y-m-d H:i:s', time() - 48 * HOUR_IN_SECONDS ) ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
-	$wpdb->query( $wpdb->prepare( 'DELETE FROM %i WHERE day < %s', $daily, $today->modify( '-60 days' )->format( 'Y-m-d' ) ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+	// Daily totals: 90 days (the longest period on the dashboard) plus the 90 days before it,
+	// which the "vs previous period" change on the KPI cards compares against. Nothing older is kept.
+	$wpdb->query( $wpdb->prepare( 'DELETE FROM %i WHERE day < %s', $daily, $today->modify( '-180 days' )->format( 'Y-m-d' ) ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 }
 add_action( 'swiftdash_rollup', 'swiftdash_rollup' );
 
@@ -273,9 +274,9 @@ register_deactivation_hook(
  */
 function swiftdash_privacy_content() {
 	wp_add_privacy_policy_content(
-		'Swift Dash',
+		'SwiftWebDev Dashboard',
 		wp_kses_post(
-			'<p>' . __( 'Swift Dash counts visitors, page views and sessions without cookies and without storing IP addresses or user agents. Each visit is reduced to a one-way hash of the visitor IP address and browser, mixed with a secret salt that changes every day, so a visitor cannot be recognised from one day to the next.', 'swift-dashboard-analytics' ) . '</p><p>' . __( 'Raw page-view rows are kept for 48 hours; daily totals are kept for 60 days. All data stays in the database of this site and is not sent to any third party.', 'swift-dashboard-analytics' ) . '</p>'
+			'<p>' . __( 'SwiftWebDev Dashboard counts visitors, page views and sessions without cookies and without storing IP addresses or user agents. Each visit is reduced to a one-way hash of the visitor IP address and browser, mixed with a secret salt that changes every day, so a visitor cannot be recognised from one day to the next.', 'swiftwebdev-dashboard-analytics' ) . '</p><p>' . __( 'Raw page-view rows are kept for 48 hours; daily totals are kept for 180 days. All data stays in the database of this site and is not sent to any third party.', 'swiftwebdev-dashboard-analytics' ) . '</p>'
 		)
 	);
 }

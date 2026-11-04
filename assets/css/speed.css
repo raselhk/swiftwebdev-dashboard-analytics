@@ -1,5 +1,5 @@
 /*
- * Swift Dash: Speed & Optimize screen and dashboard speed widgets.
+ * SwiftWebDev Dashboard: Speed & Optimize screen and dashboard speed widgets.
  * Tokens only (tokens.css); components from app.css.
  */
 
@@ -266,14 +266,6 @@
 .swiftdash .sd-speed-notice--error {
 	background: var(--sd-red-50);
 	color: var(--sd-danger);
-}
-
-.swiftdash .sd-speed-notice--pro {
-	background: var(--sd-purple-50);
-}
-
-.swiftdash .sd-speed-notice--pro .sd-icon {
-	color: var(--sd-purple);
 }
 
 .swiftdash .sd-speed-view {

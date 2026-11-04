@@ -3,7 +3,7 @@
  * Component preview screen. Loaded only when WP_DEBUG is on; excluded from release builds.
  * Values on this screen are labelled samples for checking the components, not site data.
  *
- * @package SwiftDash
+ * @package SwiftWebDevDashboard
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -13,9 +13,9 @@ add_filter(
 	function ( $screens ) {
 		$screens['swift-dash-ui'] = array(
 			'key'         => 'ui',
-			'menu'        => __( 'Components', 'swift-dashboard-analytics' ),
-			'title'       => __( 'Component preview', 'swift-dashboard-analytics' ),
-			'description' => __( 'Developer preview of every Swift Dash component and state. Sample values only.', 'swift-dashboard-analytics' ),
+			'menu'        => __( 'Components', 'swiftwebdev-dashboard-analytics' ),
+			'title'       => __( 'Component preview', 'swiftwebdev-dashboard-analytics' ),
+			'description' => __( 'Developer preview of every SwiftWebDev Dashboard component and state. Sample values only.', 'swiftwebdev-dashboard-analytics' ),
 			'icon'        => 'dots-six-vertical',
 			'nav'         => false,
 		);
@@ -105,38 +105,17 @@ function swiftdash_dev_components( $screen ) {
 
 	<div class="sd-grid">
 		<?php
-		$locked = array(
-			'id'          => 'demo-locked',
-			'title'       => 'Visitors by Country',
-			'description' => 'See which countries your visitors come from.',
-			'span'        => 4,
-			'tier'        => 'pro',
-			'placeholder' => 'map',
-			'render'      => null,
-			'state'       => '',
-		);
-		swiftdash_render_widget( $locked );
 		swiftdash_render_widget(
-			array_merge(
-				$locked,
-				array(
-					'id'          => 'demo-expired',
-					'title'       => 'Traffic Sources',
-					'placeholder' => 'donut',
-					'state'       => 'expired',
-					'render'      => '__return_null',
-				)
-			)
-		);
-		swiftdash_render_widget(
-			array_merge(
-				$locked,
-				array(
-					'id'          => 'demo-table',
-					'title'       => 'Top Referrers',
-					'description' => 'See which sites send you visitors.',
-					'placeholder' => 'table',
-				)
+			array(
+				'id'          => 'demo-widget',
+				'title'       => 'Visitors by Country',
+				'description' => 'Sample widget card.',
+				'span'        => 4,
+				'render'      => function () {
+					echo '<p>Widget body</p>';
+				},
+				'actions'     => null,
+				'kpi'         => null,
 			)
 		);
 		?>
@@ -229,7 +208,7 @@ function swiftdash_dev_components( $screen ) {
 		</section>
 	</div>
 
-	<?php swiftdash_render_upgrade( 'banner' ); ?>
+	<?php swiftdash_render_upgrade(); ?>
 
 	<script>
 	document.addEventListener( 'DOMContentLoaded', function () {

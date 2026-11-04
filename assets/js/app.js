@@ -1,5 +1,5 @@
 /**
- * Swift Dash app shell behaviour. No build step; exposes one global: window.swiftdash.
+ * SwiftWebDev Dashboard app shell behaviour. No build step; exposes one global: window.swiftdash.
  */
 ( function () {
 	'use strict';
@@ -52,7 +52,7 @@
 		el.innerHTML =
 			icon( toastIcons[ type ] || 'info' ) +
 			'<p class="sd-toast__text">' + escapeHtml( message ) + '</p>' +
-			'<button type="button" class="sd-icon-btn" aria-label="' + escapeHtml( __( 'Dismiss', 'swift-dashboard-analytics' ) ) + '">' + icon( 'x' ) + '</button>';
+			'<button type="button" class="sd-icon-btn" aria-label="' + escapeHtml( __( 'Dismiss', 'swiftwebdev-dashboard-analytics' ) ) + '">' + icon( 'x' ) + '</button>';
 		el.querySelector( 'button' ).addEventListener( 'click', () => el.remove() );
 		toastBox.appendChild( el );
 		if ( 'error' !== type ) {
@@ -69,7 +69,7 @@
 			confirmDialog.querySelector( '#sd-confirm-title' ).textContent = title;
 			confirmDialog.querySelector( '#sd-confirm-text' ).textContent = message;
 			const ok = confirmDialog.querySelector( '[data-sd-confirm-ok]' );
-			ok.textContent = confirmLabel || __( 'Confirm', 'swift-dashboard-analytics' );
+			ok.textContent = confirmLabel || __( 'Confirm', 'swiftwebdev-dashboard-analytics' );
 			ok.className = 'sd-btn ' + ( danger ? 'sd-btn--danger' : 'sd-btn--primary' );
 			confirmDialog.returnValue = '';
 			confirmDialog.addEventListener( 'close', () => resolve( 'confirm' === confirmDialog.returnValue ), { once: true } );
@@ -152,8 +152,8 @@
 				}
 			} );
 			savePrefs( { hidden } )
-				.then( () => toast( __( 'Dashboard updated.', 'swift-dashboard-analytics' ), 'success' ) )
-				.catch( () => toast( __( 'Could not save your dashboard layout. Please try again.', 'swift-dashboard-analytics' ), 'error' ) );
+				.then( () => toast( __( 'Dashboard updated.', 'swiftwebdev-dashboard-analytics' ), 'success' ) )
+				.catch( () => toast( __( 'Could not save your dashboard layout. Please try again.', 'swiftwebdev-dashboard-analytics' ), 'error' ) );
 		} );
 
 		customize.querySelector( '[data-sd-customize-reset]' ).addEventListener( 'click', () => {
@@ -161,12 +161,16 @@
 		} );
 	}
 
-	/* ---------- Upgrade prompt: hide for 30 days ---------- */
+	/* ---------- Period picker: reload with the chosen period ---------- */
 
-	// The sidebar card lives in the WordPress admin menu, outside .sd-app.
+	document.querySelectorAll( '[data-sd-range-form]' ).forEach( ( form ) => {
+		form.addEventListener( 'change', () => form.submit() );
+	} );
+
+	/* ---------- Add-on notice: hide for 30 days ---------- */
 	document.querySelectorAll( '[data-sd-dismiss-upgrade]' ).forEach( ( btn ) => {
 		btn.addEventListener( 'click', () => {
-			document.querySelectorAll( '.sd-menu-upgrade, [data-sd-upgrade]' ).forEach( ( el ) => el.remove() );
+			document.querySelectorAll( '[data-sd-upgrade]' ).forEach( ( el ) => el.remove() );
 			savePrefs( { upgrade_snooze: Math.floor( Date.now() / 1000 ) + 30 * 86400 } ).catch( () => {} );
 		} );
 	} );
@@ -189,7 +193,7 @@
 			rows.forEach( ( row, i ) => ( row.hidden = i < ( page - 1 ) * pageSize || i >= page * pageSize ) );
 			pager.querySelector( '[data-sd-page-status]' ).textContent = sprintf(
 				/* translators: 1: current page, 2: total pages. */
-				__( 'Page %1$d of %2$d', 'swift-dashboard-analytics' ),
+				__( 'Page %1$d of %2$d', 'swiftwebdev-dashboard-analytics' ),
 				page,
 				pages
 			);
@@ -234,7 +238,7 @@
 		paginate();
 	} );
 
-	/* ---------- Header search: Swift Dash + WordPress destinations, then core /wp/v2/search ---------- */
+	/* ---------- Header search: SwiftWebDev Dashboard + WordPress destinations, then core /wp/v2/search ---------- */
 
 	const search = app.querySelector( '[data-sd-search]' );
 	if ( search ) {
@@ -271,7 +275,7 @@
 					html += '<li role="option" id="sd-search-opt-' + n++ + '" class="sd-menu__item" data-url="' + escapeHtml( item.url ) + '">' + escapeHtml( item.label ) + '</li>';
 				} );
 			} );
-			list.innerHTML = html || '<li class="sd-menu__empty" role="presentation">' + escapeHtml( __( 'No results found.', 'swift-dashboard-analytics' ) ) + '</li>';
+			list.innerHTML = html || '<li class="sd-menu__empty" role="presentation">' + escapeHtml( __( 'No results found.', 'swiftwebdev-dashboard-analytics' ) ) + '</li>';
 			list.hidden = false;
 			input.setAttribute( 'aria-expanded', 'true' );
 			highlight( -1 );
@@ -292,7 +296,7 @@
 			}
 			const lower = q.toLowerCase();
 			const pages = ( data.destinations || [] ).filter( ( d ) => d.label.toLowerCase().includes( lower ) ).slice( 0, 5 );
-			const toolsGroup = { label: __( 'Go to', 'swift-dashboard-analytics' ), items: pages };
+			const toolsGroup = { label: __( 'Go to', 'swiftwebdev-dashboard-analytics' ), items: pages };
 			show( [ toolsGroup ] );
 			timer = setTimeout( () => {
 				const id = ++request;
@@ -302,10 +306,10 @@
 							return;
 						}
 						const content = results.map( ( r ) => ( {
-							label: r.title || __( '(no title)', 'swift-dashboard-analytics' ),
+							label: r.title || __( '(no title)', 'swiftwebdev-dashboard-analytics' ),
 							url: 'post' === r.type ? 'post.php?post=' + r.id + '&action=edit' : r.url,
 						} ) );
-						show( [ toolsGroup, { label: __( 'Content', 'swift-dashboard-analytics' ), items: content } ] );
+						show( [ toolsGroup, { label: __( 'Content', 'swiftwebdev-dashboard-analytics' ), items: content } ] );
 					} )
 					.catch( () => {} );
 			}, 250 );
@@ -377,8 +381,8 @@
 				// wp.media loads after this file, so look it up on click.
 				if ( ! frame && wp.media ) {
 					frame = wp.media( {
-						title: __( 'Choose a menu logo', 'swift-dashboard-analytics' ),
-						button: { text: __( 'Use this image', 'swift-dashboard-analytics' ) },
+						title: __( 'Choose a menu logo', 'swiftwebdev-dashboard-analytics' ),
+						button: { text: __( 'Use this image', 'swiftwebdev-dashboard-analytics' ) },
 						library: { type: 'image' },
 						multiple: false,
 					} );
@@ -404,13 +408,13 @@
 			apiFetch( { path: '/wp/v2/settings', method: 'POST', data: { swiftdash_settings: values } } )
 				.then( () => {
 					saved = JSON.stringify( values );
-					toast( __( 'Settings saved.', 'swift-dashboard-analytics' ), 'success' );
+					toast( __( 'Settings saved.', 'swiftwebdev-dashboard-analytics' ), 'success' );
 				} )
 				.catch( ( err ) => {
 					error.textContent = sprintf(
 						/* translators: %s: error message from the server. */
-						__( 'Settings were not saved: %s', 'swift-dashboard-analytics' ),
-						( err && err.message ) || __( 'unknown error', 'swift-dashboard-analytics' )
+						__( 'Settings were not saved: %s', 'swiftwebdev-dashboard-analytics' ),
+						( err && err.message ) || __( 'unknown error', 'swiftwebdev-dashboard-analytics' )
 					);
 					error.hidden = false;
 					submit.disabled = false;

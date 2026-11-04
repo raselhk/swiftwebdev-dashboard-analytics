@@ -39,8 +39,8 @@
 			const value = { order: pinned, pinned, hidden: ids( hiddenList ) };
 			queue = queue
 				.then( () => wp.apiFetch( { path: '/wp/v2/users/me', method: 'POST', data: { meta: { swiftdash_links: value } } } ) )
-				.then( () => toast( __( 'Shortcuts updated.', 'swift-dashboard-analytics' ), 'success' ) )
-				.catch( () => toast( __( 'Could not save your shortcuts. Please try again.', 'swift-dashboard-analytics' ), 'error' ) );
+				.then( () => toast( __( 'Shortcuts updated.', 'swiftwebdev-dashboard-analytics' ), 'success' ) )
+				.catch( () => toast( __( 'Could not save your shortcuts. Please try again.', 'swiftwebdev-dashboard-analytics' ), 'error' ) );
 		}, 300 );
 	}
 
@@ -80,7 +80,7 @@
 		count.textContent = q
 			? sprintf(
 				/* translators: %d: number of shortcuts. */
-				_n( '%d shortcut found.', '%d shortcuts found.', shown, 'swift-dashboard-analytics' ),
+				_n( '%d shortcut found.', '%d shortcuts found.', shown, 'swiftwebdev-dashboard-analytics' ),
 				shown
 			)
 			: '';
@@ -89,7 +89,7 @@
 	function announce( li ) {
 		announcer.textContent = sprintf(
 			/* translators: 1: shortcut name, 2: new position, 3: number of pinned shortcuts. */
-			__( '%1$s moved to position %2$d of %3$d.', 'swift-dashboard-analytics' ),
+			__( '%1$s moved to position %2$d of %3$d.', 'swiftwebdev-dashboard-analytics' ),
 			label( li ),
 			items( pins ).indexOf( li ) + 1,
 			pins.children.length
@@ -170,9 +170,9 @@
 
 	restore.addEventListener( 'click', () => {
 		confirm( {
-			title: __( 'Restore default shortcuts?', 'swift-dashboard-analytics' ),
-			message: __( 'All shortcuts will be shown again and the recommended ones will be pinned to your dashboard.', 'swift-dashboard-analytics' ),
-			confirmLabel: __( 'Restore defaults', 'swift-dashboard-analytics' ),
+			title: __( 'Restore default shortcuts?', 'swiftwebdev-dashboard-analytics' ),
+			message: __( 'All shortcuts will be shown again and the recommended ones will be pinned to your dashboard.', 'swiftwebdev-dashboard-analytics' ),
+			confirmLabel: __( 'Restore defaults', 'swiftwebdev-dashboard-analytics' ),
 		} ).then( ( ok ) => {
 			if ( ok ) {
 				const all = items();

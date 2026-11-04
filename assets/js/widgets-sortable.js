@@ -1,5 +1,5 @@
 /**
- * Swift Dash card order: drag (SortableJS) or keyboard (handle + ArrowUp/ArrowDown), saved per user
+ * SwiftWebDev Dashboard card order: drag (SortableJS) or keyboard (handle + ArrowUp/ArrowDown), saved per user
  * in the swiftdash_layout user meta. Cards move up and down only; their width never changes.
  */
 ( function () {
@@ -13,7 +13,7 @@
 
 	const screen = grid.dataset.sdSortable;
 	const live = document.querySelector( '[data-sd-sort-live]' );
-	const layout = Object.assign( { dashboard: [], analytics: [] }, window.swiftdashLayout );
+	const layout = Object.assign( { dashboard: [] }, window.swiftdashLayout );
 	const reduced = window.matchMedia( '(prefers-reduced-motion: reduce)' ).matches;
 	const cards = () => Array.from( grid.children ).filter( ( el ) => el.matches( '.sd-widget' ) );
 	const visible = () => cards().filter( ( el ) => ! el.hidden );
@@ -32,8 +32,8 @@
 		clearTimeout( timer );
 		timer = setTimeout( () => {
 			save( cards().map( ( el ) => el.dataset.sdWidget ) )
-				.then( () => window.swiftdash.toast( __( 'Layout saved', 'swift-dashboard-analytics' ), 'success' ) )
-				.catch( () => window.swiftdash.toast( __( 'Could not save the card order. Please try again.', 'swift-dashboard-analytics' ), 'error' ) );
+				.then( () => window.swiftdash.toast( __( 'Layout saved', 'swiftwebdev-dashboard-analytics' ), 'success' ) )
+				.catch( () => window.swiftdash.toast( __( 'Could not save the card order. Please try again.', 'swiftwebdev-dashboard-analytics' ), 'error' ) );
 		}, 400 );
 	}
 
@@ -69,7 +69,7 @@
 		grid.insertBefore( card, 'ArrowUp' === evt.key ? target : target.nextSibling );
 		handle.focus();
 		/* translators: 1: new position, 2: number of cards. */
-		live.textContent = sprintf( __( 'Moved to position %1$s of %2$s', 'swift-dashboard-analytics' ), visible().indexOf( card ) + 1, list.length );
+		live.textContent = sprintf( __( 'Moved to position %1$s of %2$s', 'swiftwebdev-dashboard-analytics' ), visible().indexOf( card ) + 1, list.length );
 		saveOrder();
 	} );
 
@@ -79,7 +79,7 @@
 		const reset = document.createElement( 'button' );
 		reset.type = 'button';
 		reset.className = 'sd-btn sd-btn--tertiary';
-		reset.textContent = __( 'Reset layout', 'swift-dashboard-analytics' );
+		reset.textContent = __( 'Reset layout', 'swiftwebdev-dashboard-analytics' );
 		foot.firstElementChild.after( reset );
 		reset.addEventListener( 'click', () => {
 			const byId = {};
@@ -87,8 +87,8 @@
 			grid.dataset.sdDefault.split( ',' ).forEach( ( id ) => byId[ id ] && grid.appendChild( byId[ id ] ) );
 			clearTimeout( timer );
 			save( [] )
-				.then( () => window.swiftdash.toast( __( 'Layout reset', 'swift-dashboard-analytics' ), 'success' ) )
-				.catch( () => window.swiftdash.toast( __( 'Could not reset the card order. Please try again.', 'swift-dashboard-analytics' ), 'error' ) );
+				.then( () => window.swiftdash.toast( __( 'Layout reset', 'swiftwebdev-dashboard-analytics' ), 'success' ) )
+				.catch( () => window.swiftdash.toast( __( 'Could not reset the card order. Please try again.', 'swiftwebdev-dashboard-analytics' ), 'error' ) );
 		} );
 	}
 }() );

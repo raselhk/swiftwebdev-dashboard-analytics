@@ -1,4 +1,4 @@
-/* Swift Dash analytics: KPI widgets, analytics subnav, locked tab panel. Tokens only. */
+/* SwiftWebDev Dashboard visitor widgets: KPI cards, visitors over time, busiest days, engagement. Tokens only. */
 
 /* ---------- KPI card (reference: tile left, label, big value, change pill, sparkline right) ---------- */
 .swiftdash .sd-widget--kpi {
@@ -56,36 +56,6 @@
 	gap: 6px;
 }
 
-/* Locked KPI: lock and unlock button on one line; the description is in the tooltip. */
-.swiftdash .sd-widget--kpi .sd-locked__body {
-	min-height: 0;
-	margin-top: var(--sd-space-2);
-}
-
-.swiftdash .sd-widget--kpi .sd-ph {
-	inset: 0;
-}
-
-.swiftdash .sd-widget--kpi .sd-locked__overlay {
-	flex-direction: row;
-	flex-wrap: wrap;
-	justify-content: flex-start;
-	min-height: 0;
-}
-
-.swiftdash .sd-widget--kpi .sd-locked__text {
-	display: none;
-}
-
-/* New Visitors only: no blurred placeholder or shadow behind the lock and button. */
-.swiftdash .sd-widget[data-sd-widget$="new-visitors"] .sd-ph {
-	display: none !important;
-}
-
-.swiftdash .sd-widget[data-sd-widget$="new-visitors"] .sd-locked__icon {
-	box-shadow: none;
-}
-
 .sd-an-spark {
 	flex: 0 1 88px;
 	min-width: 48px;
@@ -102,143 +72,6 @@
 	color: var(--sd-text);
 }
 
-/* ---------- Data note ---------- */
-.swiftdash .sd-an-note {
-	display: flex;
-	align-items: center;
-	gap: var(--sd-space-1);
-	margin-top: calc(var(--sd-space-2) - var(--sd-space-6));
-	font-size: var(--sd-fs-help);
-	color: var(--sd-text-2);
-}
-
-.sd-an-note .sd-icon {
-	flex: none;
-	width: 14px;
-	height: 14px;
-}
-
-/* ---------- Export button tooltip ---------- */
-.sd-an-export {
-	position: relative;
-	display: inline-flex;
-}
-
-.swiftdash .sd-an-export .sd-badge--pro {
-	margin-left: 0;
-}
-
-.sd-an-export:hover .sd-tip__text,
-.sd-an-export:focus-within .sd-tip__text {
-	opacity: 1;
-	visibility: visible;
-}
-
-/* ---------- Analytics subnav ---------- */
-.sd-an-tabs {
-	position: relative;
-	min-width: 0;
-	max-width: 100%;
-	overflow-x: auto;
-	scrollbar-width: thin;
-}
-
-.swiftdash .sd-an-tabs__list {
-	display: flex;
-	gap: var(--sd-space-1);
-	width: max-content;
-	min-width: 100%;
-	padding: var(--sd-space-1);
-	border-radius: var(--sd-radius-card);
-	background: var(--sd-card);
-	box-shadow: var(--sd-shadow-card);
-}
-
-.swiftdash .sd-an-tabs__link {
-	display: inline-flex;
-	align-items: center;
-	gap: var(--sd-space-1);
-	min-height: 36px;
-	padding: 0 var(--sd-space-3);
-	border-radius: var(--sd-radius-control);
-	color: var(--sd-text-2);
-	font-weight: var(--sd-fw-medium);
-	white-space: nowrap;
-	text-decoration: none;
-}
-
-.swiftdash .sd-an-tabs__link:hover {
-	background: var(--sd-bg);
-	color: var(--sd-text);
-}
-
-.swiftdash .sd-an-tabs__link[aria-current="page"] {
-	background: var(--sd-primary);
-	color: #fff;
-}
-
-.sd-an-tabs__link .sd-icon {
-	width: 14px;
-	height: 14px;
-}
-
-/* ---------- Locked Pro tab ---------- */
-.sd-an-locked__body {
-	display: grid;
-	grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-	gap: var(--sd-space-6);
-	align-items: center;
-}
-
-.sd-an-locked__preview {
-	position: relative;
-	min-height: 220px;
-	border-radius: var(--sd-radius-card);
-	background: var(--sd-bg);
-	overflow: hidden;
-}
-
-.sd-an-locked__info {
-	display: flex;
-	flex-direction: column;
-	align-items: flex-start;
-	gap: var(--sd-space-3);
-}
-
-.swiftdash .sd-an-locked__list {
-	display: flex;
-	flex-direction: column;
-	gap: var(--sd-space-2);
-	margin: 0;
-	padding: 0;
-	list-style: none;
-}
-
-.sd-an-locked__list li {
-	display: flex;
-	align-items: flex-start;
-	gap: var(--sd-space-2);
-}
-
-.sd-an-locked__list .sd-icon {
-	flex: none;
-	width: 18px;
-	height: 18px;
-	margin-top: 2px;
-	color: var(--sd-success);
-}
-
-@media (max-width: 960px) {
-
-	.sd-an-locked__body {
-		grid-template-columns: minmax(0, 1fr);
-	}
-
-	.sd-an-locked__preview {
-		min-height: 140px;
-	}
-}
-
 @media (max-width: 600px) {
 
 	.swiftdash .sd-grid .sd-span-6 {
@@ -246,11 +79,242 @@
 	}
 }
 
-/* Note + Customize button row above the overview cards. */
-.swiftdash .sd-an-toolbar {
+/* ---------- Visitors over time ---------- */
+.sd-an-trend {
+	display: flex;
+	flex-direction: column;
+	gap: var(--sd-space-3);
+}
+
+.swiftdash .sd-an-legend {
 	display: flex;
 	flex-wrap: wrap;
 	align-items: center;
+	gap: var(--sd-space-2) var(--sd-space-4);
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	font-size: var(--sd-fs-label);
+	color: var(--sd-text-2);
+}
+
+.sd-an-legend li {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--sd-space-2);
+	margin: 0;
+}
+
+.sd-an-legend__visitors::before,
+.sd-an-legend__views::before {
+	content: "";
+	width: 12px;
+	height: 12px;
+	border-radius: 3px;
+	background: var(--sd-primary);
+}
+
+.sd-an-legend__views::before {
+	height: 3px;
+	border-radius: 2px;
+	background: var(--sd-orange);
+}
+
+.sd-an-legend__unit {
+	margin-left: auto !important;
+}
+
+.sd-an-trend__plot {
+	position: relative;
+	padding-top: 18px;
+	border-bottom: var(--sd-border-w) solid var(--sd-border);
+	background: repeating-linear-gradient(to top, transparent 0 39px, var(--sd-border) 39px 40px);
+}
+
+.sd-an-trend__max {
+	position: absolute;
+	top: 0;
+	left: 0;
+	font-size: var(--sd-fs-help);
+	color: var(--sd-text-2);
+}
+
+.sd-an-trend__svg {
+	display: block;
+	width: 100%;
+	height: 180px;
+}
+
+.sd-an-trend__bar {
+	fill: var(--sd-primary);
+	opacity: 0.85;
+	transition: opacity var(--sd-dur-fast) var(--sd-ease);
+}
+
+.sd-an-trend__bar:hover {
+	opacity: 1;
+	fill: var(--sd-primary-hover);
+}
+
+.sd-an-trend__line {
+	color: var(--sd-orange);
+	pointer-events: none;
+}
+
+.sd-an-trend__axis {
+	display: flex;
 	justify-content: space-between;
 	gap: var(--sd-space-2);
+	font-size: var(--sd-fs-help);
+	color: var(--sd-text-2);
+}
+
+/* ---------- Busiest days ---------- */
+.swiftdash .sd-an-weekdays__lead {
+	margin: 0 0 var(--sd-space-3);
+	font-weight: var(--sd-fw-semibold);
+	color: var(--sd-text);
+}
+
+.swiftdash .sd-an-weekdays {
+	display: flex;
+	flex-direction: column;
+	gap: var(--sd-space-2);
+	margin: 0 0 var(--sd-space-3);
+	padding: 0;
+	list-style: none;
+}
+
+.sd-an-weekdays li {
+	display: grid;
+	grid-template-columns: 40px minmax(0, 1fr) auto;
+	align-items: center;
+	gap: var(--sd-space-3);
+	margin: 0;
+	font-size: var(--sd-fs-label);
+}
+
+.sd-an-weekdays__day {
+	font-weight: var(--sd-fw-semibold);
+	color: var(--sd-text-2);
+}
+
+.sd-an-weekdays__track {
+	height: 10px;
+	overflow: hidden;
+	border-radius: var(--sd-radius-pill);
+	background: var(--sd-tile-neutral);
+}
+
+.sd-an-weekdays__fill {
+	display: block;
+	height: 100%;
+	border-radius: inherit;
+	background: #a5abff;
+}
+
+.sd-an-weekdays li.is-best .sd-an-weekdays__day,
+.sd-an-weekdays li.is-best .sd-an-weekdays__value {
+	color: var(--sd-primary);
+	font-weight: var(--sd-fw-bold);
+}
+
+.sd-an-weekdays li.is-best .sd-an-weekdays__fill {
+	background: linear-gradient(90deg, var(--sd-primary), var(--sd-purple));
+}
+
+.sd-an-weekdays__value {
+	min-width: 56px;
+	text-align: right;
+	color: var(--sd-text-2);
+	font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Engagement ---------- */
+.swiftdash .sd-an-engage {
+	display: grid;
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+	gap: var(--sd-space-4);
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.sd-an-engage li {
+	display: flex;
+	align-items: flex-start;
+	gap: var(--sd-space-3);
+	margin: 0;
+	padding: var(--sd-space-4);
+	border-radius: var(--sd-radius-tile);
+	background: var(--sd-bg);
+}
+
+.sd-an-engage__icon {
+	display: grid;
+	flex: none;
+	place-items: center;
+	width: 40px;
+	height: 40px;
+	border-radius: 12px;
+}
+
+.sd-an-engage__icon.sd-kpi__icon--blue {
+	background: var(--sd-tile-blue);
+	color: var(--sd-primary);
+}
+
+.swiftdash .sd-an-engage__icon .sd-icon {
+	width: 22px;
+	height: 22px;
+}
+
+.sd-an-engage__text {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+}
+
+.sd-an-engage__label {
+	font-size: var(--sd-fs-label);
+	font-weight: var(--sd-fw-medium);
+	color: var(--sd-text-2);
+}
+
+.sd-an-engage__value {
+	font-size: 24px;
+	font-weight: var(--sd-fw-heavy);
+	line-height: 1.3;
+	color: var(--sd-text);
+	font-variant-numeric: tabular-nums;
+}
+
+.sd-an-engage__hint {
+	font-size: var(--sd-fs-help);
+	color: var(--sd-text-2);
+}
+
+@media (max-width: 1280px) {
+
+	.swiftdash .sd-an-engage {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+}
+
+@media (max-width: 600px) {
+
+	.swiftdash .sd-an-engage {
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+	.sd-an-trend__svg {
+		height: 140px;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+	.sd-an-trend__bar {
+		transition: none;
+	}
 }

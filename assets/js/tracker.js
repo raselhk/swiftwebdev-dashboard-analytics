@@ -1,4 +1,4 @@
-/* Swift Dash visitor counter: no cookies, no storage, one request per page load. */
+/* SwiftWebDev Dashboard visitor counter: no cookies, no storage, one request per page load. */
 ( function () {
 	var cfg = window.swiftdashTracker;
 	if ( ! cfg || ! cfg.endpoint || navigator.webdriver ) {

@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Banner</title>
+<link rel="stylesheet" href="brand.css">
+<style>
+	/* Laid out at 772x250; render.cjs shoots it at 1x and 2x (1544x500). */
+	.banner { width: 772px; height: 250px; }
+	.copy { position: absolute; left: 44px; top: 0; bottom: 0; width: 372px; display: flex; flex-direction: column; justify-content: center; }
+	.brandline { display: flex; align-items: center; gap: 10px; }
+	.brandline svg { width: 40px; height: 40px; flex: none; }
+	.wordmark { font-weight: 800; font-size: 26px; letter-spacing: -.02em; line-height: 1; white-space: nowrap; }
+	.sub { margin-top: 16px; font-size: 14.5px; line-height: 1.45; font-weight: 500; color: #C9CBE6; }
+	.chips { gap: 7px; margin-top: 18px; }
+	.chip { gap: 6px; height: 27px; padding: 0 11px; font-size: 11.5px; }
+	.chip i { width: 7px; height: 7px; }
+	.banner .shot { left: 472px; top: 34px; width: 500px; transform: perspective(1400px) rotateY(-14deg) rotateX(4deg); transform-origin: left center; }
+</style>
+</head>
+<body>
+<div class="banner dark">
+	<div class="copy">
+		<div class="brandline">
+			<svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="11" cy="11" r="8" fill="#E8672B"/><circle cx="21" cy="11" r="8" fill="#2E9E4C" opacity=".92"/><circle cx="11" cy="21" r="8" fill="#4F5BFF" opacity=".92"/><circle cx="21" cy="21" r="8" fill="#F2C23A" opacity=".9"/></svg>
+			<span class="wordmark">SwiftWebDev Dashboard</span>
+		</div>
+		<p class="sub">A modern WordPress dashboard with cookieless visitor stats and speed scores.</p>
+		<div class="chips">
+			<span class="chip"><i style="background:var(--green)"></i>No cookies</span>
+			<span class="chip"><i style="background:var(--yellow)"></i>Speed scores</span>
+			<span class="chip"><i style="background:var(--orange)"></i>Site health</span>
+		</div>
+	</div>
+	<div class="shot"><img src="shots/dash-view@2x.png" alt=""></div>
+</div>
+</body>
+</html>

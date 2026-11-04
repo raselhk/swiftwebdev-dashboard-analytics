@@ -1,8 +1,8 @@
 <?php
 /**
- * Analytics screen and the free visitor KPI widgets (dashboard + analytics).
+ * Visitor widgets on the dashboard: KPI cards, visitors over time, busiest days and engagement.
  *
- * @package SwiftDash
+ * @package SwiftWebDevDashboard
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -16,20 +16,20 @@ function swiftdash_kpi_metrics() {
 	return array(
 		'visitors'   => array(
 			'key'   => 'visitors',
-			'title' => __( 'Visitors', 'swift-dashboard-analytics' ),
-			'tip'   => __( 'Unique people who visited your site in this period, counted without cookies.', 'swift-dashboard-analytics' ),
+			'title' => __( 'Visitors', 'swiftwebdev-dashboard-analytics' ),
+			'tip'   => __( 'Unique people who visited your site in this period, counted without cookies.', 'swiftwebdev-dashboard-analytics' ),
 			'tone'  => '',
 		),
 		'page-views' => array(
 			'key'   => 'views',
-			'title' => __( 'Page Views', 'swift-dashboard-analytics' ),
-			'tip'   => __( 'Total pages viewed, including repeat views of the same page.', 'swift-dashboard-analytics' ),
+			'title' => __( 'Page Views', 'swiftwebdev-dashboard-analytics' ),
+			'tip'   => __( 'Total pages viewed, including repeat views of the same page.', 'swiftwebdev-dashboard-analytics' ),
 			'tone'  => 'purple',
 		),
 		'sessions'   => array(
 			'key'   => 'sessions',
-			'title' => __( 'Sessions', 'swift-dashboard-analytics' ),
-			'tip'   => __( 'Separate visits to your site. One person can have several sessions.', 'swift-dashboard-analytics' ),
+			'title' => __( 'Sessions', 'swiftwebdev-dashboard-analytics' ),
+			'tip'   => __( 'Separate visits to your site. One person can have several sessions.', 'swiftwebdev-dashboard-analytics' ),
 			'tone'  => 'green',
 		),
 	);
@@ -50,182 +50,89 @@ function swiftdash_analytics_stats( $days ) {
 }
 
 /**
- * Selected analytics range in days (free: 7 or 30).
+ * Periods the dashboard visitor widgets offer, in days => label. Daily totals are kept long
+ * enough to compare the longest period with the one before it (see swiftdash_rollup()).
+ *
+ * @return string[]
+ */
+function swiftdash_analytics_ranges() {
+	return array(
+		7  => __( 'Last 7 days', 'swiftwebdev-dashboard-analytics' ),
+		30 => __( 'Last 30 days', 'swiftwebdev-dashboard-analytics' ),
+		90 => __( 'Last 90 days', 'swiftwebdev-dashboard-analytics' ),
+	);
+}
+
+/**
+ * Selected period in days.
  *
  * @return int
  */
 function swiftdash_analytics_range() {
 	// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only view filter.
 	$range = isset( $_GET['range'] ) ? absint( $_GET['range'] ) : 30;
-	return 7 === $range ? 7 : 30;
+	return array_key_exists( $range, swiftdash_analytics_ranges() ) ? $range : 30;
 }
 
 /**
- * Selected analytics tab key.
- *
- * @return string
+ * Period picker for the dashboard header. Changing it reloads the page (app.js).
  */
-function swiftdash_analytics_tab() {
-	// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only view switch.
-	$tab = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET['tab'] ) ) : 'overview';
-	return array_key_exists( $tab, swiftdash_analytics_tabs() ) ? $tab : 'overview';
+function swiftdash_render_range_picker() {
+	$range = swiftdash_analytics_range();
+	?>
+	<form class="sd-daterange" method="get" action="<?php echo esc_url( admin_url( 'admin.php' ) ); ?>" data-sd-range-form>
+		<input type="hidden" name="page" value="swift-dash">
+		<label class="screen-reader-text" for="sd-range"><?php esc_html_e( 'Period for visitor stats', 'swiftwebdev-dashboard-analytics' ); ?></label>
+		<select class="sd-select" id="sd-range" name="range">
+			<?php foreach ( swiftdash_analytics_ranges() as $days => $label ) : ?>
+				<option value="<?php echo esc_attr( $days ); ?>" <?php selected( $range, $days ); ?>><?php echo esc_html( $label ); ?></option>
+			<?php endforeach; ?>
+		</select>
+		<noscript><button type="submit" class="sd-btn sd-btn--secondary"><?php esc_html_e( 'Apply', 'swiftwebdev-dashboard-analytics' ); ?></button></noscript>
+	</form>
+	<?php
 }
 
 /**
- * Analytics sub-navigation. Every tab but Overview is filled by the Pro add-on.
- *
- * @return array[] Keyed by tab: label, pro, items (what the tab contains).
- */
-function swiftdash_analytics_tabs() {
-	$tabs = array(
-		'overview'   => array(
-			'label' => __( 'Overview', 'swift-dashboard-analytics' ),
-			'pro'   => false,
-			'items' => array(),
-		),
-		'realtime'   => array(
-			'label' => __( 'Real-time', 'swift-dashboard-analytics' ),
-			'pro'   => true,
-			'items' => array(
-				__( 'How many people are on your site right now', 'swift-dashboard-analytics' ),
-				__( 'Which pages they are viewing', 'swift-dashboard-analytics' ),
-				__( 'A live feed of the latest visits', 'swift-dashboard-analytics' ),
-			),
-		),
-		'audience'   => array(
-			'label' => __( 'Audience', 'swift-dashboard-analytics' ),
-			'pro'   => true,
-			'items' => array(
-				__( 'New and returning visitors', 'swift-dashboard-analytics' ),
-				__( 'Visitors by country', 'swift-dashboard-analytics' ),
-				__( 'Devices and browsers people use', 'swift-dashboard-analytics' ),
-			),
-		),
-		'behavior'   => array(
-			'label' => __( 'Behavior', 'swift-dashboard-analytics' ),
-			'pro'   => true,
-			'items' => array(
-				__( 'How long visits last', 'swift-dashboard-analytics' ),
-				__( 'How many pages people view per visit', 'swift-dashboard-analytics' ),
-				__( 'What people search for on your site', 'swift-dashboard-analytics' ),
-			),
-		),
-		'pages'      => array(
-			'label' => __( 'Pages', 'swift-dashboard-analytics' ),
-			'pro'   => true,
-			'items' => array(
-				__( 'Every page ranked by views', 'swift-dashboard-analytics' ),
-				__( 'Unique visitors for each page', 'swift-dashboard-analytics' ),
-				__( 'Change compared with the previous period', 'swift-dashboard-analytics' ),
-			),
-		),
-		'forms'      => array(
-			'label' => __( 'Forms', 'swift-dashboard-analytics' ),
-			'pro'   => true,
-			'items' => array(
-				__( 'Successful form submissions over time', 'swift-dashboard-analytics' ),
-				__( 'Submissions for each form', 'swift-dashboard-analytics' ),
-				__( 'Conversion rate for each form', 'swift-dashboard-analytics' ),
-			),
-		),
-		'clicks'     => array(
-			'label' => __( 'Clicks', 'swift-dashboard-analytics' ),
-			'pro'   => true,
-			'items' => array(
-				__( 'Clicks on links and buttons', 'swift-dashboard-analytics' ),
-				__( 'Outbound, download, email and phone clicks', 'swift-dashboard-analytics' ),
-				__( 'Your most clicked links', 'swift-dashboard-analytics' ),
-			),
-		),
-		'recordings' => array(
-			'label' => __( 'Session recordings', 'swift-dashboard-analytics' ),
-			'pro'   => true,
-			'items' => array(
-				__( 'Replays of real visits, with private fields hidden', 'swift-dashboard-analytics' ),
-				__( 'Pages visited and time spent in each visit', 'swift-dashboard-analytics' ),
-				__( 'Search and filter recorded visits', 'swift-dashboard-analytics' ),
-			),
-		),
-		'bots'       => array(
-			'label' => __( 'Bots', 'swift-dashboard-analytics' ),
-			'pro'   => true,
-			'items' => array(
-				__( 'Suspected bot and crawler visits', 'swift-dashboard-analytics' ),
-				__( 'Spam related activity', 'swift-dashboard-analytics' ),
-				__( 'Human compared with automated traffic', 'swift-dashboard-analytics' ),
-			),
-		),
-		'events'     => array(
-			'label' => __( 'Events', 'swift-dashboard-analytics' ),
-			'pro'   => true,
-			'items' => array(
-				__( 'Custom events you choose to track', 'swift-dashboard-analytics' ),
-				__( 'Goals and conversion funnels', 'swift-dashboard-analytics' ),
-				__( 'Event trends over time', 'swift-dashboard-analytics' ),
-			),
-		),
-	);
-
-	/**
-	 * Filters the analytics tabs. The Pro add-on sets 'pro' => false on the tabs it unlocks.
-	 *
-	 * @param array $tabs Tabs keyed by tab key.
-	 */
-	return apply_filters( 'swiftdash_analytics_tabs', $tabs );
-}
-
-/**
- * Register the free KPI widgets and the analytics locked Pro slots.
+ * Register the six visitor widgets on the dashboard: three KPI cards, visitors over time,
+ * busiest days and engagement. All follow the selected period.
  */
 function swiftdash_analytics_register_widgets() {
 	$range = swiftdash_analytics_range();
 	$order = 10;
 	foreach ( swiftdash_kpi_metrics() as $id => $metric ) {
-		$base = array(
-			'title'       => $metric['title'],
-			'description' => $metric['tip'],
-			'area'        => 'kpis',
-			'order'       => $order,
-			'span'        => 3,
-			'tier'        => 'free',
-			'render'      => 'swiftdash_render_kpi_widget',
-			'metric'      => $id,
-		);
-		swiftdash_register_widget( $id, $base + array( 'days' => 30 ) );
 		swiftdash_register_widget(
-			'an-' . $id,
+			$id,
 			array(
-				'screen' => 'analytics',
-				'days'   => $range,
-			) + $base
+				'title'       => $metric['title'],
+				'description' => $metric['tip'],
+				'area'        => 'kpis',
+				'order'       => $order,
+				'span'        => 4,
+				'render'      => 'swiftdash_render_kpi_widget',
+				'metric'      => $id,
+				'days'        => $range,
+			)
 		);
 		$order += 10;
 	}
 
-	$locked = array(
-		'an-new-visitors' => array( __( 'New Visitors', 'swift-dashboard-analytics' ), __( 'See how many visitors came to your site for the first time.', 'swift-dashboard-analytics' ), 'kpis', 40, 3, 'kpi' ),
-		'an-trend'        => array( __( 'Visitors & Page Views', 'swift-dashboard-analytics' ), __( 'Track visitors, page views and sessions day by day.', 'swift-dashboard-analytics' ), 'overview', 10, 8, 'chart' ),
-		'an-sources'      => array( __( 'Traffic Sources', 'swift-dashboard-analytics' ), __( 'See whether visitors come from search, social, other sites or direct.', 'swift-dashboard-analytics' ), 'overview', 20, 4, 'donut' ),
-		'an-top-pages'    => array( __( 'Top Pages', 'swift-dashboard-analytics' ), __( 'Find the pages people visit most.', 'swift-dashboard-analytics' ), 'details', 10, 4, 'table' ),
-		'an-referrers'    => array( __( 'Top Referrers', 'swift-dashboard-analytics' ), __( 'See which other websites send you visitors.', 'swift-dashboard-analytics' ), 'details', 20, 4, 'table' ),
-		'an-devices'      => array( __( 'Device Types', 'swift-dashboard-analytics' ), __( 'Compare visits from desktop, mobile and tablet.', 'swift-dashboard-analytics' ), 'details', 30, 4, 'donut' ),
-		'an-countries'    => array( __( 'Visitors by Country', 'swift-dashboard-analytics' ), __( 'See which countries your visitors come from.', 'swift-dashboard-analytics' ), 'details', 40, 6, 'map' ),
-		'an-forms'        => array( __( 'Form Submissions', 'swift-dashboard-analytics' ), __( 'Count successful form submissions for each form.', 'swift-dashboard-analytics' ), 'details', 50, 6, 'kpi' ),
-		'an-clicks'       => array( __( 'Clicks Count', 'swift-dashboard-analytics' ), __( 'Count clicks on links, buttons, downloads and phone numbers.', 'swift-dashboard-analytics' ), 'details', 60, 6, 'kpi' ),
-		'an-conversion'   => array( __( 'Conversion Rate', 'swift-dashboard-analytics' ), __( 'See what share of visitors complete a form or goal.', 'swift-dashboard-analytics' ), 'details', 70, 6, 'kpi' ),
+	$reports = array(
+		'visitor-trend'      => array( __( 'Visitors over time', 'swiftwebdev-dashboard-analytics' ), __( 'Visitors and page views for each day of the selected period.', 'swiftwebdev-dashboard-analytics' ), 'overview', 10, 8, 'swiftdash_render_trend_widget' ),
+		'visitor-weekdays'   => array( __( 'Busiest days', 'swiftwebdev-dashboard-analytics' ), __( 'Average visitors on each day of the week.', 'swiftwebdev-dashboard-analytics' ), 'overview', 20, 4, 'swiftdash_render_weekdays_widget' ),
+		'visitor-engagement' => array( __( 'Engagement', 'swiftwebdev-dashboard-analytics' ), __( 'How much people read and how often they come back.', 'swiftwebdev-dashboard-analytics' ), 'overview', 30, 12, 'swiftdash_render_engagement_widget' ),
 	);
-	foreach ( $locked as $id => $w ) {
+	foreach ( $reports as $id => $r ) {
 		swiftdash_register_widget(
 			$id,
 			array(
-				'title'       => $w[0],
-				'description' => $w[1],
-				'screen'      => 'analytics',
-				'area'        => $w[2],
-				'order'       => $w[3],
-				'span'        => $w[4],
-				'tier'        => 'pro',
-				'placeholder' => $w[5],
+				'title'       => $r[0],
+				'description' => $r[1],
+				'area'        => $r[2],
+				'order'       => $r[3],
+				'span'        => $r[4],
+				'render'      => $r[5],
+				'days'        => $range,
 			)
 		);
 	}
@@ -233,29 +140,15 @@ function swiftdash_analytics_register_widgets() {
 add_action( 'swiftdash_register_widgets', 'swiftdash_analytics_register_widgets' );
 
 /**
- * Analytics widget areas.
- *
- * @param array $areas Areas per screen.
- * @return array
- */
-function swiftdash_analytics_areas( $areas ) {
-	$areas['analytics'] = array( 'kpis', 'overview', 'details' );
-	return $areas;
-}
-add_filter( 'swiftdash_screen_areas', 'swiftdash_analytics_areas' );
-
-/**
- * Enqueue analytics CSS/JS on the dashboard and analytics screens.
+ * Register the visitor widget styles (add-ons can enqueue the handle on their own screens)
+ * and load them on the dashboard.
  *
  * @param string $screen_key Current screen key.
  */
 function swiftdash_analytics_assets( $screen_key ) {
-	if ( ! in_array( $screen_key, array( 'dashboard', 'analytics' ), true ) ) {
-		return;
-	}
-	wp_enqueue_style( 'swiftdash-analytics', SWIFTDASH_URL . 'assets/css/analytics.css', array( 'swiftdash-app' ), SWIFTDASH_VERSION );
-	if ( 'analytics' === $screen_key ) {
-		wp_enqueue_script( 'swiftdash-analytics', SWIFTDASH_URL . 'assets/js/analytics.js', array( 'swiftdash-app' ), SWIFTDASH_VERSION, true );
+	wp_register_style( 'swiftdash-analytics', SWIFTDASH_URL . 'assets/css/analytics.css', array( 'swiftdash-app' ), SWIFTDASH_VERSION );
+	if ( 'dashboard' === $screen_key ) {
+		wp_enqueue_style( 'swiftdash-analytics' );
 	}
 }
 add_action( 'swiftdash_enqueue_assets', 'swiftdash_analytics_assets' );
@@ -272,7 +165,7 @@ function swiftdash_kpi_change( $current, $previous ) {
 		return array(
 			'tone' => 'flat',
 			'icon' => '',
-			'text' => $current > 0 ? __( 'New', 'swift-dashboard-analytics' ) : __( 'No change', 'swift-dashboard-analytics' ),
+			'text' => $current > 0 ? __( 'New', 'swiftwebdev-dashboard-analytics' ) : __( 'No change', 'swiftwebdev-dashboard-analytics' ),
 			'sr'   => '',
 		);
 	}
@@ -281,7 +174,7 @@ function swiftdash_kpi_change( $current, $previous ) {
 		return array(
 			'tone' => 'flat',
 			'icon' => '',
-			'text' => __( 'No change', 'swift-dashboard-analytics' ),
+			'text' => __( 'No change', 'swiftwebdev-dashboard-analytics' ),
 			'sr'   => '',
 		);
 	}
@@ -289,8 +182,8 @@ function swiftdash_kpi_change( $current, $previous ) {
 		'tone' => $pct > 0 ? 'good' : 'bad',
 		'icon' => $pct > 0 ? 'arrow-up' : 'arrow-down',
 		/* translators: %s: percentage number. */
-		'text' => sprintf( __( '%s%%', 'swift-dashboard-analytics' ), number_format_i18n( abs( $pct ) ) ),
-		'sr'   => $pct > 0 ? __( 'Up', 'swift-dashboard-analytics' ) : __( 'Down', 'swift-dashboard-analytics' ),
+		'text' => sprintf( __( '%s%%', 'swiftwebdev-dashboard-analytics' ), number_format_i18n( abs( $pct ) ) ),
+		'sr'   => $pct > 0 ? __( 'Up', 'swiftwebdev-dashboard-analytics' ) : __( 'Down', 'swiftwebdev-dashboard-analytics' ),
 	);
 }
 
@@ -311,7 +204,7 @@ function swiftdash_sparkline_points( $values ) {
 }
 
 /**
- * KPI card body, shared by the dashboard and analytics widgets.
+ * KPI card body.
  *
  * @param array $widget Widget args (metric, days).
  */
@@ -324,7 +217,7 @@ function swiftdash_render_kpi_widget( $widget ) {
 	?>
 	<div class="sd-kpi sd-an-kpi sd-an-kpi--<?php echo esc_attr( $metric['tone'] ? $metric['tone'] : 'blue' ); ?>">
 		<?php if ( empty( $stats['has_data'] ) ) : ?>
-			<p class="sd-an-kpi__empty"><?php esc_html_e( 'No visits recorded yet', 'swift-dashboard-analytics' ); ?></p>
+			<p class="sd-an-kpi__empty"><?php esc_html_e( 'No visits recorded yet', 'swiftwebdev-dashboard-analytics' ); ?></p>
 			<p class="sd-field__help"><?php echo esc_html( swiftdash_analytics_empty_help() ); ?></p>
 		<?php else : ?>
 			<?php
@@ -343,7 +236,7 @@ function swiftdash_render_kpi_widget( $widget ) {
 						echo esc_html(
 							sprintf(
 								/* translators: 1: number of days, 2: lowest daily value, 3: highest daily value. */
-								__( 'Daily trend over the last %1$s days: lowest %2$s, highest %3$s.', 'swift-dashboard-analytics' ),
+								__( 'Daily trend over the last %1$s days: lowest %2$s, highest %3$s.', 'swiftwebdev-dashboard-analytics' ),
 								number_format_i18n( count( $series ) ),
 								number_format_i18n( min( $series ) ),
 								number_format_i18n( max( $series ) )
@@ -357,7 +250,7 @@ function swiftdash_render_kpi_widget( $widget ) {
 				<span class="sd-trend sd-trend--<?php echo esc_attr( $change['tone'] ); ?>">
 					<?php
 					if ( $change['icon'] ) {
-						echo swiftdash_icon( $change['icon'] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped markup.
+						echo wp_kses( swiftdash_icon( $change['icon'] ), swiftdash_icon_kses() );
 						echo '<span class="screen-reader-text">' . esc_html( $change['sr'] ) . ' </span>';
 					}
 					echo esc_html( $change['text'] );
@@ -365,7 +258,7 @@ function swiftdash_render_kpi_widget( $widget ) {
 				</span>
 				<?php
 				/* translators: %s: number of days. */
-				echo esc_html( sprintf( _n( 'vs previous %s day', 'vs previous %s days', $days, 'swift-dashboard-analytics' ), number_format_i18n( $days ) ) );
+				echo esc_html( sprintf( _n( 'vs previous %s day', 'vs previous %s days', $days, 'swiftwebdev-dashboard-analytics' ), number_format_i18n( $days ) ) );
 				?>
 			</span>
 		<?php endif; ?>
@@ -380,161 +273,194 @@ function swiftdash_render_kpi_widget( $widget ) {
  */
 function swiftdash_analytics_empty_help() {
 	return swiftdash_setting( 'exclude_admins' )
-		? __( 'Stats start with the next visit. Logged-in users are not counted.', 'swift-dashboard-analytics' )
-		: __( 'Stats start with the next visit.', 'swift-dashboard-analytics' );
+		? __( 'Stats start with the next visit. Logged-in users are not counted.', 'swiftwebdev-dashboard-analytics' )
+		: __( 'Stats start with the next visit.', 'swiftwebdev-dashboard-analytics' );
 }
 
 /**
- * Analytics screen.
+ * Days of the period that count toward averages: on or after the first recorded day.
  *
- * @param array $screen Screen definition.
+ * @param array $stats See swiftdash_get_stats().
+ * @return array[] Daily rows.
  */
-function swiftdash_screen_analytics( $screen ) {
-	$tab   = swiftdash_analytics_tab();
-	$tabs  = swiftdash_analytics_tabs();
-	$range = swiftdash_analytics_range();
-
-	swiftdash_render_page_header(
-		$screen['title'],
-		$screen['description'],
-		function () use ( $tab, $range ) {
-			if ( has_action( 'swiftdash_analytics_header_actions' ) ) {
-				/**
-				 * Replaces the analytics header actions (date range, export). Used by the Pro add-on.
-				 *
-				 * @param string $tab Current tab key.
-				 */
-				do_action( 'swiftdash_analytics_header_actions', $tab );
-				return;
+function swiftdash_analytics_active_days( $stats ) {
+	$since = (string) $stats['since'];
+	return array_values(
+		array_filter(
+			$stats['daily'],
+			function ( $row ) use ( $since ) {
+				return $row['date'] >= $since;
 			}
-			?>
-			<form class="sd-daterange" method="get" action="<?php echo esc_url( admin_url( 'admin.php' ) ); ?>" data-sd-range-form>
-				<input type="hidden" name="page" value="swift-dash-analytics">
-				<?php if ( 'overview' !== $tab ) : ?>
-					<input type="hidden" name="tab" value="<?php echo esc_attr( $tab ); ?>">
-				<?php endif; ?>
-				<label class="screen-reader-text" for="sd-an-range"><?php esc_html_e( 'Date range', 'swift-dashboard-analytics' ); ?></label>
-				<select class="sd-select" id="sd-an-range" name="range">
-					<option disabled><?php esc_html_e( 'Last 24 hours (Pro)', 'swift-dashboard-analytics' ); ?></option>
-					<option value="7" <?php selected( $range, 7 ); ?>><?php esc_html_e( 'Last 7 days', 'swift-dashboard-analytics' ); ?></option>
-					<option value="30" <?php selected( $range, 30 ); ?>><?php esc_html_e( 'Last 30 days', 'swift-dashboard-analytics' ); ?></option>
-					<option disabled><?php esc_html_e( 'Last 90 days (Pro)', 'swift-dashboard-analytics' ); ?></option>
-					<option disabled><?php esc_html_e( 'Custom range (Pro)', 'swift-dashboard-analytics' ); ?></option>
-				</select>
-				<noscript><button type="submit" class="sd-btn sd-btn--secondary"><?php esc_html_e( 'Apply', 'swift-dashboard-analytics' ); ?></button></noscript>
-			</form>
-			<span class="sd-an-export">
-				<button type="button" class="sd-btn sd-btn--secondary" aria-disabled="true" aria-describedby="sd-an-export-tip">
-					<?php echo swiftdash_icon( 'download-simple' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped markup. ?>
-					<?php esc_html_e( 'Export report', 'swift-dashboard-analytics' ); ?>
-					<span class="sd-badge sd-badge--pro"><?php esc_html_e( 'Pro', 'swift-dashboard-analytics' ); ?></span>
-				</button>
-				<span class="sd-tip__text" role="tooltip" id="sd-an-export-tip"><?php esc_html_e( 'Download your reports as a file with Swift Dash PRO.', 'swift-dashboard-analytics' ); ?></span>
-			</span>
-			<?php
-		}
+		)
+	);
+}
+
+/**
+ * Empty state shared by the visitor report widgets.
+ */
+function swiftdash_render_report_empty() {
+	echo '<p class="sd-an-kpi__empty">' . esc_html__( 'No visits recorded yet', 'swiftwebdev-dashboard-analytics' ) . '</p>';
+	echo '<p class="sd-field__help">' . esc_html( swiftdash_analytics_empty_help() ) . '</p>';
+}
+
+/**
+ * Visitors over time: a bar per day with page views as a line.
+ *
+ * @param array $widget Widget args (days).
+ */
+function swiftdash_render_trend_widget( $widget ) {
+	$stats = swiftdash_analytics_stats( (int) $widget['days'] );
+	if ( empty( $stats['has_data'] ) ) {
+		swiftdash_render_report_empty();
+		return;
+	}
+	$buckets = $stats['daily'];
+	$n       = count( $buckets );
+	$max     = max( 1, max( wp_list_pluck( $buckets, 'views' ) ), max( wp_list_pluck( $buckets, 'visitors' ) ) );
+	$height  = 160;
+	$points  = array();
+	$format  = get_option( 'date_format' );
+	$label   = sprintf(
+		/* translators: 1: total visitors, 2: total page views. */
+		__( 'Visitors over time. %1$s visitors and %2$s page views in this period.', 'swiftwebdev-dashboard-analytics' ),
+		number_format_i18n( $stats['totals']['visitors'] ),
+		number_format_i18n( $stats['totals']['views'] )
 	);
 	?>
-	<nav class="sd-an-tabs" aria-label="<?php esc_attr_e( 'Analytics reports', 'swift-dashboard-analytics' ); ?>">
-		<ul class="sd-an-tabs__list">
-			<?php foreach ( $tabs as $key => $item ) : ?>
+	<div class="sd-an-trend">
+		<ul class="sd-an-legend" aria-hidden="true">
+			<li class="sd-an-legend__visitors"><?php esc_html_e( 'Visitors', 'swiftwebdev-dashboard-analytics' ); ?></li>
+			<li class="sd-an-legend__views"><?php esc_html_e( 'Page views', 'swiftwebdev-dashboard-analytics' ); ?></li>
+			<li class="sd-an-legend__unit"><?php esc_html_e( 'Per day', 'swiftwebdev-dashboard-analytics' ); ?></li>
+		</ul>
+		<div class="sd-an-trend__plot">
+			<span class="sd-an-trend__max" aria-hidden="true"><?php echo esc_html( number_format_i18n( $max ) ); ?></span>
+			<svg class="sd-an-trend__svg" viewBox="0 0 <?php echo (int) ( $n * 10 ); ?> <?php echo (int) $height; ?>" preserveAspectRatio="none" role="img" aria-label="<?php echo esc_attr( $label ); ?>">
 				<?php
-				$url = admin_url( 'admin.php?page=swift-dash-analytics' );
-				if ( 'overview' !== $key ) {
-					$url = add_query_arg( 'tab', $key, $url );
-				}
-				if ( 30 !== $range ) {
-					$url = add_query_arg( 'range', $range, $url );
+				foreach ( $buckets as $i => $b ) {
+					$h        = $b['visitors'] / $max * ( $height - 4 );
+					$when     = date_i18n( $format, strtotime( $b['date'] ) );
+					$points[] = ( $i * 10 + 5 ) . ',' . round( $height - $b['views'] / $max * ( $height - 4 ), 2 );
+					printf(
+						'<rect class="sd-an-trend__bar" x="%1$s" y="%2$s" width="7" height="%3$s" rx="1.5"><title>%4$s</title></rect>',
+						esc_attr( $i * 10 + 1.5 ),
+						esc_attr( round( $height - max( $h, 0.5 ), 2 ) ),
+						esc_attr( round( max( $h, 0.5 ), 2 ) ),
+						esc_html(
+							sprintf(
+								/* translators: 1: date, 2: visitors, 3: page views. */
+								__( '%1$s: %2$s visitors, %3$s page views', 'swiftwebdev-dashboard-analytics' ),
+								$when,
+								number_format_i18n( $b['visitors'] ),
+								number_format_i18n( $b['views'] )
+							)
+						)
+					);
 				}
 				?>
-				<li>
-					<a class="sd-an-tabs__link" href="<?php echo esc_url( $url ); ?>"<?php echo $key === $tab ? ' aria-current="page"' : ''; ?>>
-						<?php
-						echo esc_html( $item['label'] );
-						if ( $item['pro'] ) {
-							echo swiftdash_icon( 'lock-simple' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped markup.
-							echo '<span class="screen-reader-text"> ' . esc_html__( '(Pro)', 'swift-dashboard-analytics' ) . '</span>';
-						}
-						?>
-					</a>
-				</li>
-			<?php endforeach; ?>
-		</ul>
-	</nav>
-	<?php
-	if ( 'overview' === $tab ) {
-		echo '<div class="sd-an-toolbar">';
-		swiftdash_render_analytics_note();
-		printf(
-			'<button type="button" class="sd-btn sd-btn--tertiary sd-btn--sm" data-sd-modal-open="sd-customize">%s%s</button>',
-			swiftdash_icon( 'eye-slash' ), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped markup.
-			esc_html__( 'Customize', 'swift-dashboard-analytics' )
-		);
-		echo '</div>';
-		swiftdash_render_screen_widgets( 'analytics' );
-		swiftdash_render_customize_panel( 'analytics' );
-	} elseif ( has_action( 'swiftdash_analytics_tab_' . $tab ) ) {
-		/**
-		 * Prints the body of an analytics tab (the Pro add-on fills these).
-		 *
-		 * @param int $range Selected range in days.
-		 */
-		do_action( 'swiftdash_analytics_tab_' . $tab, $range );
-	} else {
-		swiftdash_render_analytics_locked_tab( $tab, $tabs[ $tab ] );
-	}
-}
-
-/**
- * One-line note on how visits are counted.
- */
-function swiftdash_render_analytics_note() {
-	echo '<p class="sd-an-note">' . swiftdash_icon( 'info' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped markup.
-	esc_html_e( 'Counted without cookies on your own site.', 'swift-dashboard-analytics' );
-	if ( swiftdash_setting( 'exclude_admins' ) ) {
-		echo ' ' . esc_html__( 'Logged-in users are not counted.', 'swift-dashboard-analytics' );
-	}
-	echo '</p>';
-}
-
-/**
- * Locked panel for a Pro analytics tab.
- *
- * @param string $key Tab key.
- * @param array  $tab Tab definition.
- */
-function swiftdash_render_analytics_locked_tab( $key, $tab ) {
-	$url = add_query_arg(
-		array(
-			'utm_source'  => 'plugin',
-			'utm_medium'  => 'locked-tab',
-			'utm_content' => $key,
-		),
-		SWIFTDASH_PRICING_URL
-	);
-	?>
-	<section class="sd-card sd-an-locked" aria-labelledby="sd-an-locked-title">
-		<header class="sd-card__head">
-			<h2 class="sd-card__title" id="sd-an-locked-title"><?php echo esc_html( $tab['label'] ); ?></h2>
-			<span class="sd-badge sd-badge--pro"><?php esc_html_e( 'Pro', 'swift-dashboard-analytics' ); ?></span>
-		</header>
-		<div class="sd-card__body sd-an-locked__body">
-			<div class="sd-an-locked__preview" aria-hidden="true">
-				<div class="sd-ph sd-ph--chart"></div>
-			</div>
-			<div class="sd-an-locked__info">
-				<span class="sd-locked__icon"><?php echo swiftdash_icon( 'lock-simple' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped markup. ?></span>
-				<p><?php esc_html_e( 'This report is part of Swift Dash PRO. It shows:', 'swift-dashboard-analytics' ); ?></p>
-				<ul class="sd-an-locked__list">
-					<?php foreach ( $tab['items'] as $item ) : ?>
-						<li><?php echo swiftdash_icon( 'check-circle' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped markup. ?><?php echo esc_html( $item ); ?></li>
-					<?php endforeach; ?>
-				</ul>
-				<a class="sd-btn sd-btn--primary" href="<?php echo esc_url( $url ); ?>" target="_blank" rel="noopener noreferrer">
-					<?php esc_html_e( 'Unlock with Pro', 'swift-dashboard-analytics' ); ?><span class="screen-reader-text"> <?php esc_html_e( '(opens in a new tab)', 'swift-dashboard-analytics' ); ?></span>
-				</a>
-			</div>
+				<polyline class="sd-an-trend__line" points="<?php echo esc_attr( implode( ' ', $points ) ); ?>" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke" />
+			</svg>
 		</div>
-	</section>
+		<div class="sd-an-trend__axis" aria-hidden="true">
+			<span><?php echo esc_html( date_i18n( $format, strtotime( $buckets[0]['date'] ) ) ); ?></span>
+			<span><?php echo esc_html( date_i18n( $format, strtotime( $buckets[ (int) floor( $n / 2 ) ]['date'] ) ) ); ?></span>
+			<span><?php esc_html_e( 'Today', 'swiftwebdev-dashboard-analytics' ); ?></span>
+		</div>
+	</div>
 	<?php
+}
+
+/**
+ * Busiest days: average visitors per weekday over the recorded days of the period.
+ *
+ * @param array $widget Widget args (days).
+ */
+function swiftdash_render_weekdays_widget( $widget ) {
+	global $wp_locale;
+	$stats = swiftdash_analytics_stats( (int) $widget['days'] );
+	$days  = swiftdash_analytics_active_days( $stats );
+	if ( empty( $stats['has_data'] ) || ! $days ) {
+		swiftdash_render_report_empty();
+		return;
+	}
+	$sum   = array_fill( 0, 7, 0 );
+	$count = array_fill( 0, 7, 0 );
+	foreach ( $days as $row ) {
+		$w          = (int) gmdate( 'w', strtotime( $row['date'] . ' 12:00:00 UTC' ) );
+		$sum[ $w ] += $row['visitors'];
+		++$count[ $w ];
+	}
+	$avg   = array();
+	$start = (int) get_option( 'start_of_week', 1 );
+	for ( $k = 0; $k < 7; $k++ ) {
+		$w         = ( $start + $k ) % 7;
+		$avg[ $w ] = $count[ $w ] ? $sum[ $w ] / $count[ $w ] : 0;
+	}
+	$max  = max( $avg );
+	$best = array_search( $max, $avg, true );
+	if ( $max > 0 ) {
+		/* translators: %s: weekday name. */
+		echo '<p class="sd-an-weekdays__lead">' . esc_html( sprintf( __( '%s is usually your busiest day.', 'swiftwebdev-dashboard-analytics' ), $wp_locale->get_weekday( $best ) ) ) . '</p>';
+	}
+	echo '<ul class="sd-an-weekdays">';
+	foreach ( $avg as $w => $value ) {
+		printf(
+			'<li%1$s><span class="sd-an-weekdays__day">%2$s</span><span class="sd-an-weekdays__track" aria-hidden="true"><span class="sd-an-weekdays__fill" style="width: %3$s%%"></span></span><span class="sd-an-weekdays__value">%4$s</span></li>',
+			$max > 0 && $w === $best ? ' class="is-best"' : '',
+			esc_html( $wp_locale->get_weekday_abbrev( $wp_locale->get_weekday( $w ) ) ),
+			esc_attr( $max > 0 ? round( $value / $max * 100, 1 ) : 0 ),
+			/* translators: %s: average number of visitors. */
+			esc_html( sprintf( __( '%s avg', 'swiftwebdev-dashboard-analytics' ), number_format_i18n( $value, $value < 10 ? 1 : 0 ) ) )
+		);
+	}
+	echo '</ul>';
+	/* translators: %s: number of days. */
+	echo '<p class="sd-field__help">' . esc_html( sprintf( _n( 'Based on %s day of visits.', 'Based on %s days of visits.', count( $days ), 'swiftwebdev-dashboard-analytics' ), number_format_i18n( count( $days ) ) ) ) . '</p>';
+}
+
+/**
+ * Engagement: pages per visit, visits per visitor, average daily visitors and the best day.
+ *
+ * @param array $widget Widget args (days).
+ */
+function swiftdash_render_engagement_widget( $widget ) {
+	$stats = swiftdash_analytics_stats( (int) $widget['days'] );
+	$days  = swiftdash_analytics_active_days( $stats );
+	$t     = $stats['totals'];
+	if ( empty( $stats['has_data'] ) || ! $days || ! $t['views'] ) {
+		swiftdash_render_report_empty();
+		return;
+	}
+	$best  = array_reduce(
+		$days,
+		function ( $carry, $row ) {
+			return null === $carry || $row['visitors'] > $carry['visitors'] ? $row : $carry;
+		}
+	);
+	$daily = $t['visitors'] / count( $days );
+	$items = array(
+		array( 'file-text-fill', 'purple', __( 'Pages per visit', 'swiftwebdev-dashboard-analytics' ), number_format_i18n( $t['sessions'] ? $t['views'] / $t['sessions'] : 0, 1 ), __( 'Pages viewed in an average visit', 'swiftwebdev-dashboard-analytics' ) ),
+		array( 'arrows-clockwise-fill', 'green', __( 'Visits per visitor', 'swiftwebdev-dashboard-analytics' ), number_format_i18n( $t['visitors'] ? $t['sessions'] / $t['visitors'] : 0, 1 ), __( 'Visits by the same person in a day', 'swiftwebdev-dashboard-analytics' ) ),
+		array( 'users-fill', 'blue', __( 'Visitors per day', 'swiftwebdev-dashboard-analytics' ), number_format_i18n( $daily, $daily < 10 ? 1 : 0 ), __( 'Average over the days with data', 'swiftwebdev-dashboard-analytics' ) ),
+		array(
+			'trend-up',
+			'orange',
+			__( 'Best day', 'swiftwebdev-dashboard-analytics' ),
+			date_i18n( _x( 'M j', 'best day date format', 'swiftwebdev-dashboard-analytics' ), strtotime( $best['date'] ) ),
+			/* translators: %s: number of visitors. */
+			sprintf( _n( '%s visitor', '%s visitors', $best['visitors'], 'swiftwebdev-dashboard-analytics' ), number_format_i18n( $best['visitors'] ) ),
+		),
+	);
+	echo '<ul class="sd-an-engage">';
+	foreach ( $items as $item ) {
+		printf(
+			'<li><span class="sd-an-engage__icon sd-kpi__icon--%1$s">%2$s</span><span class="sd-an-engage__text"><span class="sd-an-engage__label">%3$s</span><span class="sd-an-engage__value">%4$s</span><span class="sd-an-engage__hint">%5$s</span></span></li>',
+			esc_attr( $item[1] ),
+			wp_kses( swiftdash_icon( $item[0] ), swiftdash_icon_kses() ),
+			esc_html( $item[2] ),
+			esc_html( $item[3] ),
+			esc_html( $item[4] )
+		);
+	}
+	echo '</ul>';
 }

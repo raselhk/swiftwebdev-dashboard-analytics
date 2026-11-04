@@ -3,7 +3,7 @@
  * Visitor stats read API (contract shared by dashboard + analytics widgets).
  * Data comes from the tables written by tracker.php.
  *
- * @package SwiftDash
+ * @package SwiftWebDevDashboard
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -13,7 +13,7 @@ defined( 'ABSPATH' ) || exit;
  *
  * Period visitors are the sum of each day's unique visitors (no cross-day identity exists).
  *
- * @param int $days Number of days (1-30 in the free plugin).
+ * @param int $days Number of days (1-90).
  * @return array {
  *     @type bool     $has_data True once any visit was recorded.
  *     @type string   $since    First recorded day (Y-m-d) or ''.
@@ -24,7 +24,7 @@ defined( 'ABSPATH' ) || exit;
  */
 function swiftdash_get_stats( $days = 30 ) {
 	global $wpdb;
-	$days  = max( 1, min( 30, (int) $days ) );
+	$days  = max( 1, min( 90, (int) $days ) );
 	$zero  = array(
 		'visitors' => 0,
 		'views'    => 0,

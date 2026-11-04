@@ -1,7 +1,7 @@
 /*
- * Swift Dash restyle of the native WordPress admin menu (#adminmenu), loaded on every
- * admin page for users who can use Swift Dash. Matches the former Swift Dash sidebar:
- * 220px wide (68px folded), navy, 40px rounded items, brand on top, upgrade + collapse at
+ * SwiftWebDev Dashboard restyle of the native WordPress admin menu (#adminmenu), loaded on every
+ * admin page for users who can use SwiftWebDev Dashboard. Matches the former plugin sidebar:
+ * 220px wide (68px folded), navy, 40px rounded items, brand on top, collapse at
  * the bottom. WordPress keeps its own behaviour (flyouts, folding, saved fold state).
  * Menu rules are prefixed with #adminmenumain so they beat every admin colour scheme.
  */
@@ -337,46 +337,10 @@
 	text-overflow: ellipsis;
 }
 
-#adminmenumain .sd-menu-brand__pro {
-	flex: none;
-	margin-left: auto;
-	padding: 2px 7px;
-	border-radius: 999px;
-	background: rgba(255, 255, 255, 0.14);
-	font-size: 10px;
-	font-weight: 700;
-	letter-spacing: 0.04em;
-	line-height: 1.4;
-}
-
-/* ---------- Bottom: upgrade card (Swift Dash screens only), then Collapse menu ---------- */
-#adminmenumain #adminmenu li.sd-menu-upgrade {
-	order: 2;
-	margin-top: auto;
-	padding-top: 16px;
-}
-
 #adminmenumain #collapse-menu {
 	order: 3;
 	margin-top: auto;
 	padding-top: 8px;
-}
-
-#adminmenumain #adminmenu:has(.sd-menu-upgrade) #collapse-menu {
-	margin-top: 10px;
-	padding-top: 0;
-}
-
-#adminmenumain #adminmenu li.sd-menu-upgrade a.sd-btn {
-	display: inline-flex;
-	padding: 0 var(--sd-space-4);
-	color: var(--sd-primary);
-	box-shadow: none;
-}
-
-#adminmenumain #adminmenu li.sd-menu-upgrade a.sd-btn:focus-visible {
-	outline-color: #fff;
-	outline-offset: 2px;
 }
 
 /* Collapse control: same row as the items, caret-double-left icon, label. */
@@ -423,22 +387,12 @@
 	justify-content: center;
 }
 
-.folded #adminmenumain .sd-menu-brand__name,
-.folded #adminmenumain .sd-menu-brand__pro {
+.folded #adminmenumain .sd-menu-brand__name {
 	position: absolute;
 	width: 1px;
 	height: 1px;
 	overflow: hidden;
 	clip-path: inset(50%);
-}
-
-.folded #adminmenumain #adminmenu li.sd-menu-upgrade {
-	display: none;
-}
-
-.folded #adminmenumain #adminmenu:has(.sd-menu-upgrade) #collapse-menu {
-	margin-top: auto;
-	padding-top: 8px;
 }
 
 @media only screen and (min-width: 783px) and (max-width: 960px) {
@@ -465,22 +419,12 @@
 		justify-content: center;
 	}
 
-	.auto-fold #adminmenumain .sd-menu-brand__name,
-	.auto-fold #adminmenumain .sd-menu-brand__pro {
+	.auto-fold #adminmenumain .sd-menu-brand__name {
 		position: absolute;
 		width: 1px;
 		height: 1px;
 		overflow: hidden;
 		clip-path: inset(50%);
-	}
-
-	.auto-fold #adminmenumain #adminmenu li.sd-menu-upgrade {
-		display: none;
-	}
-
-	.auto-fold #adminmenumain #adminmenu:has(.sd-menu-upgrade) #collapse-menu {
-		margin-top: auto;
-		padding-top: 8px;
 	}
 
 	.auto-fold #adminmenumain #adminmenu .wp-has-current-submenu .wp-submenu {
@@ -520,10 +464,6 @@
 	#adminmenumain #adminmenu {
 		min-height: 100vh;
 	}
-
-	#adminmenumain #adminmenu li.sd-menu-upgrade {
-		display: none;
-	}
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -537,9 +477,8 @@
 	}
 }
 
-
 /* ==========================================================================
-   Swift Dash screens only: keep the WordPress toolbar and left menu, our header below the toolbar.
+   SwiftWebDev Dashboard screens only: keep the WordPress toolbar and left menu, our header below the toolbar.
    ========================================================================== */
 body.swiftdash-screen {
 	background: #f5f7fb;
@@ -634,13 +573,6 @@ body.swiftdash-screen #wpbody {
 	background-color: currentColor;
 	-webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'%3E%3Cpath d='M219.31%2C108.68l-80-80a16%2C16%2C0%2C0%2C0-22.62%2C0l-80%2C80A15.87%2C15.87%2C0%2C0%2C0%2C32%2C120v96a8%2C8%2C0%2C0%2C0%2C8%2C8h64a8%2C8%2C0%2C0%2C0%2C8-8V160h32v56a8%2C8%2C0%2C0%2C0%2C8%2C8h64a8%2C8%2C0%2C0%2C0%2C8-8V120A15.87%2C15.87%2C0%2C0%2C0%2C219.31%2C108.68ZM208%2C208H160V152a8%2C8%2C0%2C0%2C0-8-8H104a8%2C8%2C0%2C0%2C0-8%2C8v56H48V120l80-80%2C80%2C80Z'/%3E%3C/svg%3E") center / 20px 20px no-repeat;
 	mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'%3E%3Cpath d='M219.31%2C108.68l-80-80a16%2C16%2C0%2C0%2C0-22.62%2C0l-80%2C80A15.87%2C15.87%2C0%2C0%2C0%2C32%2C120v96a8%2C8%2C0%2C0%2C0%2C8%2C8h64a8%2C8%2C0%2C0%2C0%2C8-8V160h32v56a8%2C8%2C0%2C0%2C0%2C8%2C8h64a8%2C8%2C0%2C0%2C0%2C8-8V120A15.87%2C15.87%2C0%2C0%2C0%2C219.31%2C108.68ZM208%2C208H160V152a8%2C8%2C0%2C0%2C0-8-8H104a8%2C8%2C0%2C0%2C0-8%2C8v56H48V120l80-80%2C80%2C80Z'/%3E%3C/svg%3E") center / 20px 20px no-repeat;
-}
-
-#adminmenumain #adminmenu #toplevel_page_swift-dash-analytics div.wp-menu-image:before {
-	content: "";
-	background-color: currentColor;
-	-webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'%3E%3Cpath d='M232%2C208a8%2C8%2C0%2C0%2C1-8%2C8H32a8%2C8%2C0%2C0%2C1-8-8V48a8%2C8%2C0%2C0%2C1%2C16%2C0V156.69l50.34-50.35a8%2C8%2C0%2C0%2C1%2C11.32%2C0L128%2C132.69%2C180.69%2C80H160a8%2C8%2C0%2C0%2C1%2C0-16h40a8%2C8%2C0%2C0%2C1%2C8%2C8v40a8%2C8%2C0%2C0%2C1-16%2C0V91.31l-58.34%2C58.35a8%2C8%2C0%2C0%2C1-11.32%2C0L96%2C123.31l-56%2C56V200H224A8%2C8%2C0%2C0%2C1%2C232%2C208Z'/%3E%3C/svg%3E") center / 20px 20px no-repeat;
-	mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'%3E%3Cpath d='M232%2C208a8%2C8%2C0%2C0%2C1-8%2C8H32a8%2C8%2C0%2C0%2C1-8-8V48a8%2C8%2C0%2C0%2C1%2C16%2C0V156.69l50.34-50.35a8%2C8%2C0%2C0%2C1%2C11.32%2C0L128%2C132.69%2C180.69%2C80H160a8%2C8%2C0%2C0%2C1%2C0-16h40a8%2C8%2C0%2C0%2C1%2C8%2C8v40a8%2C8%2C0%2C0%2C1-16%2C0V91.31l-58.34%2C58.35a8%2C8%2C0%2C0%2C1-11.32%2C0L96%2C123.31l-56%2C56V200H224A8%2C8%2C0%2C0%2C1%2C232%2C208Z'/%3E%3C/svg%3E") center / 20px 20px no-repeat;
 }
 
 #adminmenumain #adminmenu #menu-posts div.wp-menu-image:before {

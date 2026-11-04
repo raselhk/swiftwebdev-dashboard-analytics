@@ -4,15 +4,15 @@
  * swiftdash_schema filter; tables are created or updated on activation and whenever
  * SWIFTDASH_DB_VERSION changes (dbDelta is safe to re-run).
  *
- * @package SwiftDash
+ * @package SwiftWebDevDashboard
  */
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'SWIFTDASH_DB_VERSION', '2' );
+define( 'SWIFTDASH_DB_VERSION', '3' );
 
 /**
- * Create or update all Swift Dash tables.
+ * Create or update all SwiftWebDev Dashboard tables.
  */
 function swiftdash_install() {
 	global $wpdb;
@@ -28,6 +28,12 @@ function swiftdash_install() {
 	$schema = apply_filters( 'swiftdash_schema', array(), $wpdb->prefix . 'swiftdash_', $wpdb->get_charset_collate() );
 	foreach ( $schema as $sql ) {
 		dbDelta( $sql );
+	}
+
+	// Version 3 stopped storing the page path of each visit (dbDelta never drops columns).
+	$hits = $wpdb->prefix . 'swiftdash_hits';
+	if ( $wpdb->get_var( $wpdb->prepare( 'SHOW COLUMNS FROM %i LIKE %s', $hits, 'path' ) ) ) { // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		$wpdb->query( $wpdb->prepare( 'ALTER TABLE %i DROP COLUMN path', $hits ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange
 	}
 	update_option( 'swiftdash_db_version', SWIFTDASH_DB_VERSION, false );
 

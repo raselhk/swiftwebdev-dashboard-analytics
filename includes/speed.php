@@ -1,13 +1,12 @@
 <?php
 /**
  * Speed & Optimize: real Google PageSpeed Insights scores for mobile and desktop, plus
- * plain-language advice on what to fix. Read only: Swift Dash never changes the site.
+ * plain-language advice on what to fix. Read only: SwiftWebDev Dashboard never changes the site.
  *
- * Tests run through the Swift Dash API with our Google key, so users never need one.
- * Free: homepage only. Other pages of the same site need Swift Dash PRO (the
- * swiftdash_speed_fetch filter). Addresses outside this site are always refused.
+ * Tests run through the SwiftWebDev speed test service with our Google key, so users never
+ * need one. Any page of this site can be tested; addresses outside this site are refused.
  *
- * @package SwiftDash
+ * @package SwiftWebDevDashboard
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -37,7 +36,7 @@ function swiftdash_speed_get( $strategy ) {
 }
 
 /**
- * Stored results for the last custom page tested with Pro: { url, mobile, desktop }, or null.
+ * Stored results for the last other page of this site that was tested: { url, mobile, desktop }, or null.
  *
  * @return array|null
  */
@@ -58,15 +57,6 @@ function swiftdash_speed_url() {
 	 * @param string $url Default home_url( '/' ).
 	 */
 	return (string) apply_filters( 'swiftdash_speed_url', home_url( '/' ) );
-}
-
-/**
- * Whether Swift Dash PRO can test any page of this site (Pro hooks swiftdash_speed_fetch while licensed).
- *
- * @return bool
- */
-function swiftdash_speed_pro_active() {
-	return (bool) has_filter( 'swiftdash_speed_fetch' );
 }
 
 /**
@@ -120,31 +110,10 @@ function swiftdash_speed_is_public( $url ) {
 function swiftdash_speed_fetch( $url, $strategy ) {
 	$url = esc_url_raw( $url, array( 'http', 'https' ) );
 	if ( '' === $url || swiftdash_speed_host( $url ) !== swiftdash_speed_host( home_url() ) ) {
-		return new WP_Error( 'outside_site', __( 'Only pages of this website can be tested.', 'swift-dashboard-analytics' ), array( 'status' => 403 ) );
-	}
-	$is_home = swiftdash_speed_is_home( $url );
-	if ( ! $is_home && ! swiftdash_speed_pro_active() ) {
-		return new WP_Error( 'pro_required', __( 'Testing other pages needs Swift Dash PRO.', 'swift-dashboard-analytics' ), array( 'status' => 403 ) );
+		return new WP_Error( 'outside_site', __( 'Only pages of this website can be tested.', 'swiftwebdev-dashboard-analytics' ), array( 'status' => 403 ) );
 	}
 	if ( ! swiftdash_speed_is_public( $url ) ) {
-		return new WP_Error( 'not_public', __( 'Google cannot test a local site. Speed tests work once the site is online at a public address.', 'swift-dashboard-analytics' ), array( 'status' => 400 ) );
-	}
-
-	if ( swiftdash_speed_pro_active() ) {
-		/**
-		 * Runs a speed test through Swift Dash PRO (any page of this site).
-		 *
-		 * @param array|WP_Error|null $result   Null to fall back to the free homepage test.
-		 * @param string              $url      Address on this site.
-		 * @param string              $strategy mobile or desktop.
-		 */
-		$result = apply_filters( 'swiftdash_speed_fetch', null, $url, $strategy );
-		if ( null !== $result ) {
-			return $result;
-		}
-		if ( ! $is_home ) {
-			return new WP_Error( 'pro_required', __( 'Testing other pages needs an active Swift Dash PRO license.', 'swift-dashboard-analytics' ), array( 'status' => 403 ) );
-		}
+		return new WP_Error( 'not_public', __( 'Google cannot test a local site. Speed tests work once the site is online at a public address.', 'swiftwebdev-dashboard-analytics' ), array( 'status' => 400 ) );
 	}
 
 	$response = wp_remote_post(
@@ -168,7 +137,7 @@ function swiftdash_speed_fetch( $url, $strategy ) {
 }
 
 /**
- * Turn a Swift Dash API response into the PSI array or a WP_Error with a plain message.
+ * Turn a speed test service response into the PSI array or a WP_Error with a plain message.
  *
  * @param array|WP_Error $response wp_remote_* response.
  * @return array|WP_Error
@@ -177,7 +146,7 @@ function swiftdash_speed_api_result( $response ) {
 	if ( is_wp_error( $response ) ) {
 		return new WP_Error(
 			'test_failed',
-			__( 'The speed test service could not be reached. Please try again in a minute.', 'swift-dashboard-analytics' ),
+			__( 'The speed test service could not be reached. Please try again in a minute.', 'swiftwebdev-dashboard-analytics' ),
 			array(
 				'status'    => 502,
 				'reference' => 'SD-API-NETWORK',
@@ -194,18 +163,17 @@ function swiftdash_speed_api_result( $response ) {
 	$slug  = isset( $error['code'] ) ? sanitize_key( $error['code'] ) : '';
 	$wait  = isset( $error['retry_after'] ) ? max( 1, (int) $error['retry_after'] ) : 0;
 	$texts = array(
-		'outside_site' => __( 'Only pages of this website can be tested.', 'swift-dashboard-analytics' ),
-		'pro_required' => __( 'Testing other pages needs Swift Dash PRO.', 'swift-dashboard-analytics' ),
-		'not_public'   => __( 'Google cannot test a local site. Speed tests work once the site is online at a public address.', 'swift-dashboard-analytics' ),
+		'outside_site' => __( 'Only pages of this website can be tested.', 'swiftwebdev-dashboard-analytics' ),
+		'not_public'   => __( 'Google cannot test a local site. Speed tests work once the site is online at a public address.', 'swiftwebdev-dashboard-analytics' ),
 		'rate_limited' => sprintf(
 			/* translators: %d: minutes to wait. */
-			_n( 'You can run 10 tests per 10 minutes. Please try again in %d minute.', 'You can run 10 tests per 10 minutes. Please try again in %d minutes.', (int) max( 1, ceil( $wait / 60 ) ), 'swift-dashboard-analytics' ),
+			_n( 'You can run 10 tests per 10 minutes. Please try again in %d minute.', 'You can run 10 tests per 10 minutes. Please try again in %d minutes.', (int) max( 1, ceil( $wait / 60 ) ), 'swiftwebdev-dashboard-analytics' ),
 			(int) max( 1, ceil( $wait / 60 ) )
 		),
 	);
 	return new WP_Error(
 		isset( $texts[ $slug ] ) ? $slug : 'test_failed',
-		isset( $texts[ $slug ] ) ? $texts[ $slug ] : __( 'Google could not finish the test. Please try again in a minute.', 'swift-dashboard-analytics' ),
+		isset( $texts[ $slug ] ) ? $texts[ $slug ] : __( 'Google could not finish the test. Please try again in a minute.', 'swiftwebdev-dashboard-analytics' ),
 		array(
 			'status'    => $code ? $code : 502,
 			'reference' => 'SD-API-' . ( $code ? $code : 'NETWORK' ),
@@ -263,7 +231,7 @@ function swiftdash_speed_routes() {
 add_action( 'rest_api_init', 'swiftdash_speed_routes' );
 
 /**
- * POST /speed/run: test the homepage (or, with Pro, another page of this site) and store the result.
+ * POST /speed/run: test the homepage or another page of this site and store the result.
  * Response: the stored result plus 'scope' (home or custom).
  *
  * @param WP_REST_Request $request Request.
@@ -282,7 +250,7 @@ function swiftdash_speed_rest_run( $request ) {
 	if ( ! $result ) {
 		return new WP_Error(
 			'test_failed',
-			__( 'Google could not finish the test. Please try again in a minute.', 'swift-dashboard-analytics' ),
+			__( 'Google could not finish the test. Please try again in a minute.', 'swiftwebdev-dashboard-analytics' ),
 			array(
 				'status'    => 502,
 				'reference' => 'SD-PSI-EMPTY',
@@ -484,62 +452,62 @@ function swiftdash_speed_plain( $text ) {
  * @return string
  */
 function swiftdash_speed_advice( $id ) {
-	$images = __( 'Compress your images and serve them as WebP or AVIF at the size they are shown on screen. An image optimization plugin can do this for new and existing uploads.', 'swift-dashboard-analytics' );
-	$block  = __( 'Let the page show content before every script and style has loaded: defer non-essential JavaScript and load only the CSS the top of the page needs first. Most caching and performance plugins have settings for this. Check your pages after each change.', 'swift-dashboard-analytics' );
-	$server = __( 'Your server is slow to send the first part of the page. Page caching usually helps the most. If it stays slow, ask your host about server-level caching or a faster hosting plan.', 'swift-dashboard-analytics' );
-	$cache  = __( 'Tell browsers to keep your images, CSS and JavaScript for a long time so repeat visits load faster. A caching plugin or your host can set long cache times for static files.', 'swift-dashboard-analytics' );
-	$lcp    = __( 'Make the biggest item at the top of the page load first: do not lazy load it, compress it, and avoid sliders or large background videos there.', 'swift-dashboard-analytics' );
-	$cls    = __( 'Stop content from jumping while the page loads: give images, videos and embeds a width and height, and do not insert banners or notices above content after it appears.', 'swift-dashboard-analytics' );
-	$js     = __( 'The browser spends a long time running JavaScript. Remove plugins you do not need, turn off unused plugin features, and delay chat widgets, trackers and similar scripts until the visitor interacts.', 'swift-dashboard-analytics' );
+	$images = __( 'Compress your images and serve them as WebP or AVIF at the size they are shown on screen. An image optimization plugin can do this for new and existing uploads.', 'swiftwebdev-dashboard-analytics' );
+	$block  = __( 'Let the page show content before every script and style has loaded: defer non-essential JavaScript and load only the CSS the top of the page needs first. Most caching and performance plugins have settings for this. Check your pages after each change.', 'swiftwebdev-dashboard-analytics' );
+	$server = __( 'Your server is slow to send the first part of the page. Page caching usually helps the most. If it stays slow, ask your host about server-level caching or a faster hosting plan.', 'swiftwebdev-dashboard-analytics' );
+	$cache  = __( 'Tell browsers to keep your images, CSS and JavaScript for a long time so repeat visits load faster. A caching plugin or your host can set long cache times for static files.', 'swiftwebdev-dashboard-analytics' );
+	$lcp    = __( 'Make the biggest item at the top of the page load first: do not lazy load it, compress it, and avoid sliders or large background videos there.', 'swiftwebdev-dashboard-analytics' );
+	$cls    = __( 'Stop content from jumping while the page loads: give images, videos and embeds a width and height, and do not insert banners or notices above content after it appears.', 'swiftwebdev-dashboard-analytics' );
+	$js     = __( 'The browser spends a long time running JavaScript. Remove plugins you do not need, turn off unused plugin features, and delay chat widgets, trackers and similar scripts until the visitor interacts.', 'swiftwebdev-dashboard-analytics' );
 
 	$advice = array(
 		'render-blocking-resources'        => $block,
 		'render-blocking-insight'          => $block,
-		'unused-javascript'                => __( 'Some scripts load on pages that never use them. Turn off plugin features you do not use, remove plugins you no longer need, or use a plugin that can unload scripts on pages where they are not needed.', 'swift-dashboard-analytics' ),
-		'unused-css-rules'                 => __( 'Some styles load on pages that never use them. Remove unused plugins and page builder add-ons, or use a performance plugin that can remove unused CSS. Check your pages after the change.', 'swift-dashboard-analytics' ),
+		'unused-javascript'                => __( 'Some scripts load on pages that never use them. Turn off plugin features you do not use, remove plugins you no longer need, or use a plugin that can unload scripts on pages where they are not needed.', 'swiftwebdev-dashboard-analytics' ),
+		'unused-css-rules'                 => __( 'Some styles load on pages that never use them. Remove unused plugins and page builder add-ons, or use a performance plugin that can remove unused CSS. Check your pages after the change.', 'swiftwebdev-dashboard-analytics' ),
 		'modern-image-formats'             => $images,
 		'uses-optimized-images'            => $images,
 		'uses-responsive-images'           => $images,
 		'image-delivery-insight'           => $images,
-		'offscreen-images'                 => __( 'Load images further down the page only when the visitor scrolls to them (lazy loading). WordPress does this by default; check that your theme or page builder has not turned it off.', 'swift-dashboard-analytics' ),
-		'efficient-animated-content'       => __( 'Replace large animated GIFs with short MP4 or WebM videos, which are much smaller.', 'swift-dashboard-analytics' ),
+		'offscreen-images'                 => __( 'Load images further down the page only when the visitor scrolls to them (lazy loading). WordPress does this by default; check that your theme or page builder has not turned it off.', 'swiftwebdev-dashboard-analytics' ),
+		'efficient-animated-content'       => __( 'Replace large animated GIFs with short MP4 or WebM videos, which are much smaller.', 'swiftwebdev-dashboard-analytics' ),
 		'server-response-time'             => $server,
 		'document-latency-insight'         => $server,
-		'uses-text-compression'            => __( 'Turn on GZIP or Brotli compression for text files. Many hosts can enable it for you, and most caching plugins have a setting for it.', 'swift-dashboard-analytics' ),
+		'uses-text-compression'            => __( 'Turn on GZIP or Brotli compression for text files. Many hosts can enable it for you, and most caching plugins have a setting for it.', 'swiftwebdev-dashboard-analytics' ),
 		'uses-long-cache-ttl'              => $cache,
 		'cache-insight'                    => $cache,
-		'unminified-css'                   => __( 'Minify your CSS files to remove spaces and comments. Most caching and performance plugins can do this.', 'swift-dashboard-analytics' ),
-		'unminified-javascript'            => __( 'Minify your JavaScript files to remove spaces and comments. Most caching and performance plugins can do this.', 'swift-dashboard-analytics' ),
+		'unminified-css'                   => __( 'Minify your CSS files to remove spaces and comments. Most caching and performance plugins can do this.', 'swiftwebdev-dashboard-analytics' ),
+		'unminified-javascript'            => __( 'Minify your JavaScript files to remove spaces and comments. Most caching and performance plugins can do this.', 'swiftwebdev-dashboard-analytics' ),
 		'largest-contentful-paint-element' => $lcp,
 		'lcp-breakdown-insight'            => $lcp,
-		'lcp-lazy-loaded'                  => __( 'The main image at the top of the page is lazy loaded, so it appears late. Turn off lazy loading for that one image and mark it as high priority in your theme or page builder.', 'swift-dashboard-analytics' ),
-		'prioritize-lcp-image'             => __( 'Help the browser find the main image at the top of the page sooner: do not lazy load it, preload it or mark it as high priority, and avoid setting it only as a CSS background.', 'swift-dashboard-analytics' ),
-		'lcp-discovery-insight'            => __( 'Help the browser find the main image at the top of the page sooner: do not lazy load it, preload it or mark it as high priority, and avoid setting it only as a CSS background.', 'swift-dashboard-analytics' ),
-		'total-byte-weight'                => __( 'The page downloads a lot of data. Compress images, remove scripts and fonts you do not need, and show embedded videos as a preview image that loads the player only on click.', 'swift-dashboard-analytics' ),
-		'dom-size'                         => __( 'The page is built from a very large number of HTML elements. Simplify the layout, remove nested containers you do not need in your page builder, and split very long pages or lists.', 'swift-dashboard-analytics' ),
-		'dom-size-insight'                 => __( 'The page is built from a very large number of HTML elements. Simplify the layout, remove nested containers you do not need in your page builder, and split very long pages or lists.', 'swift-dashboard-analytics' ),
-		'third-party-summary'              => __( 'Code from other services (chat, ads, trackers, embeds) slows the page. Remove the ones you do not need and delay the rest until the visitor interacts.', 'swift-dashboard-analytics' ),
-		'third-parties-insight'            => __( 'Code from other services (chat, ads, trackers, embeds) slows the page. Remove the ones you do not need and delay the rest until the visitor interacts.', 'swift-dashboard-analytics' ),
-		'font-display'                     => __( 'Make text visible while web fonts load by using font-display: swap. Host fonts on your own site and use fewer font families and weights. Many themes and performance plugins have a setting for this.', 'swift-dashboard-analytics' ),
-		'font-display-insight'             => __( 'Make text visible while web fonts load by using font-display: swap. Host fonts on your own site and use fewer font families and weights. Many themes and performance plugins have a setting for this.', 'swift-dashboard-analytics' ),
+		'lcp-lazy-loaded'                  => __( 'The main image at the top of the page is lazy loaded, so it appears late. Turn off lazy loading for that one image and mark it as high priority in your theme or page builder.', 'swiftwebdev-dashboard-analytics' ),
+		'prioritize-lcp-image'             => __( 'Help the browser find the main image at the top of the page sooner: do not lazy load it, preload it or mark it as high priority, and avoid setting it only as a CSS background.', 'swiftwebdev-dashboard-analytics' ),
+		'lcp-discovery-insight'            => __( 'Help the browser find the main image at the top of the page sooner: do not lazy load it, preload it or mark it as high priority, and avoid setting it only as a CSS background.', 'swiftwebdev-dashboard-analytics' ),
+		'total-byte-weight'                => __( 'The page downloads a lot of data. Compress images, remove scripts and fonts you do not need, and show embedded videos as a preview image that loads the player only on click.', 'swiftwebdev-dashboard-analytics' ),
+		'dom-size'                         => __( 'The page is built from a very large number of HTML elements. Simplify the layout, remove nested containers you do not need in your page builder, and split very long pages or lists.', 'swiftwebdev-dashboard-analytics' ),
+		'dom-size-insight'                 => __( 'The page is built from a very large number of HTML elements. Simplify the layout, remove nested containers you do not need in your page builder, and split very long pages or lists.', 'swiftwebdev-dashboard-analytics' ),
+		'third-party-summary'              => __( 'Code from other services (chat, ads, trackers, embeds) slows the page. Remove the ones you do not need and delay the rest until the visitor interacts.', 'swiftwebdev-dashboard-analytics' ),
+		'third-parties-insight'            => __( 'Code from other services (chat, ads, trackers, embeds) slows the page. Remove the ones you do not need and delay the rest until the visitor interacts.', 'swiftwebdev-dashboard-analytics' ),
+		'font-display'                     => __( 'Make text visible while web fonts load by using font-display: swap. Host fonts on your own site and use fewer font families and weights. Many themes and performance plugins have a setting for this.', 'swiftwebdev-dashboard-analytics' ),
+		'font-display-insight'             => __( 'Make text visible while web fonts load by using font-display: swap. Host fonts on your own site and use fewer font families and weights. Many themes and performance plugins have a setting for this.', 'swiftwebdev-dashboard-analytics' ),
 		'bootup-time'                      => $js,
 		'mainthread-work-breakdown'        => $js,
 		'forced-reflow-insight'            => $js,
-		'redirects'                        => __( 'The page address redirects before it loads. Link straight to the final address, including https and the correct www or non-www form.', 'swift-dashboard-analytics' ),
+		'redirects'                        => __( 'The page address redirects before it loads. Link straight to the final address, including https and the correct www or non-www form.', 'swiftwebdev-dashboard-analytics' ),
 		'layout-shifts'                    => $cls,
 		'cls-culprits-insight'             => $cls,
 		'unsized-images'                   => $cls,
 		'non-composited-animations'        => $cls,
-		'legacy-javascript'                => __( 'Some scripts include old code for outdated browsers. Keep your theme and plugins up to date; if it remains, ask the theme or plugin author.', 'swift-dashboard-analytics' ),
-		'legacy-javascript-insight'        => __( 'Some scripts include old code for outdated browsers. Keep your theme and plugins up to date; if it remains, ask the theme or plugin author.', 'swift-dashboard-analytics' ),
-		'duplicated-javascript'            => __( 'The same code library loads more than once, often from two plugins. Remove one of the overlapping plugins or ask their authors.', 'swift-dashboard-analytics' ),
-		'duplicated-javascript-insight'    => __( 'The same code library loads more than once, often from two plugins. Remove one of the overlapping plugins or ask their authors.', 'swift-dashboard-analytics' ),
-		'network-dependency-tree-insight'  => __( 'Important files are loaded one after another instead of together. Load fewer files at the top of the page and preload the fonts and images the first screen needs.', 'swift-dashboard-analytics' ),
-		'critical-request-chains'          => __( 'Important files are loaded one after another instead of together. Load fewer files at the top of the page and preload the fonts and images the first screen needs.', 'swift-dashboard-analytics' ),
-		'viewport-insight'                 => __( 'The page is missing a mobile viewport setting. Your theme normally adds it; ask the theme author if it is missing.', 'swift-dashboard-analytics' ),
+		'legacy-javascript'                => __( 'Some scripts include old code for outdated browsers. Keep your theme and plugins up to date; if it remains, ask the theme or plugin author.', 'swiftwebdev-dashboard-analytics' ),
+		'legacy-javascript-insight'        => __( 'Some scripts include old code for outdated browsers. Keep your theme and plugins up to date; if it remains, ask the theme or plugin author.', 'swiftwebdev-dashboard-analytics' ),
+		'duplicated-javascript'            => __( 'The same code library loads more than once, often from two plugins. Remove one of the overlapping plugins or ask their authors.', 'swiftwebdev-dashboard-analytics' ),
+		'duplicated-javascript-insight'    => __( 'The same code library loads more than once, often from two plugins. Remove one of the overlapping plugins or ask their authors.', 'swiftwebdev-dashboard-analytics' ),
+		'network-dependency-tree-insight'  => __( 'Important files are loaded one after another instead of together. Load fewer files at the top of the page and preload the fonts and images the first screen needs.', 'swiftwebdev-dashboard-analytics' ),
+		'critical-request-chains'          => __( 'Important files are loaded one after another instead of together. Load fewer files at the top of the page and preload the fonts and images the first screen needs.', 'swiftwebdev-dashboard-analytics' ),
+		'viewport-insight'                 => __( 'The page is missing a mobile viewport setting. Your theme normally adds it; ask the theme author if it is missing.', 'swiftwebdev-dashboard-analytics' ),
 	);
 
-	return isset( $advice[ $id ] ) ? $advice[ $id ] : __( 'Open the full report on PageSpeed Insights for the details of this item. Your developer or the support team of your theme or plugins can usually help.', 'swift-dashboard-analytics' );
+	return isset( $advice[ $id ] ) ? $advice[ $id ] : __( 'Open the full report on PageSpeed Insights for the details of this item. Your developer or the support team of your theme or plugins can usually help.', 'swiftwebdev-dashboard-analytics' );
 }
 
 /**
@@ -555,8 +523,8 @@ function swiftdash_screen_speed( $screen ) {
 			?>
 			<p class="sd-speed-last" data-sd-speed-last></p>
 			<button type="button" class="sd-btn sd-btn--primary" data-sd-speed-run>
-				<?php echo swiftdash_icon( 'arrow-clockwise' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped markup. ?>
-				<?php esc_html_e( 'Run test', 'swift-dashboard-analytics' ); ?>
+				<?php echo wp_kses( swiftdash_icon( 'arrow-clockwise' ), swiftdash_icon_kses() ); ?>
+				<?php esc_html_e( 'Run test', 'swiftwebdev-dashboard-analytics' ); ?>
 			</button>
 			<?php
 		}
@@ -567,15 +535,15 @@ function swiftdash_screen_speed( $screen ) {
 	<p class="sd-speed-progress" role="status" aria-live="polite" data-sd-speed-progress hidden></p>
 	<div class="sd-speed" data-sd-speed-screen>
 		<div data-sd-speed-alert></div>
-		<section class="sd-card sd-speed-pagecard" aria-label="<?php esc_attr_e( 'Test another page', 'swift-dashboard-analytics' ); ?>">
+		<section class="sd-card sd-speed-pagecard" aria-label="<?php esc_attr_e( 'Test another page', 'swiftwebdev-dashboard-analytics' ); ?>">
 			<div data-sd-speed-page-slot></div>
 			<div data-sd-speed-view></div>
 		</section>
 		<div class="sd-grid">
 			<?php
 			foreach ( array(
-				'mobile'  => __( 'Mobile', 'swift-dashboard-analytics' ),
-				'desktop' => __( 'Desktop', 'swift-dashboard-analytics' ),
+				'mobile'  => __( 'Mobile', 'swiftwebdev-dashboard-analytics' ),
+				'desktop' => __( 'Desktop', 'swiftwebdev-dashboard-analytics' ),
 			) as $strategy => $label ) :
 				?>
 				<section class="sd-card sd-span-6" aria-labelledby="sd-speed-<?php echo esc_attr( $strategy ); ?>-title">
@@ -589,7 +557,7 @@ function swiftdash_screen_speed( $screen ) {
 		<div class="sd-grid">
 			<section class="sd-card sd-span-12" aria-labelledby="sd-speed-cwv-title">
 				<header class="sd-card__head">
-					<h2 class="sd-card__title" id="sd-speed-cwv-title"><?php esc_html_e( 'Core Web Vitals', 'swift-dashboard-analytics' ); ?></h2>
+					<h2 class="sd-card__title" id="sd-speed-cwv-title"><?php esc_html_e( 'Core Web Vitals', 'swiftwebdev-dashboard-analytics' ); ?></h2>
 				</header>
 				<div class="sd-card__body" data-sd-speed-vitals><?php echo wp_kses_post( $skeleton ); ?></div>
 			</section>
@@ -597,10 +565,10 @@ function swiftdash_screen_speed( $screen ) {
 		<div class="sd-grid">
 			<section class="sd-card sd-span-12" aria-labelledby="sd-speed-fixes-title">
 				<header class="sd-card__head">
-					<h2 class="sd-card__title" id="sd-speed-fixes-title"><?php esc_html_e( 'Potential speed improvement areas', 'swift-dashboard-analytics' ); ?></h2>
-					<div class="sd-card__actions sd-speed-toggle" role="group" aria-label="<?php esc_attr_e( 'Device', 'swift-dashboard-analytics' ); ?>">
-						<button type="button" class="sd-btn sd-btn--sm sd-btn--secondary" data-sd-speed-device="mobile" aria-pressed="true"><?php esc_html_e( 'Mobile', 'swift-dashboard-analytics' ); ?></button>
-						<button type="button" class="sd-btn sd-btn--sm sd-btn--secondary" data-sd-speed-device="desktop" aria-pressed="false"><?php esc_html_e( 'Desktop', 'swift-dashboard-analytics' ); ?></button>
+					<h2 class="sd-card__title" id="sd-speed-fixes-title"><?php esc_html_e( 'Potential speed improvement areas', 'swiftwebdev-dashboard-analytics' ); ?></h2>
+					<div class="sd-card__actions sd-speed-toggle" role="group" aria-label="<?php esc_attr_e( 'Device', 'swiftwebdev-dashboard-analytics' ); ?>">
+						<button type="button" class="sd-btn sd-btn--sm sd-btn--secondary" data-sd-speed-device="mobile" aria-pressed="true"><?php esc_html_e( 'Mobile', 'swiftwebdev-dashboard-analytics' ); ?></button>
+						<button type="button" class="sd-btn sd-btn--sm sd-btn--secondary" data-sd-speed-device="desktop" aria-pressed="false"><?php esc_html_e( 'Desktop', 'swiftwebdev-dashboard-analytics' ); ?></button>
 					</div>
 				</header>
 				<div class="sd-card__body" data-sd-speed-fixes><?php echo wp_kses_post( $skeleton ); ?></div>
@@ -608,25 +576,10 @@ function swiftdash_screen_speed( $screen ) {
 		</div>
 		<div class="sd-grid">
 			<?php
-			if ( has_action( 'swiftdash_speed_pro' ) ) {
-				/**
-				 * Prints the scheduled tests and score history card (Swift Dash PRO).
-				 */
-				do_action( 'swiftdash_speed_pro' );
-			} else {
-				swiftdash_render_widget(
-					array(
-						'id'          => 'speed-history',
-						'title'       => __( 'Scheduled tests and score history', 'swift-dashboard-analytics' ),
-						'description' => __( 'Run tests automatically every week, follow your scores on a history chart, get an alert when a score drops, and test any page of your site.', 'swift-dashboard-analytics' ),
-						'span'        => 12,
-						'tier'        => 'pro',
-						'placeholder' => 'chart',
-						'render'      => null,
-						'state'       => '',
-					)
-				);
-			}
+			/**
+			 * Prints extra cards at the end of the Speed & Optimize screen, for add-ons.
+			 */
+			do_action( 'swiftdash_speed_cards' );
 			?>
 		</div>
 	</div>
@@ -640,8 +593,8 @@ function swiftdash_speed_widgets() {
 	swiftdash_register_widget(
 		'speed-scores',
 		array(
-			'title'       => __( 'Speed scores', 'swift-dashboard-analytics' ),
-			'description' => __( 'Your latest Google PageSpeed performance scores for mobile and desktop.', 'swift-dashboard-analytics' ),
+			'title'       => __( 'Speed scores', 'swiftwebdev-dashboard-analytics' ),
+			'description' => __( 'Your latest Google PageSpeed performance scores for mobile and desktop.', 'swiftwebdev-dashboard-analytics' ),
 			'area'        => 'performance',
 			'order'       => 10,
 			'span'        => 4,
@@ -653,8 +606,8 @@ function swiftdash_speed_widgets() {
 	swiftdash_register_widget(
 		'speed-fixes',
 		array(
-			'title'       => __( 'Potential speed improvement areas', 'swift-dashboard-analytics' ),
-			'description' => __( 'The three changes that would help your mobile speed score the most.', 'swift-dashboard-analytics' ),
+			'title'       => __( 'Potential speed improvement areas', 'swiftwebdev-dashboard-analytics' ),
+			'description' => __( 'The three changes that would help your mobile speed score the most.', 'swiftwebdev-dashboard-analytics' ),
 			'area'        => 'performance',
 			'order'       => 20,
 			'span'        => 4,
@@ -677,26 +630,18 @@ function swiftdash_speed_assets( $screen_key ) {
 	}
 	wp_enqueue_style( 'swiftdash-speed', SWIFTDASH_URL . 'assets/css/speed.css', array( 'swiftdash-app' ), SWIFTDASH_VERSION );
 	wp_enqueue_script( 'swiftdash-speed', SWIFTDASH_URL . 'assets/js/speed.js', array( 'swiftdash-app', 'wp-api-fetch', 'wp-i18n' ), SWIFTDASH_VERSION, true );
-	wp_set_script_translations( 'swiftdash-speed', 'swift-dashboard-analytics' );
+	wp_set_script_translations( 'swiftdash-speed', 'swiftwebdev-dashboard-analytics' );
 	wp_add_inline_script(
 		'swiftdash-speed',
 		'window.swiftdashSpeed = ' . wp_json_encode(
 			array(
-				'results'    => array(
+				'results'   => array(
 					'mobile'  => swiftdash_speed_get( 'mobile' ),
 					'desktop' => swiftdash_speed_get( 'desktop' ),
 				),
-				'custom'     => swiftdash_speed_get_custom(),
-				'home'       => swiftdash_speed_url(),
-				'isPro'      => swiftdash_speed_pro_active(),
-				'upgradeUrl' => add_query_arg(
-					array(
-						'utm_source' => 'plugin',
-						'utm_medium' => 'speed-page-test',
-					),
-					SWIFTDASH_PRICING_URL
-				),
-				'screenUrl'  => admin_url( 'admin.php?page=swift-dash-speed' ),
+				'custom'    => swiftdash_speed_get_custom(),
+				'home'      => swiftdash_speed_url(),
+				'screenUrl' => admin_url( 'admin.php?page=swift-dash-speed' ),
 			)
 		) . ';',
 		'before'

@@ -1,7 +1,7 @@
 <?php
 /**
- * Plugin Name:       Swift Dash: Admin Dashboard & Analytics, Visitor Statistics, PageSpeed & Site Health
- * Plugin URI:        https://swiftwebdev.com/
+ * Plugin Name:       SwiftWebDev Dashboard & Analytics - Visitor Statistics & PageSpeed
+ * Plugin URI:        https://swiftwebdev.com/swiftwebdev-dashboard-docs/
  * Description:       Admin dashboard and cookieless analytics for WordPress: visitor stats, Google PageSpeed scores, site health and a modern admin menu.
  * Version:           1.0.0
  * Requires at least: 6.5
@@ -10,9 +10,9 @@
  * Author URI:        https://swiftwebdev.com/
  * License:           GPL-2.0-or-later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
- * Text Domain:       swift-dashboard-analytics
+ * Text Domain:       swiftwebdev-dashboard-analytics
  *
- * @package SwiftDash
+ * @package SwiftWebDevDashboard
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -21,9 +21,8 @@ define( 'SWIFTDASH_VERSION', '1.0.0' );
 define( 'SWIFTDASH_FILE', __FILE__ );
 define( 'SWIFTDASH_DIR', plugin_dir_path( __FILE__ ) );
 define( 'SWIFTDASH_URL', plugin_dir_url( __FILE__ ) );
-define( 'SWIFTDASH_PRICING_URL', 'https://swiftwebdev.com/pricing/' );
-define( 'SWIFTDASH_ACCOUNT_URL', 'https://swiftwebdev.com/account/' );
-define( 'SWIFTDASH_DOCS_URL', 'https://swiftwebdev.com/docs/swift-dash/' );
+define( 'SWIFTDASH_ADDON_URL', 'https://swiftwebdev.com/swiftwebdev-dashboard-pro/' );
+define( 'SWIFTDASH_DOCS_URL', 'https://swiftwebdev.com/swiftwebdev-dashboard-docs/' );
 
 require_once SWIFTDASH_DIR . 'includes/install.php';
 require_once SWIFTDASH_DIR . 'includes/settings.php';

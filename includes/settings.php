@@ -2,21 +2,21 @@
 /**
  * Site settings (core /wp/v2/settings) and per-user preferences (core /wp/v2/users/me meta).
  *
- * Both ride on core REST endpoints, so Swift Dash needs no custom routes for them.
+ * Both ride on core REST endpoints, so SwiftWebDev Dashboard needs no custom routes for them.
  *
- * @package SwiftDash
+ * @package SwiftWebDevDashboard
  */
 
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Capability needed to use Swift Dash screens.
+ * Capability needed to use SwiftWebDev Dashboard screens.
  *
  * @return string
  */
 function swiftdash_capability() {
 	/**
-	 * Filters the capability required to open Swift Dash screens.
+	 * Filters the capability required to open SwiftWebDev Dashboard screens.
 	 *
 	 * @param string $capability Default 'manage_options'.
 	 */
@@ -125,15 +125,19 @@ function swiftdash_setting( $key ) {
 }
 
 /**
- * Sidebar brand: name and logo URL (defaults when not set).
+ * Sidebar brand: name and logo URL. Defaults to the site title and site icon.
  *
  * @return array { name, logo }
  */
 function swiftdash_brand() {
 	$name = swiftdash_setting( 'brand_name' );
 	$logo = swiftdash_setting( 'brand_logo' ) ? wp_get_attachment_image_url( swiftdash_setting( 'brand_logo' ), 'thumbnail' ) : '';
+	$logo = $logo ? $logo : get_site_icon_url( 64 );
+	if ( '' === $name ) {
+		$name = wp_strip_all_tags( get_bloginfo( 'name' ) );
+	}
 	return array(
-		'name' => '' !== $name ? $name : __( 'Swift Dash', 'swift-dashboard-analytics' ),
+		'name' => '' !== $name ? $name : __( 'Dashboard', 'swiftwebdev-dashboard-analytics' ),
 		'logo' => $logo ? $logo : SWIFTDASH_URL . 'assets/img/brand.svg',
 	);
 }
