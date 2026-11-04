@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Blog cover</title>
+<link rel="stylesheet" href="brand.css">
+<style>
+	/* 1200x630 blog cover. render.cjs fills the title, eyebrow and image from the query string. */
+	.cover { width: 1200px; height: 630px; }
+	.copy { position: absolute; left: 72px; top: 0; bottom: 0; width: 500px; display: flex; flex-direction: column; justify-content: center; }
+	.brandline { display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 20px; color: #C9CBE6; }
+	.brandline svg { width: 36px; height: 36px; }
+	h1 { text-wrap: balance; margin-top: 26px; font-size: 54px; line-height: 1.08; font-weight: 800; letter-spacing: -.025em; }
+	.eyebrow { text-wrap: balance; margin-top: 22px; font-size: 21px; line-height: 1.45; color: #C9CBE6; font-weight: 500; }
+	.chips { gap: 10px; margin-top: 30px; }
+	.chip { gap: 9px; height: 38px; padding: 0 16px; font-size: 16px; }
+	.chip i { width: 9px; height: 9px; }
+	.cover .shot { left: 628px; top: 50%; width: 640px; border-radius: 16px; transform: translateY(-50%) perspective(1800px) rotateY(-10deg); transform-origin: left center; }
+</style>
+</head>
+<body>
+<div class="cover dark">
+	<div class="copy">
+		<div class="brandline">
+			<svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="11" cy="11" r="8" fill="#E8672B"/><circle cx="21" cy="11" r="8" fill="#2E9E4C" opacity=".92"/><circle cx="11" cy="21" r="8" fill="#4F5BFF" opacity=".92"/><circle cx="21" cy="21" r="8" fill="#F2C23A" opacity=".9"/></svg>
+			SwiftWebDev Dashboard
+		</div>
+		<h1 id="t"></h1>
+		<p class="eyebrow" id="e"></p>
+		<div class="chips" id="c"></div>
+	</div>
+	<div class="shot"><img id="i" alt=""></div>
+</div>
+<script>
+	const q = new URLSearchParams(location.search);
+	document.getElementById('t').textContent = q.get('t');
+	document.getElementById('e').textContent = q.get('e');
+	document.getElementById('i').src = q.get('i');
+	const colors = ['var(--green)', 'var(--yellow)', 'var(--orange)'];
+	q.get('c').split('|').forEach((label, n) => {
+		const s = document.createElement('span');
+		s.className = 'chip';
+		s.innerHTML = '<i style="background:' + colors[n % 3] + '"></i>';
+		s.append(label);
+		document.getElementById('c').append(s);
+	});
+</script>
+</body>
+</html>
