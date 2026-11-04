@@ -3,7 +3,7 @@
  * App shell: top header, user menu, page header, icons (guideline section 3).
  * The left menu is the native WordPress admin menu (admin-menu.php).
  *
- * @package SwiftDash
+ * @package SwiftWebDevDashboard
  */
 
 defined( 'ABSPATH' ) || exit;

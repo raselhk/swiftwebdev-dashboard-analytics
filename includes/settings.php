@@ -4,7 +4,7 @@
  *
  * Both ride on core REST endpoints, so SwiftWebDev Dashboard needs no custom routes for them.
  *
- * @package SwiftDash
+ * @package SwiftWebDevDashboard
  */
 
 defined( 'ABSPATH' ) || exit;

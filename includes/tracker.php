@@ -5,7 +5,7 @@
  * Nothing identifying is stored. A visitor is sha256( daily salt + IP + user agent ); the
  * salt rotates every site-local day, so hashes cannot be linked across days.
  *
- * @package SwiftDash
+ * @package SwiftWebDevDashboard
  */
 
 defined( 'ABSPATH' ) || exit;

@@ -2,7 +2,7 @@
 /**
  * Widget registry and card rendering. Add-ons register their own widgets on swiftdash_register_widgets.
  *
- * @package SwiftDash
+ * @package SwiftWebDevDashboard
  */
 
 defined( 'ABSPATH' ) || exit;

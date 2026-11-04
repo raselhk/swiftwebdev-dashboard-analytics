@@ -2,7 +2,7 @@
 /**
  * Visitor widgets on the dashboard: KPI cards, visitors over time, busiest days and engagement.
  *
- * @package SwiftDash
+ * @package SwiftWebDevDashboard
  */
 
 defined( 'ABSPATH' ) || exit;

@@ -3,7 +3,7 @@
  * Component preview screen. Loaded only when WP_DEBUG is on; excluded from release builds.
  * Values on this screen are labelled samples for checking the components, not site data.
  *
- * @package SwiftDash
+ * @package SwiftWebDevDashboard
  */
 
 defined( 'ABSPATH' ) || exit;

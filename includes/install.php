@@ -4,7 +4,7 @@
  * swiftdash_schema filter; tables are created or updated on activation and whenever
  * SWIFTDASH_DB_VERSION changes (dbDelta is safe to re-run).
  *
- * @package SwiftDash
+ * @package SwiftWebDevDashboard
  */
 
 defined( 'ABSPATH' ) || exit;

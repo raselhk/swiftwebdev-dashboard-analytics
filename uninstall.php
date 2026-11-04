@@ -2,7 +2,7 @@
 /**
  * Remove everything SwiftWebDev Dashboard stored when the plugin is deleted.
  *
- * @package SwiftDash
+ * @package SwiftWebDevDashboard
  */
 
 defined( 'WP_UNINSTALL_PLUGIN' ) || exit;

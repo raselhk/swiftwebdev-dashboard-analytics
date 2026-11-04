@@ -4,7 +4,7 @@
  *
  * Per-user layout lives in user meta swiftdash_links, saved through core /wp/v2/users/me.
  *
- * @package SwiftDash
+ * @package SwiftWebDevDashboard
  */
 
 defined( 'ABSPATH' ) || exit;

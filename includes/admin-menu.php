@@ -4,7 +4,7 @@
  * WordPress admin menu, plus its restyle (brand block, admin-menu.css) on every admin page
  * for permitted users.
  *
- * @package SwiftDash
+ * @package SwiftWebDevDashboard
  */
 
 defined( 'ABSPATH' ) || exit;

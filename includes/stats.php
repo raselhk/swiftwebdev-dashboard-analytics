@@ -3,7 +3,7 @@
  * Visitor stats read API (contract shared by dashboard + analytics widgets).
  * Data comes from the tables written by tracker.php.
  *
- * @package SwiftDash
+ * @package SwiftWebDevDashboard
  */
 
 defined( 'ABSPATH' ) || exit;

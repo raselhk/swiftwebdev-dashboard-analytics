@@ -2,7 +2,7 @@
 /**
  * Activity log: records site events (from activation onward) into {prefix}swiftdash_activity.
  *
- * @package SwiftDash
+ * @package SwiftWebDevDashboard
  */
 
 defined( 'ABSPATH' ) || exit;

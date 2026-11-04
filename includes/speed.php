@@ -6,7 +6,7 @@
  * Tests run through the SwiftWebDev speed test service with our Google key, so users never
  * need one. Any page of this site can be tested; addresses outside this site are refused.
  *
- * @package SwiftDash
+ * @package SwiftWebDevDashboard
  */
 
 defined( 'ABSPATH' ) || exit;

@@ -4,7 +4,7 @@
  *
  * Everything reads cached WordPress data only; nothing here triggers a remote request.
  *
- * @package SwiftDash
+ * @package SwiftWebDevDashboard
  */
 
 defined( 'ABSPATH' ) || exit;

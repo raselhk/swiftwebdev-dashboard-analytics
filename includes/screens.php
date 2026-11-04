@@ -2,7 +2,7 @@
 /**
  * SwiftWebDev Dashboard screens: definitions, assets, screen bodies. The left menu lives in admin-menu.php.
  *
- * @package SwiftDash
+ * @package SwiftWebDevDashboard
  */
 
 defined( 'ABSPATH' ) || exit;
