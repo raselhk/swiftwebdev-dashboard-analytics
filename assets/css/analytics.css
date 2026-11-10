@@ -1,36 +1,58 @@
 /* SwiftWebDev Dashboard visitor widgets: KPI cards, visitors over time, busiest days, engagement. Tokens only. */
 
-/* ---------- KPI card (reference: tile left, label, big value, change pill, sparkline right) ---------- */
+/* ---------- KPI card ----------
+ * Icon tile and label on top, then the value with its sparkline, then the change line across
+ * the full card width. Reads the same 4-up, 3-up and on phones; PRO KPI views share the markup. */
 .swiftdash .sd-widget--kpi {
 	display: grid;
 	grid-template-columns: auto minmax(0, 1fr);
 	grid-template-rows: auto 1fr;
-	gap: var(--sd-space-1) var(--sd-space-4);
-	align-content: start;
+	gap: var(--sd-space-4) var(--sd-space-3);
+	align-items: center;
 	padding: var(--sd-card-pad);
 }
 
 .swiftdash .sd-widget--kpi > .sd-kpi__icon {
-	grid-row: 1 / 3;
-	align-self: start;
+	grid-row: 1;
+	width: 44px;
+	height: 44px;
+	border-radius: 12px;
+}
+
+.swiftdash .sd-widget--kpi > .sd-kpi__icon .sd-icon {
+	width: 24px;
+	height: 24px;
 }
 
 .swiftdash .sd-widget--kpi > .sd-card__head,
 .swiftdash .sd-widget--kpi > .sd-card__body {
-	grid-column: 2;
 	min-height: 0;
 	padding: 0;
 }
 
+.swiftdash .sd-widget--kpi > .sd-card__body {
+	grid-column: 1 / -1;
+	align-self: end;
+	/* Same height loading and loaded (value line + change line), so the row never jumps. */
+	min-height: 72px;
+}
+
 .swiftdash .sd-widget--kpi .sd-card__title {
+	overflow: hidden;
 	font-size: var(--sd-fs-kpi-label);
 	font-weight: var(--sd-fw-medium);
 	letter-spacing: 0;
 	color: var(--sd-text-2);
+	white-space: nowrap;
+	text-overflow: ellipsis;
 }
 
 .swiftdash .sd-widget--kpi .sd-an-kpi {
 	grid-template-columns: minmax(0, 1fr) auto;
+	grid-template-areas:
+		"value spark"
+		"meta meta";
+	align-items: end;
 	gap: var(--sd-space-2) var(--sd-space-3);
 }
 
@@ -38,22 +60,40 @@
 	display: contents;
 }
 
+.swiftdash .sd-widget--kpi .sd-kpi__value {
+	grid-area: value;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
 .swiftdash .sd-widget--kpi .sd-an-kpi > p {
 	grid-column: 1 / -1;
+	margin: 0;
 }
 
 .swiftdash .sd-widget--kpi .sd-an-spark {
-	grid-column: 2;
-	grid-row: 1 / 3;
+	grid-area: spark;
 	align-self: center;
-	width: 76px;
-	height: 40px;
+	width: 88px;
+	min-width: 0;
+	max-width: 100%;
+	height: 36px;
 }
 
+/* One line at every width (fixed card height): the pill, then the comparison, clipped with an ellipsis. */
 .swiftdash .sd-widget--kpi .sd-kpi__meta {
-	flex-direction: column;
-	align-items: flex-start;
-	gap: 6px;
+	display: block;
+	grid-area: meta;
+	overflow: hidden;
+	line-height: 24px;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+.swiftdash .sd-widget--kpi .sd-kpi__meta .sd-trend {
+	margin-right: var(--sd-space-2);
+	vertical-align: middle;
 }
 
 .sd-an-spark {
@@ -230,11 +270,18 @@
 	font-variant-numeric: tabular-nums;
 }
 
-/* ---------- Engagement ---------- */
+/* ---------- Engagement: four stats in a 2x2 grid that fills the card height ---------- */
+.swiftdash .sd-card__body:has(> .sd-an-engage) {
+	display: flex;
+	flex-direction: column;
+}
+
 .swiftdash .sd-an-engage {
 	display: grid;
-	grid-template-columns: repeat(4, minmax(0, 1fr));
-	gap: var(--sd-space-4);
+	flex: 1;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	grid-auto-rows: 1fr;
+	gap: var(--sd-space-3);
 	margin: 0;
 	padding: 0;
 	list-style: none;
@@ -242,8 +289,9 @@
 
 .sd-an-engage li {
 	display: flex;
-	align-items: flex-start;
+	align-items: center;
 	gap: var(--sd-space-3);
+	min-width: 0;
 	margin: 0;
 	padding: var(--sd-space-4);
 	border-radius: var(--sd-radius-tile);
@@ -254,8 +302,8 @@
 	display: grid;
 	flex: none;
 	place-items: center;
-	width: 40px;
-	height: 40px;
+	width: 44px;
+	height: 44px;
 	border-radius: 12px;
 }
 
@@ -270,42 +318,79 @@
 }
 
 .sd-an-engage__text {
-	display: flex;
-	flex-direction: column;
+	display: grid;
+	flex: 1;
+	grid-template-columns: minmax(0, 1fr) auto;
+	grid-template-areas:
+		"label value"
+		"hint value";
+	align-items: center;
+	gap: 2px var(--sd-space-3);
 	min-width: 0;
 }
 
 .sd-an-engage__label {
+	grid-area: label;
 	font-size: var(--sd-fs-label);
-	font-weight: var(--sd-fw-medium);
-	color: var(--sd-text-2);
+	font-weight: var(--sd-fw-semibold);
+	color: var(--sd-text);
 }
 
 .sd-an-engage__value {
+	grid-area: value;
 	font-size: 24px;
 	font-weight: var(--sd-fw-heavy);
-	line-height: 1.3;
+	line-height: 1.2;
 	color: var(--sd-text);
 	font-variant-numeric: tabular-nums;
+	white-space: nowrap;
 }
 
 .sd-an-engage__hint {
+	grid-area: hint;
 	font-size: var(--sd-fs-help);
+	line-height: 1.4;
 	color: var(--sd-text-2);
 }
 
-@media (max-width: 1280px) {
+/* Narrow tiles (two stats side by side in a small card): value under the label. */
+.swiftdash .sd-card__body:has(> .sd-an-engage) {
+	container-type: inline-size;
+}
 
-	.swiftdash .sd-an-engage {
-		grid-template-columns: repeat(2, minmax(0, 1fr));
+@container (max-width: 680px) {
+
+	.sd-an-engage__text {
+		grid-template-columns: minmax(0, 1fr);
+		grid-template-areas:
+			"label"
+			"value"
+			"hint";
+	}
+}
+
+/* Phones: still two by two, icon above the text. */
+@container (max-width: 400px) {
+
+	.sd-an-engage li {
+		flex-direction: column;
+		align-items: flex-start;
+		gap: var(--sd-space-2);
+		padding: var(--sd-space-3);
+	}
+
+	.sd-an-engage__icon {
+		width: 36px;
+		height: 36px;
+		border-radius: 10px;
+	}
+
+	.sd-an-engage__value {
+		font-size: 22px;
 	}
 }
 
 @media (max-width: 600px) {
-
-	.swiftdash .sd-an-engage {
-		grid-template-columns: minmax(0, 1fr);
-	}
 
 	.sd-an-trend__svg {
 		height: 140px;

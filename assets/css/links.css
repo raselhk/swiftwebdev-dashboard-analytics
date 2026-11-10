@@ -1,17 +1,5 @@
 /* Quick Links screen + dashboard widget. Tokens only (tokens.css). */
 
-/* ---------- Tones (pastel tile + matching filled icon) ---------- */
-.swiftdash .sd-ql-tone--blue { --sd-ql-fg: var(--sd-primary); }
-.swiftdash .sd-ql-tone--sky { --sd-ql-fg: var(--sd-info); }
-.swiftdash .sd-ql-tone--purple { --sd-ql-fg: var(--sd-purple); }
-.swiftdash .sd-ql-tone--green { --sd-ql-fg: var(--sd-success); }
-.swiftdash .sd-ql-tone--orange { --sd-ql-fg: var(--sd-warning); }
-.swiftdash .sd-ql-tone--red { --sd-ql-fg: var(--sd-danger); }
-
-.swiftdash [class*="sd-ql-tone--"] {
-	--sd-ql-bg: color-mix(in srgb, var(--sd-ql-fg) 10%, var(--sd-card));
-}
-
 /* ---------- Screen ---------- */
 .swiftdash .sd-page-head__actions:has(.sd-ql-search) {
 	align-items: center;
@@ -71,7 +59,8 @@
 }
 
 .swiftdash .sd-ql__pins {
-	grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+	grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
+	grid-auto-rows: 128px;
 }
 
 .swiftdash .sd-ql__grid {
@@ -174,13 +163,20 @@
 }
 
 .swiftdash .sd-ql__pins .sd-ql__tile {
-	flex-direction: column;
-	justify-content: center;
+	display: grid;
+	grid-template-rows: 32px calc(var(--sd-fs-label) * 2.6);
+	place-content: center;
+	justify-items: center;
 	gap: var(--sd-space-2);
 	width: 100%;
-	aspect-ratio: 1;
+	height: 100%;
 	padding: var(--sd-space-6) var(--sd-space-2) var(--sd-space-3);
 	text-align: center;
+}
+
+.swiftdash .sd-ql__pins .sd-ql__text {
+	display: block;
+	line-height: 1.3;
 }
 
 .swiftdash .sd-ql__pins .sd-ql__chip {
@@ -195,8 +191,13 @@
 }
 
 .swiftdash .sd-ql__pins .sd-ql__label {
+	display: -webkit-box;
+	overflow: hidden;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical;
 	font-size: var(--sd-fs-label);
 	line-height: 1.3;
+	overflow-wrap: anywhere;
 }
 
 .swiftdash .sd-ql__pins .sd-ql__desc,
@@ -280,21 +281,27 @@
 	margin-right: var(--sd-space-3);
 }
 
-/* ---------- Dashboard widget ---------- */
+/* ---------- Dashboard widget ----------
+ * Every tile is the same size: icon at a fixed spot, label area reserved for two lines. Rows
+ * share the card height so the card fits its row without an empty block under the tiles. */
+.swiftdash .sd-card__body:has(> .sd-ql-mini) {
+	display: flex;
+	flex-direction: column;
+	container-type: inline-size;
+}
+
 .swiftdash .sd-ql-mini {
 	display: grid;
-	grid-template-columns: repeat(2, minmax(0, 1fr));
+	flex: 1;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	grid-auto-rows: minmax(96px, 1fr);
 	gap: var(--sd-space-3);
 	margin: 0;
 	padding: 0;
 	list-style: none;
 }
 
-.swiftdash .sd-card__body:has(> .sd-ql-mini) {
-	container-type: inline-size;
-}
-
-@container (min-width: 320px) {
+@container (min-width: 420px) {
 
 	.swiftdash .sd-ql-mini {
 		grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -302,17 +309,20 @@
 }
 
 .swiftdash .sd-ql-mini li {
+	display: flex;
+	min-width: 0;
 	margin: 0;
 }
 
 .swiftdash .sd-ql-mini__tile {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	justify-content: center;
+	display: grid;
+	flex: 1;
+	grid-template-rows: 30px calc(var(--sd-fs-help) * 2.6);
+	place-content: center;
+	justify-items: center;
 	gap: var(--sd-space-2);
-	aspect-ratio: 1;
-	padding: var(--sd-space-2);
+	min-width: 0;
+	padding: var(--sd-space-3) var(--sd-space-2);
 	border: var(--sd-border-w) solid transparent;
 	border-radius: var(--sd-radius-card);
 	background: var(--sd-ql-bg);
@@ -333,15 +343,21 @@
 }
 
 .swiftdash .sd-ql-mini__label {
+	display: -webkit-box;
+	overflow: hidden;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical;
 	font-size: var(--sd-fs-help);
 	font-weight: var(--sd-fw-semibold);
 	line-height: 1.3;
 	color: var(--sd-text);
+	overflow-wrap: anywhere;
 }
 
 .swiftdash .sd-ql-mini__manage {
 	width: 32px;
 	height: 32px;
+	margin: -4px -6px -4px 0;
 }
 
 .swiftdash .sd-ql-mini__empty-cta {

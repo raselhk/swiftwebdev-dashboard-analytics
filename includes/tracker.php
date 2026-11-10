@@ -46,6 +46,14 @@ function swiftdash_tracker_schema( $schema, $prefix, $collate ) {
   sessions int(10) unsigned NOT NULL DEFAULT 0,
   PRIMARY KEY  (day)
 ) {$collate};";
+	// Daily totals per page path, referrer host, device type (kept 90 days), AI source and AI bot (180 days).
+	$schema[] = "CREATE TABLE {$prefix}dims (
+  day date NOT NULL,
+  kind varchar(10) NOT NULL,
+  item varchar(191) NOT NULL,
+  count int(10) unsigned NOT NULL DEFAULT 0,
+  PRIMARY KEY  (day,kind,item)
+) {$collate};";
 	return $schema;
 }
 add_filter( 'swiftdash_schema', 'swiftdash_tracker_schema', 10, 3 );
@@ -158,12 +166,18 @@ function swiftdash_rest_hit( $request ) {
 
 	$body = $request->get_body();
 	$data = strlen( $body ) < 2048 ? json_decode( $body, true ) : null;
-	// The page path only confirms the request came from a real page view; it is not stored.
+	// The page path is never stored with the visit, only in the daily per-page totals.
 	$path = is_array( $data ) && isset( $data['p'] ) && is_string( $data['p'] ) ? $data['p'] : '';
-	$path = (string) preg_split( '/[?#]/', $path, 2 )[0];
-	if ( '' === $path || '/' !== $path[0] || strlen( $path ) > 255 || preg_match( '/[\x00-\x1f\x7f]/', $path ) ) {
+	$path = rawurldecode( (string) preg_split( '/[?#]/', $path, 2 )[0] );
+	if ( '' === $path || '/' !== $path[0] || strlen( $path ) > 255 || ! wp_check_invalid_utf8( $path ) || preg_match( '/[\x00-\x1f\x7f]/', $path ) ) {
 		return new WP_REST_Response( null, 400 );
 	}
+	$ref = isset( $data['r'] ) && is_string( $data['r'] ) ? strtolower( $data['r'] ) : '';
+	$ref = preg_replace( '/^www\./', '', $ref );
+	if ( strlen( $ref ) > 100 || ! preg_match( '/^[a-z0-9]([a-z0-9.-]*[a-z0-9])?$/', $ref ) || preg_replace( '/^www\./', '', (string) wp_parse_url( home_url(), PHP_URL_HOST ) ) === $ref ) {
+		$ref = '';
+	}
+	$utm = isset( $data['u'] ) && is_string( $data['u'] ) && preg_match( '/^[a-z0-9][a-z0-9._ -]{0,39}$/', $data['u'] ) ? $data['u'] : '';
 
 	$ip = isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : '';
 	/**
@@ -188,7 +202,85 @@ function swiftdash_rest_hit( $request ) {
 		),
 		array( '%s', '%d', '%s' )
 	);
+
+	// Daily totals: every view counts for its page; sources and devices count once per session.
+	$dims = array( 'page' => mb_substr( $path, 0, 191 ) );
+	if ( ! $recent ) {
+		$dims['referrer'] = $ref;
+		$dims['device']   = swiftdash_device_type( $ua );
+		$dims['ai']       = swiftdash_ai_source( $ref, $utm );
+	}
+	$day = wp_date( 'Y-m-d' );
+	foreach ( array_filter( $dims ) as $kind => $item ) {
+		$wpdb->query( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+			$wpdb->prepare( 'INSERT INTO %i (day, kind, item, count) VALUES (%s, %s, %s, 1) ON DUPLICATE KEY UPDATE count = count + 1', swiftdash_table( 'dims' ), $day, $kind, $item )
+		);
+	}
 	return $done;
+}
+
+/**
+ * Device type from a user agent. iPads that report a desktop browser count as desktop.
+ *
+ * @param string $ua User agent.
+ * @return string mobile|tablet|desktop.
+ */
+function swiftdash_device_type( $ua ) {
+	if ( preg_match( '/ipad|tablet|kindle|silk|playbook|android(?!.*mobi)/i', $ua ) ) {
+		return 'tablet';
+	}
+	return preg_match( '/mobi|iphone|ipod|android|blackberry|opera mini|iemobile/i', $ua ) ? 'mobile' : 'desktop';
+}
+
+/**
+ * AI assistants whose visits are counted: referrer hosts (subdomains match too) and utm_source values.
+ *
+ * @return array[] key => { label, hosts, utm }.
+ */
+function swiftdash_ai_sources() {
+	$sources = array(
+		'chatgpt'    => array( 'ChatGPT', array( 'chatgpt.com', 'chat.openai.com' ), array( 'chatgpt.com', 'chatgpt', 'openai' ) ),
+		'perplexity' => array( 'Perplexity', array( 'perplexity.ai' ), array( 'perplexity', 'perplexity.ai' ) ),
+		'gemini'     => array( 'Gemini', array( 'gemini.google.com', 'bard.google.com' ), array( 'gemini', 'gemini.google.com', 'bard' ) ),
+		'claude'     => array( 'Claude', array( 'claude.ai' ), array( 'claude', 'claude.ai' ) ),
+		'copilot'    => array( 'Copilot', array( 'copilot.microsoft.com', 'copilot.cloud.microsoft' ), array( 'copilot', 'copilot.microsoft.com' ) ),
+		'deepseek'   => array( 'DeepSeek', array( 'chat.deepseek.com', 'deepseek.com' ), array( 'deepseek', 'deepseek.com' ) ),
+		'meta'       => array( 'Meta AI', array( 'meta.ai' ), array( 'meta.ai' ) ),
+		'grok'       => array( 'Grok', array( 'grok.com' ), array( 'grok', 'grok.com' ) ),
+		'mistral'    => array( 'Mistral Le Chat', array( 'chat.mistral.ai' ), array( 'mistral', 'chat.mistral.ai' ) ),
+		'you'        => array( 'You.com', array( 'you.com' ), array( 'you.com' ) ),
+		'phind'      => array( 'Phind', array( 'phind.com' ), array( 'phind', 'phind.com' ) ),
+	);
+	foreach ( $sources as $key => $s ) {
+		$sources[ $key ] = array_combine( array( 'label', 'hosts', 'utm' ), $s );
+	}
+	/**
+	 * Filters the AI assistants counted on the AI traffic widget.
+	 *
+	 * @param array[] $sources key => { label, hosts, utm }.
+	 */
+	return (array) apply_filters( 'swiftdash_ai_sources', $sources );
+}
+
+/**
+ * AI source key of a visit, from its referrer host (without www) or utm_source.
+ *
+ * @param string $host Referrer host or ''.
+ * @param string $utm  Lowercased utm_source or ''.
+ * @return string Source key or ''.
+ */
+function swiftdash_ai_source( $host, $utm ) {
+	foreach ( swiftdash_ai_sources() as $key => $source ) {
+		foreach ( (array) $source['hosts'] as $h ) {
+			if ( '' !== $host && ( $host === $h || str_ends_with( $host, '.' . $h ) ) ) {
+				return $key;
+			}
+		}
+		if ( '' !== $utm && in_array( $utm, (array) $source['utm'], true ) ) {
+			return $key;
+		}
+	}
+	return '';
 }
 
 /**
@@ -249,6 +341,10 @@ function swiftdash_rollup() {
 	// Daily totals: 90 days (the longest period on the dashboard) plus the 90 days before it,
 	// which the "vs previous period" change on the KPI cards compares against. Nothing older is kept.
 	$wpdb->query( $wpdb->prepare( 'DELETE FROM %i WHERE day < %s', $daily, $today->modify( '-180 days' )->format( 'Y-m-d' ) ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+	// Page, referrer and device totals: 90 days, the longest period they are shown for. AI visitor
+	// and AI bot totals: 180 days, for the "vs previous period" change of the longest period.
+	$wpdb->query( $wpdb->prepare( "DELETE FROM %i WHERE day < %s AND kind NOT IN ('ai', 'aibot')", swiftdash_table( 'dims' ), $today->modify( '-90 days' )->format( 'Y-m-d' ) ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+	$wpdb->query( $wpdb->prepare( 'DELETE FROM %i WHERE day < %s', swiftdash_table( 'dims' ), $today->modify( '-180 days' )->format( 'Y-m-d' ) ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 }
 add_action( 'swiftdash_rollup', 'swiftdash_rollup' );
 
@@ -276,7 +372,7 @@ function swiftdash_privacy_content() {
 	wp_add_privacy_policy_content(
 		'SwiftWebDev Dashboard',
 		wp_kses_post(
-			'<p>' . __( 'SwiftWebDev Dashboard counts visitors, page views and sessions without cookies and without storing IP addresses or user agents. Each visit is reduced to a one-way hash of the visitor IP address and browser, mixed with a secret salt that changes every day, so a visitor cannot be recognised from one day to the next.', 'swiftwebdev-dashboard-analytics' ) . '</p><p>' . __( 'Raw page-view rows are kept for 48 hours; daily totals are kept for 180 days. All data stays in the database of this site and is not sent to any third party.', 'swiftwebdev-dashboard-analytics' ) . '</p>'
+			'<p>' . __( 'SwiftWebDev Dashboard counts visitors, page views and sessions without cookies and without storing IP addresses or user agents. Each visit is reduced to a one-way hash of the visitor IP address and browser, mixed with a secret salt that changes every day, so a visitor cannot be recognized from one day to the next.', 'swiftwebdev-dashboard-analytics' ) . '</p><p>' . __( 'Raw page-view rows are kept for 48 hours; daily visitor totals are kept for 180 days. Daily totals per page, referring website and device type (mobile, tablet or desktop) are kept for 90 days; daily totals per AI assistant are kept for 180 days. They are counts only, are not linked to any visitor, and still no IP address or user agent is stored. All data stays in the database of this site and is not sent to any third party.', 'swiftwebdev-dashboard-analytics' ) . '</p><p>' . __( 'Requests from known AI crawlers (for example GPTBot or ClaudeBot) are recognized by the name in their user agent and added to a daily total per crawler, kept for 180 days. The user agent, IP address and requested address are not stored.', 'swiftwebdev-dashboard-analytics' ) . '</p>'
 		)
 	);
 }

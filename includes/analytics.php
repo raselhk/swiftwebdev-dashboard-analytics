@@ -22,7 +22,7 @@ function swiftdash_kpi_metrics() {
 		),
 		'page-views' => array(
 			'key'   => 'views',
-			'title' => __( 'Page Views', 'swiftwebdev-dashboard-analytics' ),
+			'title' => __( 'Page views', 'swiftwebdev-dashboard-analytics' ),
 			'tip'   => __( 'Total pages viewed, including repeat views of the same page.', 'swiftwebdev-dashboard-analytics' ),
 			'tone'  => 'purple',
 		),
@@ -188,6 +188,23 @@ function swiftdash_kpi_change( $current, $previous ) {
 }
 
 /**
+ * Change pill followed by "vs previous N days".
+ *
+ * @param array $change swiftdash_kpi_change().
+ * @param int   $days   Period length.
+ */
+function swiftdash_render_trend( $change, $days ) {
+	echo '<span class="sd-trend sd-trend--' . esc_attr( $change['tone'] ) . '">';
+	if ( $change['icon'] ) {
+		echo wp_kses( swiftdash_icon( $change['icon'] ), swiftdash_icon_kses() );
+		echo '<span class="screen-reader-text">' . esc_html( $change['sr'] ) . ' </span>';
+	}
+	echo esc_html( $change['text'] ) . '</span> ';
+	/* translators: %s: number of days. */
+	echo esc_html( sprintf( _n( 'vs previous %s day', 'vs previous %s days', $days, 'swiftwebdev-dashboard-analytics' ), number_format_i18n( $days ) ) );
+}
+
+/**
  * Inline SVG sparkline points for a series.
  *
  * @param int[] $values Values, oldest first.
@@ -201,6 +218,30 @@ function swiftdash_sparkline_points( $values ) {
 		$points[] = round( $i * $step, 2 ) . ',' . round( 30 - ( $v / $max ) * 28, 2 );
 	}
 	return implode( ' ', $points );
+}
+
+/**
+ * Sparkline of a daily series with a screen-reader summary (nothing for fewer than two days).
+ *
+ * @param int[] $series Daily values, oldest first.
+ */
+function swiftdash_render_sparkline( $series ) {
+	if ( count( $series ) < 2 ) {
+		return;
+	}
+	printf(
+		'<svg class="sd-an-spark" viewBox="0 0 100 32" preserveAspectRatio="none" aria-hidden="true" focusable="false"><polyline points="%1$s" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke" /></svg><span class="screen-reader-text">%2$s</span>',
+		esc_attr( swiftdash_sparkline_points( $series ) ),
+		esc_html(
+			sprintf(
+				/* translators: 1: number of days, 2: lowest daily value, 3: highest daily value. */
+				__( 'Daily trend over the last %1$s days: lowest %2$s, highest %3$s.', 'swiftwebdev-dashboard-analytics' ),
+				number_format_i18n( count( $series ) ),
+				number_format_i18n( min( $series ) ),
+				number_format_i18n( max( $series ) )
+			)
+		)
+	);
 }
 
 /**
@@ -227,40 +268,9 @@ function swiftdash_render_kpi_widget( $widget ) {
 			?>
 			<div class="sd-an-kpi__row">
 				<span class="sd-kpi__value"><?php echo esc_html( number_format_i18n( $current ) ); ?></span>
-				<?php if ( count( $series ) > 1 ) : ?>
-					<svg class="sd-an-spark" viewBox="0 0 100 32" preserveAspectRatio="none" aria-hidden="true" focusable="false">
-						<polyline points="<?php echo esc_attr( swiftdash_sparkline_points( $series ) ); ?>" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke" />
-					</svg>
-					<span class="screen-reader-text">
-						<?php
-						echo esc_html(
-							sprintf(
-								/* translators: 1: number of days, 2: lowest daily value, 3: highest daily value. */
-								__( 'Daily trend over the last %1$s days: lowest %2$s, highest %3$s.', 'swiftwebdev-dashboard-analytics' ),
-								number_format_i18n( count( $series ) ),
-								number_format_i18n( min( $series ) ),
-								number_format_i18n( max( $series ) )
-							)
-						);
-						?>
-					</span>
-				<?php endif; ?>
+				<?php swiftdash_render_sparkline( $series ); ?>
 			</div>
-			<span class="sd-kpi__meta">
-				<span class="sd-trend sd-trend--<?php echo esc_attr( $change['tone'] ); ?>">
-					<?php
-					if ( $change['icon'] ) {
-						echo wp_kses( swiftdash_icon( $change['icon'] ), swiftdash_icon_kses() );
-						echo '<span class="screen-reader-text">' . esc_html( $change['sr'] ) . ' </span>';
-					}
-					echo esc_html( $change['text'] );
-					?>
-				</span>
-				<?php
-				/* translators: %s: number of days. */
-				echo esc_html( sprintf( _n( 'vs previous %s day', 'vs previous %s days', $days, 'swiftwebdev-dashboard-analytics' ), number_format_i18n( $days ) ) );
-				?>
-			</span>
+			<span class="sd-kpi__meta"><?php swiftdash_render_trend( $change, $days ); ?></span>
 		<?php endif; ?>
 	</div>
 	<?php

@@ -102,7 +102,7 @@ function swiftdash_menu_extras() {
 	$brand = swiftdash_brand();
 	?>
 	<li class="sd-menu-brand">
-		<a href="<?php echo esc_url( admin_url() ); ?>">
+		<a href="<?php echo esc_url( admin_url() ); ?>" title="<?php echo esc_attr( $brand['name'] ); ?>">
 			<img class="sd-menu-brand__logo" src="<?php echo esc_url( $brand['logo'] ); ?>" alt="" width="28" height="28">
 			<span class="sd-menu-brand__name"><?php echo esc_html( $brand['name'] ); ?></span>
 		</a>
@@ -129,9 +129,9 @@ function swiftdash_menu_url( $slug, $parent_slug ) {
 
 /**
  * Header search destinations: everything in the admin menu (already filtered by
- * capability) plus SwiftWebDev Dashboard screens that are not in the left menu.
+ * capability), each with the icon of its top-level menu.
  *
- * @return array[] Each: label, url.
+ * @return array[] Each: label, url, icon.
  */
 function swiftdash_destinations() {
 	global $menu, $submenu;
@@ -141,11 +141,12 @@ function swiftdash_destinations() {
 		// Drop counter bubbles ("Updates 3" becomes "Updates").
 		return trim( preg_replace( '/\s*\d+$/', '', wp_strip_all_tags( (string) $label ) ) );
 	};
-	$add   = function ( $label, $url ) use ( &$out ) {
+	$add   = function ( $label, $url, $icon ) use ( &$out ) {
 		if ( '' !== $label && ! isset( $out[ $url ] ) ) {
 			$out[ $url ] = array(
 				'label' => $label,
 				'url'   => $url,
+				'icon'  => $icon,
 			);
 		}
 	};
@@ -155,21 +156,19 @@ function swiftdash_destinations() {
 		if ( '' === $top ) {
 			continue;
 		}
+		$icon = swiftdash_menu_icon( $item[2] );
 		if ( empty( $submenu[ $item[2] ] ) ) {
-			$add( $top, swiftdash_menu_url( $item[2], 'admin.php' ) );
+			$add( $top, swiftdash_menu_url( $item[2], 'admin.php' ), $icon );
 			continue;
 		}
 		foreach ( $submenu[ $item[2] ] as $sub ) {
 			$label = $clean( $sub[0] );
-			$add( $label === $top ? $label : $top . ': ' . $label, swiftdash_menu_url( $sub[2], $item[2] ) );
+			$add( $label === $top ? $label : $top . ': ' . $label, swiftdash_menu_url( $sub[2], $item[2] ), $icon );
 		}
 	}
 
-	foreach ( swiftdash_screens() as $slug => $screen ) {
-		$add( $screen['menu'], admin_url( 'admin.php?page=' . $slug ) );
-	}
 	if ( swiftdash_can_update() ) {
-		$add( __( 'Updates', 'swiftwebdev-dashboard-analytics' ), admin_url( 'update-core.php' ) );
+		$add( __( 'Updates', 'swiftwebdev-dashboard-analytics' ), admin_url( 'update-core.php' ), 'arrows-clockwise-fill' );
 	}
 	return array_values( $out );
 }

@@ -16,7 +16,7 @@ function swiftdash_register_site_widgets() {
 	swiftdash_register_widget(
 		'updates-health',
 		array(
-			'title'       => __( 'Updates & Health', 'swiftwebdev-dashboard-analytics' ),
+			'title'       => __( 'Updates and health', 'swiftwebdev-dashboard-analytics' ),
 			'description' => __( 'See pending WordPress, plugin and theme updates, your PHP version and Site Health results.', 'swiftwebdev-dashboard-analytics' ),
 			'screen'      => 'dashboard',
 			'area'        => 'site',
@@ -30,7 +30,7 @@ function swiftdash_register_site_widgets() {
 	swiftdash_register_widget(
 		'recent-activity',
 		array(
-			'title'       => __( 'Recent Activity', 'swiftwebdev-dashboard-analytics' ),
+			'title'       => __( 'Recent activity', 'swiftwebdev-dashboard-analytics' ),
 			'description' => __( 'See the latest posts, new users, orders and plugin changes on your site.', 'swiftwebdev-dashboard-analytics' ),
 			'screen'      => 'dashboard',
 			'area'        => 'site',

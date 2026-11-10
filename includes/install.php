@@ -9,7 +9,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'SWIFTDASH_DB_VERSION', '3' );
+define( 'SWIFTDASH_DB_VERSION', '4' );
 
 /**
  * Create or update all SwiftWebDev Dashboard tables.
@@ -17,6 +17,7 @@ define( 'SWIFTDASH_DB_VERSION', '3' );
 function swiftdash_install() {
 	global $wpdb;
 	require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+	$fresh = false === get_option( 'swiftdash_db_version' ); // Never installed before (not an update or reactivation).
 
 	/**
 	 * Filters the CREATE TABLE statements (dbDelta format, one per array item).
@@ -36,6 +37,17 @@ function swiftdash_install() {
 		$wpdb->query( $wpdb->prepare( 'ALTER TABLE %i DROP COLUMN path', $hits ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.DirectDatabaseQuery.SchemaChange
 	}
 	update_option( 'swiftdash_db_version', SWIFTDASH_DB_VERSION, false );
+
+	// Install date (review notice timing). Sites updating from 1.0.0 use their oldest daily total.
+	if ( ! get_option( 'swiftdash_installed' ) ) {
+		$oldest = $wpdb->get_var( $wpdb->prepare( 'SELECT MIN(day) FROM %i', $wpdb->prefix . 'swiftdash_daily' ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		$since  = $oldest ? strtotime( $oldest . ' 00:00:00' ) : false;
+		update_option( 'swiftdash_installed', $since ? $since : time(), false );
+		if ( $fresh ) {
+			// Brand-new install: onboarding.php sends the activating admin to the welcome screen once.
+			update_option( 'swiftdash_first_run', 1, false );
+		}
+	}
 
 	/**
 	 * Fires after tables are installed (schedule cron events here).

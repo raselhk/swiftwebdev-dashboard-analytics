@@ -12,7 +12,7 @@
 		return;
 	}
 
-	let prefs = Object.assign( { hidden: [], upgrade_snooze: 0 }, data.prefs );
+	let prefs = Object.assign( { hidden: [], upgrade_snooze: 0, review_snooze: 0, welcomed: false, recent: [], pro_tips_hidden: false }, data.prefs );
 
 	/* ---------- Helpers ---------- */
 
@@ -31,13 +31,14 @@
 		return div.innerHTML;
 	}
 
-	function savePrefs( changes ) {
+	// Extra fetch options, e.g. { keepalive: true } when the page is about to unload.
+	function savePrefs( changes, extra ) {
 		prefs = Object.assign( {}, prefs, changes );
-		return apiFetch( {
+		return apiFetch( Object.assign( {
 			path: '/wp/v2/users/me',
 			method: 'POST',
 			data: { meta: { swiftdash_prefs: prefs } },
-		} );
+		}, extra ) );
 	}
 
 	/* ---------- Toasts (top right, auto-dismiss) ---------- */
@@ -175,6 +176,23 @@
 		} );
 	} );
 
+	/* ---------- PRO tips on the AI cards: hide all of them for this user ---------- */
+	document.querySelectorAll( '[data-sd-hide-pro-tips]' ).forEach( ( btn ) => {
+		btn.addEventListener( 'click', () => {
+			document.querySelectorAll( '[data-sd-pro-tip]' ).forEach( ( el ) => el.remove() );
+			savePrefs( { pro_tips_hidden: true } ).catch( () => {} );
+		} );
+	} );
+
+	/* ---------- Review request: leave a review / already did = for good, maybe later = 30 days ---------- */
+	document.querySelectorAll( '[data-sd-review-done], [data-sd-review-later]' ).forEach( ( el ) => {
+		el.addEventListener( 'click', () => {
+			const now = Math.floor( Date.now() / 1000 );
+			document.querySelectorAll( '[data-sd-review]' ).forEach( ( card ) => card.remove() );
+			savePrefs( { review_snooze: el.hasAttribute( 'data-sd-review-later' ) ? now + 30 * 86400 : 2147483647 } ).catch( () => {} );
+		} );
+	} );
+
 	/* ---------- Sortable tables + client pagination ---------- */
 
 	app.querySelectorAll( 'table[data-sd-table]' ).forEach( ( table ) => {
@@ -238,109 +256,27 @@
 		paginate();
 	} );
 
-	/* ---------- Header search: SwiftWebDev Dashboard + WordPress destinations, then core /wp/v2/search ---------- */
+	/* ---------- Header search: shared with the toolbar (search.js) ---------- */
 
 	const search = app.querySelector( '[data-sd-search]' );
-	if ( search ) {
-		const input = search.querySelector( 'input' );
-		const list = search.querySelector( '[role="listbox"]' );
-		let timer = null;
-		let request = 0;
-		let active = -1;
-
-		function options() {
-			return Array.from( list.querySelectorAll( '[role="option"]' ) );
-		}
-
-		function highlight( index ) {
-			const opts = options();
-			active = Math.max( -1, Math.min( index, opts.length - 1 ) );
-			opts.forEach( ( opt, i ) => opt.classList.toggle( 'is-highlighted', i === active ) );
-			if ( active >= 0 ) {
-				input.setAttribute( 'aria-activedescendant', opts[ active ].id );
-			} else {
-				input.removeAttribute( 'aria-activedescendant' );
+	if ( search && window.swiftdashSearch ) {
+		window.swiftdashSearch(
+			{
+				root: search,
+				input: search.querySelector( 'input' ),
+				panel: search.querySelector( '.sd-search__panel' ),
+				list: search.querySelector( '[role="listbox"]' ),
+				status: search.querySelector( '[data-sd-search-status]' ),
+			},
+			{
+				commands: data.commands || [],
+				adminUrl: data.adminUrl,
+				iconUrl,
+				userId: data.userId || 0,
+				getRecent: () => prefs.recent || [],
+				saveRecent: ( recent, extra ) => savePrefs( { recent }, extra ),
 			}
-		}
-
-		function show( groups ) {
-			let html = '';
-			let n = 0;
-			groups.forEach( ( group ) => {
-				if ( ! group.items.length ) {
-					return;
-				}
-				html += '<li class="sd-menu__group" role="presentation">' + escapeHtml( group.label ) + '</li>';
-				group.items.forEach( ( item ) => {
-					html += '<li role="option" id="sd-search-opt-' + n++ + '" class="sd-menu__item" data-url="' + escapeHtml( item.url ) + '">' + escapeHtml( item.label ) + '</li>';
-				} );
-			} );
-			list.innerHTML = html || '<li class="sd-menu__empty" role="presentation">' + escapeHtml( __( 'No results found.', 'swiftwebdev-dashboard-analytics' ) ) + '</li>';
-			list.hidden = false;
-			input.setAttribute( 'aria-expanded', 'true' );
-			highlight( -1 );
-		}
-
-		function hide() {
-			list.hidden = true;
-			input.setAttribute( 'aria-expanded', 'false' );
-			input.removeAttribute( 'aria-activedescendant' );
-		}
-
-		input.addEventListener( 'input', () => {
-			const q = input.value.trim();
-			clearTimeout( timer );
-			if ( ! q ) {
-				hide();
-				return;
-			}
-			const lower = q.toLowerCase();
-			const pages = ( data.destinations || [] ).filter( ( d ) => d.label.toLowerCase().includes( lower ) ).slice( 0, 5 );
-			const toolsGroup = { label: __( 'Go to', 'swiftwebdev-dashboard-analytics' ), items: pages };
-			show( [ toolsGroup ] );
-			timer = setTimeout( () => {
-				const id = ++request;
-				apiFetch( { path: '/wp/v2/search?per_page=5&search=' + encodeURIComponent( q ) } )
-					.then( ( results ) => {
-						if ( id !== request ) {
-							return;
-						}
-						const content = results.map( ( r ) => ( {
-							label: r.title || __( '(no title)', 'swiftwebdev-dashboard-analytics' ),
-							url: 'post' === r.type ? 'post.php?post=' + r.id + '&action=edit' : r.url,
-						} ) );
-						show( [ toolsGroup, { label: __( 'Content', 'swiftwebdev-dashboard-analytics' ), items: content } ] );
-					} )
-					.catch( () => {} );
-			}, 250 );
-		} );
-
-		input.addEventListener( 'keydown', ( e ) => {
-			if ( list.hidden ) {
-				return;
-			}
-			if ( 'ArrowDown' === e.key ) {
-				e.preventDefault();
-				highlight( active + 1 );
-			} else if ( 'ArrowUp' === e.key ) {
-				e.preventDefault();
-				highlight( active - 1 );
-			} else if ( 'Enter' === e.key && active >= 0 ) {
-				e.preventDefault();
-				window.location.href = options()[ active ].dataset.url;
-			} else if ( 'Escape' === e.key ) {
-				hide();
-			}
-		} );
-
-		list.addEventListener( 'mousedown', ( e ) => {
-			const opt = e.target.closest( '[role="option"]' );
-			if ( opt ) {
-				window.location.href = opt.dataset.url;
-			}
-		} );
-
-		input.addEventListener( 'blur', () => setTimeout( hide, 150 ) );
+		);
 	}
 
 	/* ---------- Settings form: Save disabled until changed, saved via core /wp/v2/settings ---------- */
@@ -399,8 +335,71 @@
 			reset.addEventListener( 'click', () => setLogo( 0, logo.dataset.default ) );
 		}
 
+		// Report address: empty (site admin email) or a valid email. Errors show in red under the form.
+		const email = form.querySelector( '[name="report_email"]' );
+		const emailOk = () => {
+			const ok = ! email || ! email.value.trim() || email.checkValidity();
+			if ( email ) {
+				email.setAttribute( 'aria-invalid', ok ? 'false' : 'true' );
+			}
+			error.textContent = ok ? '' : __( 'Enter a valid email address for the weekly report, or leave it empty.', 'swiftwebdev-dashboard-analytics' );
+			error.hidden = ok;
+			return ok;
+		};
+		if ( email ) {
+			email.addEventListener( 'input', () => 'true' === email.getAttribute( 'aria-invalid' ) && emailOk() );
+		}
+
+		const test = form.querySelector( '[data-sd-report-test]' );
+		if ( test ) {
+			test.addEventListener( 'click', () => {
+				if ( ! emailOk() ) {
+					email.focus();
+					return;
+				}
+				test.disabled = true;
+				test.classList.add( 'is-busy' );
+				apiFetch( { path: '/swiftdash/v1/report/test', method: 'POST', data: { email: email.value.trim() } } )
+					/* translators: %s: email address. */
+					.then( ( res ) => toast( sprintf( __( 'Test report sent to %s.', 'swiftwebdev-dashboard-analytics' ), res.to ), 'success' ) )
+					.catch( ( err ) => toast( ( err && err.message ) || __( 'Could not send the test report. Please try again.', 'swiftwebdev-dashboard-analytics' ), 'error' ) )
+					.finally( () => {
+						test.disabled = false;
+						test.classList.remove( 'is-busy' );
+					} );
+			} );
+		}
+
+		// First-run welcome card: "Yes" turns on open after login, both answers save the report choice.
+		const welcome = app.querySelector( '[data-sd-welcome]' );
+		if ( welcome ) {
+			const buttons = welcome.querySelectorAll( '[data-sd-welcome-answer]' );
+			buttons.forEach( ( btn ) => {
+				btn.addEventListener( 'click', () => {
+					const values = Object.assign( JSON.parse( saved ), { weekly_report: welcome.querySelector( '[data-sd-welcome-report]' ).checked } );
+					if ( 'yes' === btn.dataset.sdWelcomeAnswer ) {
+						values.open_after_login = true;
+					}
+					buttons.forEach( ( b ) => ( b.disabled = true ) );
+					btn.classList.add( 'is-busy' );
+					apiFetch( { path: '/wp/v2/settings', method: 'POST', data: { swiftdash_settings: values } } )
+						.then( () => savePrefs( { welcomed: true } ) )
+						.then( () => ( window.location.href = welcome.dataset.dashboard ) )
+						.catch( ( err ) => {
+							toast( ( err && err.message ) || __( 'Could not save your choice. Please try again.', 'swiftwebdev-dashboard-analytics' ), 'error' );
+							buttons.forEach( ( b ) => ( b.disabled = false ) );
+							btn.classList.remove( 'is-busy' );
+						} );
+				} );
+			} );
+		}
+
 		form.addEventListener( 'submit', ( e ) => {
 			e.preventDefault();
+			if ( ! emailOk() ) {
+				email.focus();
+				return;
+			}
 			const values = read();
 			error.hidden = true;
 			submit.disabled = true;

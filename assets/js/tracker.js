@@ -4,7 +4,18 @@
 	if ( ! cfg || ! cfg.endpoint || navigator.webdriver ) {
 		return;
 	}
-	var body = JSON.stringify( { p: location.pathname } );
+	var data = { p: location.pathname };
+	try {
+		var ref = document.referrer ? new URL( document.referrer ).hostname : '';
+		if ( ref && ref !== location.hostname ) {
+			data.r = ref;
+		}
+		var utm = new URLSearchParams( location.search ).get( 'utm_source' );
+		if ( utm ) {
+			data.u = utm.toLowerCase().slice( 0, 40 );
+		}
+	} catch ( e ) {}
+	var body = JSON.stringify( data );
 	try {
 		if ( navigator.sendBeacon && navigator.sendBeacon( cfg.endpoint, body ) ) {
 			return;
