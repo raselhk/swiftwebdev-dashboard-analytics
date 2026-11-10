@@ -1,11 +1,12 @@
-# Publish to WordPress.org when a release tag (e.g. 1.0.1) is pushed.
-# Needs repo secrets SVN_USERNAME and SVN_PASSWORD (WordPress.org account raselhk) once the plugin is approved.
+# Publish to WordPress.org only when a plugin version tag (e.g. 1.0.1) is pushed.
+# Dated push tags (vYYYY.MM.DD-HHMM) start with "v" and never match, so they do not deploy.
+# Needs repo secrets SVN_USERNAME and SVN_PASSWORD (WordPress.org account raselhk).
 name: Deploy to WordPress.org
 
 on:
   push:
     tags:
-      - "*"
+      - "[0-9]+.[0-9]+.[0-9]+"
 
 jobs:
   deploy:

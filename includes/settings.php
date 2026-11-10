@@ -37,6 +37,10 @@ function swiftdash_register_settings() {
 				'exclude_admins'   => true,
 				'brand_name'       => '',
 				'brand_logo'       => 0,
+				'weekly_report'    => false,
+				'report_email'     => '',
+				'toolbar_live'     => true,
+				'toolbar_search'   => true,
 			),
 			'sanitize_callback' => 'swiftdash_sanitize_settings',
 			'show_in_rest'      => array(
@@ -53,6 +57,13 @@ function swiftdash_register_settings() {
 							'type'    => 'integer',
 							'minimum' => 0,
 						),
+						'weekly_report'    => array( 'type' => 'boolean' ),
+						'report_email'     => array(
+							'type'      => 'string',
+							'maxLength' => 100,
+						),
+						'toolbar_live'     => array( 'type' => 'boolean' ),
+						'toolbar_search'   => array( 'type' => 'boolean' ),
 					),
 					'additionalProperties' => false,
 				),
@@ -64,29 +75,71 @@ function swiftdash_register_settings() {
 		'user',
 		'swiftdash_prefs',
 		array(
-			'type'          => 'object',
-			'single'        => true,
-			'default'       => array(
-				'hidden'         => array(),
-				'upgrade_snooze' => 0,
+			'type'              => 'object',
+			'single'            => true,
+			'default'           => array(
+				'hidden'          => array(),
+				'upgrade_snooze'  => 0,
+				'review_snooze'   => 0,
+				'welcomed'        => false,
+				'recent'          => array(),
+				'pro_tips_hidden' => false,
 			),
-			'auth_callback' => function ( $allowed, $meta_key, $user_id ) {
+			'auth_callback'     => function ( $allowed, $meta_key, $user_id ) {
 				return current_user_can( 'edit_user', $user_id );
 			},
-			'show_in_rest'  => array(
+			'sanitize_callback' => 'swiftdash_sanitize_prefs',
+			'show_in_rest'      => array(
 				'schema' => array(
 					'type'                 => 'object',
 					'properties'           => array(
-						'hidden'         => array(
+						'hidden'          => array(
 							'type'  => 'array',
 							'items' => array(
 								'type'    => 'string',
 								'pattern' => '^[a-z0-9_-]+$',
 							),
 						),
-						'upgrade_snooze' => array(
+						'upgrade_snooze'  => array(
 							'type'    => 'integer',
 							'minimum' => 0,
+						),
+						'review_snooze'   => array(
+							'type'    => 'integer',
+							'minimum' => 0,
+						),
+						'welcomed'        => array( 'type' => 'boolean' ),
+						'pro_tips_hidden' => array( 'type' => 'boolean' ),
+						'recent'          => array(
+							'type'     => 'array',
+							'maxItems' => 5,
+							'items'    => array(
+								'type'                 => 'object',
+								'properties'           => array(
+									'label' => array(
+										'type'      => 'string',
+										'maxLength' => 200,
+									),
+									'url'   => array(
+										'type'   => 'string',
+										'format' => 'uri',
+									),
+									'hint'  => array(
+										'type'      => 'string',
+										'maxLength' => 200,
+									),
+									'icon'  => array(
+										'type'    => 'string',
+										'pattern' => '^[a-z0-9_-]+$',
+									),
+									'tone'  => array(
+										'type'    => 'string',
+										'pattern' => '^[a-z0-9_-]+$',
+									),
+								),
+								'required'             => array( 'label', 'url' ),
+								'additionalProperties' => false,
+							),
 						),
 					),
 					'additionalProperties' => false,
@@ -110,6 +163,10 @@ function swiftdash_sanitize_settings( $value ) {
 		'exclude_admins'   => ! isset( $value['exclude_admins'] ) || ! empty( $value['exclude_admins'] ),
 		'brand_name'       => isset( $value['brand_name'] ) ? mb_substr( sanitize_text_field( (string) $value['brand_name'] ), 0, 40 ) : '',
 		'brand_logo'       => isset( $value['brand_logo'] ) ? absint( $value['brand_logo'] ) : 0,
+		'weekly_report'    => ! empty( $value['weekly_report'] ),
+		'report_email'     => isset( $value['report_email'] ) ? sanitize_email( (string) $value['report_email'] ) : '',
+		'toolbar_live'     => ! isset( $value['toolbar_live'] ) || ! empty( $value['toolbar_live'] ),
+		'toolbar_search'   => ! isset( $value['toolbar_search'] ) || ! empty( $value['toolbar_search'] ),
 	);
 }
 
@@ -143,15 +200,44 @@ function swiftdash_brand() {
 }
 
 /**
+ * Clean a preferences array: every key present, recent searches limited to admin pages of this site.
+ *
+ * @param mixed $prefs Raw value.
+ * @return array
+ */
+function swiftdash_sanitize_prefs( $prefs ) {
+	$prefs  = is_array( $prefs ) ? $prefs : array();
+	$recent = array();
+	foreach ( isset( $prefs['recent'] ) && is_array( $prefs['recent'] ) ? $prefs['recent'] : array() as $item ) {
+		$url = is_array( $item ) && isset( $item['url'], $item['label'] ) ? esc_url_raw( (string) $item['url'] ) : '';
+		if ( '' === $url || 0 !== strpos( $url, admin_url() ) || count( $recent ) >= 5 ) {
+			continue;
+		}
+		$icon     = isset( $item['icon'] ) ? sanitize_key( $item['icon'] ) : '';
+		$tone     = isset( $item['tone'] ) ? sanitize_key( $item['tone'] ) : '';
+		$recent[] = array(
+			'label' => mb_substr( sanitize_text_field( (string) $item['label'] ), 0, 200 ),
+			'url'   => $url,
+			'hint'  => isset( $item['hint'] ) ? mb_substr( sanitize_text_field( (string) $item['hint'] ), 0, 200 ) : '',
+			'icon'  => '' !== $icon ? $icon : 'arrow-square-out',
+			'tone'  => '' !== $tone ? $tone : 'neutral',
+		);
+	}
+	return array(
+		'hidden'          => isset( $prefs['hidden'] ) && is_array( $prefs['hidden'] ) ? array_values( array_map( 'sanitize_key', $prefs['hidden'] ) ) : array(),
+		'upgrade_snooze'  => isset( $prefs['upgrade_snooze'] ) ? absint( $prefs['upgrade_snooze'] ) : 0,
+		'review_snooze'   => isset( $prefs['review_snooze'] ) ? absint( $prefs['review_snooze'] ) : 0,
+		'welcomed'        => ! empty( $prefs['welcomed'] ),
+		'recent'          => $recent,
+		'pro_tips_hidden' => ! empty( $prefs['pro_tips_hidden'] ),
+	);
+}
+
+/**
  * Current user's preferences, always with every key present.
  *
  * @return array
  */
 function swiftdash_prefs() {
-	$prefs = get_user_meta( get_current_user_id(), 'swiftdash_prefs', true );
-	$prefs = is_array( $prefs ) ? $prefs : array();
-	return array(
-		'hidden'         => isset( $prefs['hidden'] ) && is_array( $prefs['hidden'] ) ? array_values( array_map( 'sanitize_key', $prefs['hidden'] ) ) : array(),
-		'upgrade_snooze' => isset( $prefs['upgrade_snooze'] ) ? absint( $prefs['upgrade_snooze'] ) : 0,
-	);
+	return swiftdash_sanitize_prefs( get_user_meta( get_current_user_id(), 'swiftdash_prefs', true ) );
 }

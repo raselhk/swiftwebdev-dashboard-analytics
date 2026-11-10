@@ -37,6 +37,48 @@
 		}, 400 );
 	}
 
+	/*
+	 * No holes: when a card does not fit the rest of its row (a card was hidden or moved), the card
+	 * before it widens to the row end. Spans come from the stylesheet for the current width.
+	 */
+	function fillRows() {
+		const items = Array.from( grid.children ).filter( ( el ) => ! el.hidden && ( el.matches( '.sd-widget' ) || el.matches( '.sd-promo' ) ) );
+		items.forEach( ( el ) => ( el.style.gridColumn = '' ) );
+		const spans = items.map( ( el ) => {
+			const style = getComputedStyle( el );
+			const match = /span\s+(\d+)/.exec( style.gridColumnStart + ' ' + style.gridColumnEnd );
+			return match ? Math.min( 12, Number( match[ 1 ] ) ) : 12; // The promo runs 1 / -1.
+		} );
+		let used = 0;
+		const widen = ( i ) => {
+			if ( i >= 0 && used > 0 && used < 12 ) {
+				items[ i ].style.gridColumn = 'span ' + ( spans[ i ] + 12 - used );
+			}
+		};
+		spans.forEach( ( span, i ) => {
+			if ( used + span > 12 ) {
+				widen( i - 1 );
+				used = 0;
+			}
+			used = ( used + span ) % 12;
+		} );
+		widen( items.length - 1 );
+	}
+	fillRows();
+	// Cards shown or hidden (Customize), moved, or the promo dismissed; style changes are not watched.
+	new MutationObserver( ( records ) => {
+		if ( records.some( ( r ) => r.target === grid || r.target.parentElement === grid ) ) {
+			fillRows();
+		}
+	} ).observe( grid, { childList: true, subtree: true, attributeFilter: [ 'hidden' ] } );
+	let gridWidth = 0;
+	new ResizeObserver( ( [ entry ] ) => {
+		if ( entry.contentRect.width !== gridWidth ) {
+			gridWidth = entry.contentRect.width;
+			fillRows();
+		}
+	} ).observe( grid );
+
 	window.Sortable.create( grid, {
 		handle: '.sd-drag',
 		draggable: '.sd-widget',
@@ -84,7 +126,13 @@
 		reset.addEventListener( 'click', () => {
 			const byId = {};
 			cards().forEach( ( el ) => ( byId[ el.dataset.sdWidget ] = el ) );
+			// The promo banner keeps its slot: the same number of cards stays above it.
+			const promo = grid.querySelector( ':scope > .sd-promo' );
+			const above = promo ? cards().filter( ( el ) => el.compareDocumentPosition( promo ) & Node.DOCUMENT_POSITION_FOLLOWING ).length : 0;
 			grid.dataset.sdDefault.split( ',' ).forEach( ( id ) => byId[ id ] && grid.appendChild( byId[ id ] ) );
+			if ( promo ) {
+				grid.insertBefore( promo, cards()[ above ] || null );
+			}
 			clearTimeout( timer );
 			save( [] )
 				.then( () => window.swiftdash.toast( __( 'Layout reset', 'swiftwebdev-dashboard-analytics' ), 'success' ) )

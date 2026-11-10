@@ -109,8 +109,16 @@ function swiftdash_render_header() {
 		<div class="sd-search" role="search" data-sd-search>
 			<label class="screen-reader-text" for="sd-search-input"><?php esc_html_e( 'Search content, tools and pages', 'swiftwebdev-dashboard-analytics' ); ?></label>
 			<?php echo wp_kses( swiftdash_icon( 'magnifying-glass', 'sd-search__icon' ), swiftdash_icon_kses() ); ?>
-			<input type="search" id="sd-search-input" class="sd-input sd-search__input" placeholder="<?php esc_attr_e( 'Search posts, pages, tools...', 'swiftwebdev-dashboard-analytics' ); ?>" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="sd-search-results" aria-autocomplete="list">
-			<ul class="sd-menu sd-search__results" id="sd-search-results" role="listbox" hidden></ul>
+			<input type="search" id="sd-search-input" class="sd-input sd-search__input" placeholder="<?php esc_attr_e( 'Search posts, pages, users, tools...', 'swiftwebdev-dashboard-analytics' ); ?>" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="sd-search-results" aria-autocomplete="list">
+			<div class="sd-menu sd-search__panel" hidden>
+				<ul class="sd-search__results" id="sd-search-results" role="listbox" aria-label="<?php esc_attr_e( 'Search results', 'swiftwebdev-dashboard-analytics' ); ?>"></ul>
+				<p class="sd-search__foot" aria-hidden="true">
+					<span><kbd>&uarr;</kbd><kbd>&darr;</kbd> <?php esc_html_e( 'to move', 'swiftwebdev-dashboard-analytics' ); ?></span>
+					<span><kbd>Enter</kbd> <?php esc_html_e( 'to open', 'swiftwebdev-dashboard-analytics' ); ?></span>
+					<span><kbd>Esc</kbd> <?php esc_html_e( 'to close', 'swiftwebdev-dashboard-analytics' ); ?></span>
+				</p>
+			</div>
+			<p class="screen-reader-text" aria-live="polite" data-sd-search-status></p>
 		</div>
 
 		<div class="sd-header__actions">

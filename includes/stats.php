@@ -84,3 +84,33 @@ function swiftdash_get_stats( $days = 30 ) {
 		'daily'    => $daily,
 	);
 }
+
+/**
+ * Most counted items of one kind over the last $days days (including today unless $full_days).
+ *
+ * @param string $kind  page (URL path), referrer (host), device (mobile|tablet|desktop) or ai (source key).
+ * @param int    $days  Number of days (1-90).
+ * @param int    $limit     Maximum rows.
+ * @param bool   $full_days End with yesterday, so the period is $days complete days.
+ * @return array[] Each: item (string), count (int). Highest count first.
+ */
+function swiftdash_get_top( $kind, $days = 30, $limit = 10, $full_days = false ) {
+	global $wpdb;
+	$days  = max( 1, min( 90, (int) $days ) );
+	$today = new DateTimeImmutable( 'today', wp_timezone() );
+	$end   = $full_days ? $today : $today->modify( '+1 day' ); // Exclusive.
+	$since = $end->modify( '-' . $days . ' days' )->format( 'Y-m-d' );
+	$rows  = $wpdb->get_results( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		$wpdb->prepare( 'SELECT item, SUM(count) AS total FROM %i WHERE day >= %s AND day < %s AND kind = %s GROUP BY item ORDER BY total DESC, item ASC LIMIT %d', swiftdash_table( 'dims' ), $since, $end->format( 'Y-m-d' ), (string) $kind, max( 1, (int) $limit ) ),
+		ARRAY_A
+	);
+	return array_map(
+		function ( $row ) {
+			return array(
+				'item'  => (string) $row['item'],
+				'count' => (int) $row['total'],
+			);
+		},
+		(array) $rows
+	);
+}

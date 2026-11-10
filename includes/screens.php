@@ -120,15 +120,17 @@ function swiftdash_enqueue_assets( $hook_suffix ) {
 	wp_enqueue_style( 'swiftdash-tokens', SWIFTDASH_URL . 'assets/css/tokens.css', array(), SWIFTDASH_VERSION );
 	wp_enqueue_style( 'swiftdash-app', SWIFTDASH_URL . 'assets/css/app.css', array( 'swiftdash-tokens' ), SWIFTDASH_VERSION );
 
-	wp_enqueue_script( 'swiftdash-app', SWIFTDASH_URL . 'assets/js/app.js', array( 'wp-api-fetch', 'wp-i18n' ), SWIFTDASH_VERSION, true );
+	wp_enqueue_script( 'swiftdash-app', SWIFTDASH_URL . 'assets/js/app.js', array( 'wp-api-fetch', 'wp-i18n', 'swiftdash-search' ), SWIFTDASH_VERSION, true );
 	wp_set_script_translations( 'swiftdash-app', 'swiftwebdev-dashboard-analytics' );
 
 	wp_add_inline_script(
 		'swiftdash-app',
 		'window.swiftdashData = ' . wp_json_encode(
 			array(
-				'prefs'        => swiftdash_prefs(),
-				'destinations' => swiftdash_destinations(),
+				'prefs'    => swiftdash_prefs(),
+				'commands' => swiftdash_search_commands(),
+				'userId'   => get_current_user_id(),
+				'adminUrl' => admin_url(),
 			)
 		) . ';',
 		'before'
@@ -247,7 +249,6 @@ function swiftdash_screen_dashboard( $screen ) {
 	);
 
 	swiftdash_render_screen_widgets( 'dashboard' );
-	swiftdash_render_upgrade( 'dashboard' );
 	swiftdash_render_customize_panel( 'dashboard' );
 }
 
@@ -259,7 +260,7 @@ function swiftdash_screen_dashboard( $screen ) {
  */
 function swiftdash_screen_areas( $screen_key ) {
 	$areas = array(
-		'dashboard' => array( 'kpis', 'overview', 'performance', 'site' ),
+		'dashboard' => array( 'kpis', 'overview', 'performance', 'site', 'insights', 'ai' ),
 	);
 
 	/**
@@ -305,13 +306,17 @@ function swiftdash_screen_pending( $screen ) {
  * @param array $screen Screen definition.
  */
 function swiftdash_screen_settings( $screen ) {
-	$brand = swiftdash_brand();
+	$brand   = swiftdash_brand();
+	$last    = (int) get_option( 'swiftdash_report_last', 0 );
+	$weekly  = swiftdash_setting( 'weekly_report' );
+	$help_id = $last ? 'sd-weekly-report-help sd-weekly-report-last' : 'sd-weekly-report-help';
 	swiftdash_render_page_header( $screen['title'], $screen['description'] );
+	$welcome = swiftdash_render_welcome();
 	?>
 	<form class="sd-card sd-form" data-sd-settings-form novalidate>
 		<div class="sd-card__body sd-form__fields">
-			<div class="sd-field sd-field--switch">
-				<input type="checkbox" class="sd-switch" id="sd-open-after-login" name="open_after_login" <?php checked( swiftdash_setting( 'open_after_login' ) ); ?>>
+			<div class="sd-field sd-field--switch<?php echo $welcome ? ' sd-field--highlight' : ''; ?>">
+				<input type="checkbox" class="sd-switch" id="sd-open-after-login" name="open_after_login" aria-describedby="sd-open-after-login-help" <?php checked( swiftdash_setting( 'open_after_login' ) ); ?>>
 				<div>
 					<label class="sd-field__label" for="sd-open-after-login"><?php esc_html_e( 'Open SwiftWebDev Dashboard after login', 'swiftwebdev-dashboard-analytics' ); ?></label>
 					<p class="sd-field__help" id="sd-open-after-login-help"><?php esc_html_e( 'Shows SwiftWebDev Dashboard instead of the WordPress dashboard. The WordPress dashboard stays available from your user menu.', 'swiftwebdev-dashboard-analytics' ); ?></p>
@@ -324,9 +329,23 @@ function swiftdash_screen_settings( $screen ) {
 					<p class="sd-field__help" id="sd-exclude-admins-help"><?php esc_html_e( 'Visits by anyone logged in to WordPress (you and your team) are left out of visitor stats.', 'swiftwebdev-dashboard-analytics' ); ?></p>
 				</div>
 			</div>
+			<div class="sd-field sd-field--switch">
+				<input type="checkbox" class="sd-switch" id="sd-toolbar-live" name="toolbar_live" aria-describedby="sd-toolbar-live-help" <?php checked( swiftdash_setting( 'toolbar_live' ) ); ?>>
+				<div>
+					<label class="sd-field__label" for="sd-toolbar-live"><?php esc_html_e( 'Show live visitors in the toolbar', 'swiftwebdev-dashboard-analytics' ); ?></label>
+					<p class="sd-field__help" id="sd-toolbar-live-help"><?php esc_html_e( 'Shows how many people are on your site right now in the top bar, with more of today\'s numbers when you point at it.', 'swiftwebdev-dashboard-analytics' ); ?></p>
+				</div>
+			</div>
+			<div class="sd-field sd-field--switch">
+				<input type="checkbox" class="sd-switch" id="sd-toolbar-search" name="toolbar_search" aria-describedby="sd-toolbar-search-help" <?php checked( swiftdash_setting( 'toolbar_search' ) ); ?>>
+				<div>
+					<label class="sd-field__label" for="sd-toolbar-search"><?php esc_html_e( 'Show search in the toolbar', 'swiftwebdev-dashboard-analytics' ); ?></label>
+					<p class="sd-field__help" id="sd-toolbar-search-help"><?php esc_html_e( 'Adds a search icon next to your name in the top bar that finds posts, pages, media, users and admin screens from any admin page.', 'swiftwebdev-dashboard-analytics' ); ?></p>
+				</div>
+			</div>
 			<div class="sd-field">
 				<label class="sd-field__label" for="sd-brand-name"><?php esc_html_e( 'Menu name', 'swiftwebdev-dashboard-analytics' ); ?></label>
-				<input type="text" class="sd-input" id="sd-brand-name" name="brand_name" maxlength="40" aria-describedby="sd-brand-name-help" value="<?php echo esc_attr( $brand['name'] ); ?>">
+				<input type="text" class="sd-input" id="sd-brand-name" name="brand_name" maxlength="40" aria-describedby="sd-brand-name-help" placeholder="<?php echo esc_attr( wp_strip_all_tags( get_bloginfo( 'name' ) ) ); ?>" value="<?php echo esc_attr( swiftdash_setting( 'brand_name' ) ); ?>">
 				<p class="sd-field__help" id="sd-brand-name-help"><?php esc_html_e( 'Shown next to the logo at the top of the left menu. Your site title is used by default.', 'swiftwebdev-dashboard-analytics' ); ?></p>
 			</div>
 			<div class="sd-field" data-sd-logo data-default="<?php echo esc_url( get_site_icon_url( 64 ) ? get_site_icon_url( 64 ) : SWIFTDASH_URL . 'assets/img/brand.svg' ); ?>">
@@ -338,6 +357,34 @@ function swiftdash_screen_settings( $screen ) {
 				</div>
 				<input type="hidden" name="brand_logo" value="<?php echo esc_attr( (string) swiftdash_setting( 'brand_logo' ) ); ?>">
 				<p class="sd-field__help"><?php esc_html_e( 'A square image works best. It is shown at the top of the left menu on every admin page. Your site icon is used by default.', 'swiftwebdev-dashboard-analytics' ); ?></p>
+			</div>
+			<div class="sd-field sd-field--switch">
+				<input type="checkbox" class="sd-switch" id="sd-weekly-report" name="weekly_report" aria-describedby="<?php echo esc_attr( $help_id ); ?>" <?php checked( $weekly ); ?>>
+				<div>
+					<label class="sd-field__label" for="sd-weekly-report"><?php esc_html_e( 'Email a weekly site report', 'swiftwebdev-dashboard-analytics' ); ?></label>
+					<p class="sd-field__help" id="sd-weekly-report-help"><?php esc_html_e( 'Every Monday morning: visitors, top pages, AI assistant visits, speed scores, pending updates and Site Health, compared with the week before.', 'swiftwebdev-dashboard-analytics' ); ?></p>
+					<?php if ( $last ) : ?>
+						<p class="sd-field__help" id="sd-weekly-report-last">
+							<?php
+							/* translators: %s: date and time the last weekly report was sent. */
+							echo esc_html( sprintf( __( 'Last report sent %s.', 'swiftwebdev-dashboard-analytics' ), wp_date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), $last ) ) );
+							?>
+						</p>
+					<?php endif; ?>
+				</div>
+			</div>
+			<div class="sd-field">
+				<label class="sd-field__label" for="sd-report-email"><?php esc_html_e( 'Send the report to', 'swiftwebdev-dashboard-analytics' ); ?></label>
+				<input type="email" class="sd-input" id="sd-report-email" name="report_email" maxlength="100" placeholder="<?php echo esc_attr( get_option( 'admin_email' ) ); ?>" aria-describedby="sd-report-email-help" value="<?php echo esc_attr( swiftdash_setting( 'report_email' ) ); ?>">
+				<p class="sd-field__help" id="sd-report-email-help">
+					<?php
+					/* translators: %s: site admin email address. */
+					echo esc_html( sprintf( __( 'Leave empty to use the site admin email, %s. The test report goes to this address too.', 'swiftwebdev-dashboard-analytics' ), get_option( 'admin_email' ) ) );
+					?>
+				</p>
+				<div>
+					<button type="button" class="sd-btn sd-btn--secondary" data-sd-report-test><?php esc_html_e( 'Send a test report now', 'swiftwebdev-dashboard-analytics' ); ?></button>
+				</div>
 			</div>
 			<p class="sd-form__error" role="alert" hidden></p>
 		</div>

@@ -32,6 +32,8 @@ function &swiftdash_widget_registry() {
  *     @type callable      $render      Prints the card body. Widgets without one are not shown.
  *     @type callable|null $actions     Prints extra header content (status pill, links), right aligned.
  *     @type array|null    $kpi         KPI card style { icon, tone } for widgets not listed in swiftdash_kpi_card().
+ *     @type string        $replaced_by Id of a widget that shows the same data; when it is registered on the
+ *                                      same screen, this one is left out (one card per report).
  * }
  */
 function swiftdash_register_widget( $id, $args ) {
@@ -49,6 +51,7 @@ function swiftdash_register_widget( $id, $args ) {
 			'render'      => null,
 			'actions'     => null,
 			'kpi'         => null,
+			'replaced_by' => '',
 		)
 	);
 	$registry[ $id ]['id'] = $id;
@@ -62,9 +65,14 @@ function swiftdash_register_widget( $id, $args ) {
  * @return array
  */
 function swiftdash_get_widgets( $screen, $area = null ) {
-	$widgets = array_filter(
-		swiftdash_widget_registry(),
-		function ( $w ) use ( $screen, $area ) {
+	$registry = swiftdash_widget_registry();
+	$widgets  = array_filter(
+		$registry,
+		function ( $w ) use ( $screen, $area, $registry ) {
+			$other = $w['replaced_by'] && isset( $registry[ $w['replaced_by'] ] ) ? $registry[ $w['replaced_by'] ] : null;
+			if ( $other && $other['screen'] === $screen && is_callable( $other['render'] ) ) {
+				return false;
+			}
 			return $w['screen'] === $screen && ( null === $area || $w['area'] === $area ) && is_callable( $w['render'] );
 		}
 	);
@@ -178,13 +186,25 @@ function swiftdash_render_screen_widgets( $screen_key ) {
 	);
 
 	$hidden = swiftdash_prefs()['hidden'];
+	// The dashboard's promo slot sits after the second full row of visible cards.
+	$promo = 'dashboard' === $screen_key;
+	$spans = 0;
 	printf(
 		'<div class="sd-grid sd-grid--sortable" data-sd-sortable="%1$s" data-sd-default="%2$s">',
 		esc_attr( $screen_key ),
 		esc_attr( implode( ',', $defaults ) )
 	);
 	foreach ( $widgets as $widget ) {
-		swiftdash_render_widget( $widget, in_array( $widget['id'], $hidden, true ), true );
+		$is_hidden = in_array( $widget['id'], $hidden, true );
+		swiftdash_render_widget( $widget, $is_hidden, true );
+		$spans += $is_hidden ? 0 : absint( $widget['span'] );
+		if ( $promo && $spans >= 24 && 0 === $spans % 12 ) {
+			swiftdash_render_upgrade( $screen_key );
+			$promo = false;
+		}
+	}
+	if ( $promo ) {
+		swiftdash_render_upgrade( $screen_key );
 	}
 	echo '</div>';
 	echo '<p class="screen-reader-text" id="sd-drag-help">' . esc_html__( 'Drag to move this card, or press the up and down arrow keys.', 'swiftwebdev-dashboard-analytics' ) . '</p>';
@@ -295,12 +315,59 @@ function swiftdash_show_upgrade() {
 }
 
 /**
- * Banner at the end of the dashboard about the separate PRO add-on: what it adds, one link
- * to learn more. Dismissible for 30 days; never shown elsewhere.
+ * Whether the review request is due for the current user: 14 days after install, administrators
+ * only, not answered or snoozed. Shown for free and PRO alike.
+ *
+ * @return bool
+ */
+function swiftdash_review_due() {
+	$installed = (int) get_option( 'swiftdash_installed', 0 );
+	return $installed && time() >= $installed + 14 * DAY_IN_SECONDS
+		&& current_user_can( 'manage_options' )
+		&& swiftdash_prefs()['review_snooze'] < time();
+}
+
+/**
+ * Review request in the promo slot. "Leave a review" and "I already did" hide it for good,
+ * "Maybe later" for 30 days (app.js, per user in swiftdash_prefs).
+ */
+function swiftdash_render_review() {
+	$url = 'https://wordpress.org/support/plugin/swiftwebdev-dashboard-analytics/reviews/#new-post';
+	?>
+	<aside class="sd-promo sd-promo--single" aria-labelledby="sd-review-title" data-sd-review>
+		<button type="button" class="sd-icon-btn sd-promo__close" data-sd-review-done aria-label="<?php esc_attr_e( 'Close and do not ask again', 'swiftwebdev-dashboard-analytics' ); ?>">
+			<?php echo wp_kses( swiftdash_icon( 'x' ), swiftdash_icon_kses() ); ?>
+		</button>
+		<div class="sd-promo__intro">
+			<span class="sd-promo__eyebrow"><?php echo wp_kses( swiftdash_icon( 'heart-fill' ), swiftdash_icon_kses() ); ?><?php esc_html_e( 'Quick favor', 'swiftwebdev-dashboard-analytics' ); ?></span>
+			<h2 class="sd-promo__title" id="sd-review-title"><?php esc_html_e( 'Enjoying SwiftWebDev Dashboard?', 'swiftwebdev-dashboard-analytics' ); ?></h2>
+			<p class="sd-promo__desc"><?php esc_html_e( 'An honest review on WordPress.org takes a minute and helps other site owners decide if it is right for them.', 'swiftwebdev-dashboard-analytics' ); ?></p>
+			<div class="sd-promo__actions">
+				<a class="sd-btn sd-btn--light" href="<?php echo esc_url( $url ); ?>" target="_blank" rel="noopener noreferrer" data-sd-review-done>
+					<?php esc_html_e( 'Leave a review', 'swiftwebdev-dashboard-analytics' ); ?>
+					<?php echo wp_kses( swiftdash_icon( 'arrow-square-out' ), swiftdash_icon_kses() ); ?>
+					<span class="screen-reader-text"><?php esc_html_e( '(opens in a new tab)', 'swiftwebdev-dashboard-analytics' ); ?></span>
+				</a>
+				<button type="button" class="sd-promo__later" data-sd-review-later><?php esc_html_e( 'Maybe later', 'swiftwebdev-dashboard-analytics' ); ?></button>
+				<button type="button" class="sd-promo__later" data-sd-review-done><?php esc_html_e( 'I already did', 'swiftwebdev-dashboard-analytics' ); ?></button>
+			</div>
+		</div>
+	</aside>
+	<?php
+}
+
+/**
+ * Banner in the middle of the dashboard (after the second row of cards) about the separate PRO add-on: what it adds, one link
+ * to learn more. Dismissible for 30 days; never shown elsewhere. While the review request is
+ * due it takes this slot instead (one promo at a time).
  *
  * @param string $screen_key Screen the banner is on, for the link's campaign tag.
  */
 function swiftdash_render_upgrade( $screen_key = 'dashboard' ) {
+	if ( 'dashboard' === $screen_key && swiftdash_review_due() ) {
+		swiftdash_render_review();
+		return;
+	}
 	if ( ! swiftdash_show_upgrade() ) {
 		return;
 	}
@@ -313,9 +380,10 @@ function swiftdash_render_upgrade( $screen_key = 'dashboard' ) {
 	);
 	$features = array(
 		__( 'Real-time visitors', 'swiftwebdev-dashboard-analytics' ),
-		__( 'Traffic sources and referrers', 'swiftwebdev-dashboard-analytics' ),
-		__( 'Top pages and new visitors', 'swiftwebdev-dashboard-analytics' ),
-		__( 'Countries, devices and browsers', 'swiftwebdev-dashboard-analytics' ),
+		__( 'Goals and conversion rates', 'swiftwebdev-dashboard-analytics' ),
+		__( 'UTM campaign reports', 'swiftwebdev-dashboard-analytics' ),
+		__( 'Traffic-spike email alerts', 'swiftwebdev-dashboard-analytics' ),
+		__( 'Countries, browsers and new visitors', 'swiftwebdev-dashboard-analytics' ),
 		__( 'Form and click tracking', 'swiftwebdev-dashboard-analytics' ),
 		__( 'Session recordings with private fields hidden', 'swiftwebdev-dashboard-analytics' ),
 		__( 'Custom date ranges and CSV export', 'swiftwebdev-dashboard-analytics' ),

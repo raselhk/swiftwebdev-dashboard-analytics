@@ -1,6 +1,7 @@
 // Builds the wp.org listing assets and the site media from the HTML sources here and the raw
 // UI shots in shots/ (made by youtube/_screens/_scripts/assets-cap.cjs).
-//   node render.cjs
+//   node render.cjs              (everything)
+//   node render.cjs screenshots  (wp.org screenshots only)
 const { chromium } = require('D:/Simple Swift Email/app/node_modules/.pnpm/playwright@1.63.0/node_modules/playwright');
 const sharp = require('D:/Simple Swift Email/app/node_modules/.pnpm/sharp@0.35.5_@types+node@22.20.3/node_modules/sharp');
 const fs = require('fs');
@@ -45,19 +46,36 @@ async function webp(input, out, width, max, extract) {
 	}
 	const log = (n, b) => console.log(n, b);
 
-	// Banners and icons.
-	for (const [w, h, dsf] of [[772, 250, 1], [772, 250, 2]]) {
+	// Banners and icons (skipped by `node render.cjs screenshots`).
+	const all = process.argv[2] !== 'screenshots';
+	for (const [w, h, dsf] of all ? [[772, 250, 1], [772, 250, 2]] : []) {
 		const buf = await render('banner.html', w, h, dsf);
 		log('banner', await png(buf, path.join(ORG, `banner-${w * dsf}x${h * dsf}.png`)));
 	}
-	for (const dsf of [1, 2]) {
+	for (const dsf of all ? [1, 2] : []) {
 		const buf = await render('icon.html', 128, 128, dsf);
 		log('icon', await png(buf, path.join(ORG, `icon-${128 * dsf}x${128 * dsf}.png`)));
 	}
 
 	// wp.org screenshots, in readme.txt caption order, downscaled from 2x for crisp text.
-	const ss = ['dash-full@2x.png', 'visitors-90d-view@2x.png', 'speed-view@2x.png', 'links-view@2x.png'];
-	for (let i = 0; i < 4; i++) log('screenshot-' + (i + 1), await png(shot(ss[i]), path.join(ORG, `screenshot-${i + 1}.png`), 1600));
+	// 1.1.0 set: raw 1440 css px captures at 2x (v11-*), demo site "Northwind".
+	const ss = [
+		['v11-overview-2x.png', 1600, { left: 0, top: 0, width: 2880, height: 3436 }], // Ends at the Quick Links row.
+		['v11-search-typed-2x.png'],
+		['v11-search-focus-2x.png'],
+		['v11-ai-2x.png'],
+		['v11-insights-2x.png'],
+		['v11-speed-full-2x.png', 1600, { left: 0, top: 0, width: 2880, height: 2824 }], // Scores, Core Web Vitals, first fix.
+		['v11-links-full-2x.png', 1600, { left: 0, top: 0, width: 2880, height: 1900 }], // Pinned + Content + Design.
+		['v11-email-2x.png', null, { left: 700, top: 0, width: 1480, height: 2936 }], // The email card, native size.
+		['v11-toolbar-live-2x.png'], // Live visitors panel over Posts.
+		['v11-toolbar-search-2x.png'], // Toolbar search over Pages.
+	];
+	for (let i = 0; i < ss.length; i++) {
+		const [f, w = 1600, ex] = ss[i];
+		log('screenshot-' + (i + 1), await png(shot(f), path.join(ORG, `screenshot-${i + 1}.png`), w, ex));
+	}
+	if (!all) return br.close();
 
 	// Landing-page images: 1600 px wide WebP (<150 KB) plus PNG.
 	const speedMeta = await sharp(shot('speed-view@2x.png')).metadata();
