@@ -48,7 +48,8 @@
 }
 
 .swiftdash .sd-widget--kpi .sd-an-kpi {
-	grid-template-columns: minmax(0, 1fr) auto;
+	/* The number keeps its full width first; the sparkline takes what is left (up to 88px). */
+	grid-template-columns: minmax(0, max-content) minmax(0, 1fr);
 	grid-template-areas:
 		"value spark"
 		"meta meta";
@@ -75,9 +76,10 @@
 .swiftdash .sd-widget--kpi .sd-an-spark {
 	grid-area: spark;
 	align-self: center;
-	width: 88px;
+	justify-self: end;
+	width: 100%;
 	min-width: 0;
-	max-width: 100%;
+	max-width: 88px;
 	height: 36px;
 }
 

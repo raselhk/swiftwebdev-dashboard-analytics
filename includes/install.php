@@ -9,7 +9,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'SWIFTDASH_DB_VERSION', '4' );
+define( 'SWIFTDASH_DB_VERSION', '5' );
 
 /**
  * Create or update all SwiftWebDev Dashboard tables.

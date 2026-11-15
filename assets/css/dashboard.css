@@ -14,6 +14,7 @@
 
 .swiftdash .sd-dw-row {
 	display: flex;
+	flex-wrap: wrap;
 	align-items: center;
 	gap: var(--sd-space-4);
 	margin: 0;
@@ -52,7 +53,8 @@
 	flex: 1;
 	flex-direction: column;
 	gap: 2px;
-	min-width: 0;
+	/* Room for a whole word ("recommended"); below that the status wraps to its own line. */
+	min-width: 7em;
 }
 
 .swiftdash .sd-dw-row__name {
@@ -78,18 +80,14 @@
 	justify-content: flex-end;
 	align-items: center;
 	gap: var(--sd-space-2);
-	max-width: 50%;
+	/* In a narrow card the status drops below the text, still on the right. */
+	margin-left: auto;
 }
 
 @media (max-width: 480px) {
 
-	.swiftdash .sd-dw-row {
-		flex-wrap: wrap;
-	}
-
 	.swiftdash .sd-dw-row__end {
 		justify-content: flex-start;
-		max-width: none;
 		padding-left: calc(44px + var(--sd-space-4));
 		width: 100%;
 	}

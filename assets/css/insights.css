@@ -96,8 +96,14 @@
 	font-weight: var(--sd-fw-bold);
 }
 
-#sd-w-insight-ai .sd-in-row__fill {
-	background: linear-gradient(90deg, var(--sd-purple), var(--sd-orange));
+/* "AI" tag after an AI assistant in Referrers. */
+.swiftdash .sd-in-tag {
+	margin-left: var(--sd-space-1);
+	padding: 0 6px;
+	background: var(--sd-purple-50);
+	color: var(--sd-purple);
+	font-size: 11px;
+	vertical-align: 1px;
 }
 
 /* Brand marks (Simple Icons, CC0): brand color on a soft tint of it; letter for brands without a mark. */
@@ -127,9 +133,9 @@
 	line-height: 1;
 }
 
-/* ---------- AI & Search row: AI crawlers, AI visitors, AI access check ---------- */
+/* ---------- AI & Search row: AI crawlers, bots, AI access check ---------- */
 #sd-w-ai-crawlers .sd-card__body,
-#sd-w-insight-ai .sd-card__body,
+#sd-w-bots .sd-card__body,
 #sd-w-ai-access .sd-card__body {
 	display: flex;
 	flex-direction: column;
@@ -150,18 +156,75 @@
 	color: var(--sd-text-2);
 }
 
-.sd-ai-figure__row {
-	display: flex;
+/* People from AI assistants: count on the left, top assistants on the right. */
+.sd-ai-people {
+	display: grid;
+	grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+	gap: var(--sd-space-3) var(--sd-space-6);
 	align-items: center;
-	justify-content: space-between;
-	gap: var(--sd-space-3);
-	min-width: 0;
+	padding-top: var(--sd-space-4);
+	border-top: var(--sd-border-w) solid var(--sd-border);
 }
 
-.swiftdash .sd-ai-figure__row .sd-an-spark {
-	width: 120px;
-	height: 36px;
-	color: var(--sd-purple);
+.sd-ai-people > .sd-field__help {
+	margin: 0;
+}
+
+.swiftdash .sd-ai-chip .sd-in-row__icon {
+	width: 20px;
+	height: 20px;
+	border-radius: 6px;
+	font-size: var(--sd-fs-help);
+}
+
+.swiftdash .sd-ai-chip .sd-brand .sd-icon {
+	width: 12px;
+	height: 12px;
+}
+
+.swiftdash .sd-ai-chip .sd-brand__letter {
+	font-size: var(--sd-fs-help);
+}
+
+/* Bots & automated visits: label and count, the change below the label. */
+.swiftdash .sd-bots {
+	display: flex;
+	flex-direction: column;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.swiftdash .sd-bots__row {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) auto;
+	gap: var(--sd-space-2) var(--sd-space-3);
+	align-items: baseline;
+	margin: 0;
+	padding: var(--sd-space-4) 0;
+	border-top: var(--sd-border-w) solid var(--sd-border);
+}
+
+.swiftdash .sd-bots__row:first-child {
+	padding-top: 0;
+	border-top: 0;
+}
+
+.sd-bots__label {
+	font-weight: var(--sd-fw-semibold);
+	color: var(--sd-text);
+}
+
+.sd-bots__value {
+	font-size: var(--sd-fs-card);
+	font-weight: var(--sd-fw-heavy);
+	color: var(--sd-text);
+	font-variant-numeric: tabular-nums;
+}
+
+.sd-bots__row .sd-kpi__meta,
+.sd-bots__row .sd-in-row__track {
+	grid-area: auto / 1 / auto / -1;
 }
 
 .sd-ai-daily {
@@ -178,12 +241,6 @@
 
 .swiftdash .sd-ai-figure .sd-kpi__meta {
 	margin-top: var(--sd-space-1);
-}
-
-.swiftdash .sd-ai-share {
-	margin: calc(-1 * var(--sd-space-2)) 0 0;
-	font-size: var(--sd-fs-label);
-	color: var(--sd-text-2);
 }
 
 .sd-ai-split {
@@ -203,17 +260,6 @@
 .sd-ai-split__list {
 	min-width: 0;
 	padding-left: var(--sd-space-6);
-	border-left: var(--sd-border-w) solid var(--sd-border);
-}
-
-.sd-ai-pair {
-	display: grid;
-	grid-template-columns: repeat(2, minmax(0, 1fr));
-	gap: var(--sd-space-4);
-}
-
-.sd-ai-pair > .sd-ai-figure + .sd-ai-figure {
-	padding-left: var(--sd-space-4);
 	border-left: var(--sd-border-w) solid var(--sd-border);
 }
 
@@ -469,7 +515,8 @@
 
 @container (max-width: 560px) {
 
-	.sd-ai-split {
+	.sd-ai-split,
+	.sd-ai-people {
 		grid-template-columns: minmax(0, 1fr);
 	}
 

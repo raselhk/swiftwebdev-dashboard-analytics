@@ -33,10 +33,13 @@ function swiftdash_tracker_schema( $schema, $prefix, $collate ) {
 	$schema[] = "CREATE TABLE {$prefix}hits (
   id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   visitor char(64) NOT NULL,
+  token char(16) NOT NULL DEFAULT '',
+  human tinyint(1) unsigned NOT NULL DEFAULT 1,
   new_session tinyint(1) unsigned NOT NULL DEFAULT 0,
   created datetime NOT NULL,
   PRIMARY KEY  (id),
   KEY visitor_created (visitor,created),
+  KEY token (token),
   KEY created (created)
 ) {$collate};";
 	$schema[] = "CREATE TABLE {$prefix}daily (
@@ -44,6 +47,7 @@ function swiftdash_tracker_schema( $schema, $prefix, $collate ) {
   visitors int(10) unsigned NOT NULL DEFAULT 0,
   views int(10) unsigned NOT NULL DEFAULT 0,
   sessions int(10) unsigned NOT NULL DEFAULT 0,
+  automated int(10) unsigned NOT NULL DEFAULT 0,
   PRIMARY KEY  (day)
 ) {$collate};";
 	// Daily totals per page path, referrer host, device type (kept 90 days), AI source and AI bot (180 days).
@@ -145,7 +149,94 @@ function swiftdash_visitor_hash( $ip, $ua ) {
 }
 
 /**
- * Record one page view.
+ * Is $ip inside the CIDR range $cidr (IPv4 or IPv6)?
+ *
+ * @param string $ip   IP address.
+ * @param string $cidr Range, e.g. 104.16.0.0/13.
+ * @return bool
+ */
+function swiftdash_ip_in_cidr( $ip, $cidr ) {
+	list( $net, $bits ) = explode( '/', $cidr );
+	$a                  = @inet_pton( $ip ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
+	$b                  = @inet_pton( $net ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
+	if ( false === $a || false === $b || strlen( $a ) !== strlen( $b ) ) {
+		return false;
+	}
+	$bytes = intdiv( (int) $bits, 8 );
+	$rest  = (int) $bits % 8;
+	if ( substr( $a, 0, $bytes ) !== substr( $b, 0, $bytes ) ) {
+		return false;
+	}
+	$mask = ( 0xFF << ( 8 - $rest ) ) & 0xFF;
+	return ! $rest || ( ord( $a[ $bytes ] ) & $mask ) === ( ord( $b[ $bytes ] ) & $mask );
+}
+
+/**
+ * Real visitor IP: REMOTE_ADDR, or CF-Connecting-IP when the request came through Cloudflare, or the
+ * first public address in X-Forwarded-For when REMOTE_ADDR is a private proxy. Then the filter.
+ *
+ * @return string
+ */
+function swiftdash_client_ip() {
+	$ip = isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : '';
+	// ponytail: hardcoded from https://www.cloudflare.com/ips/ (rarely changes); use the swiftdash_client_ip filter if Cloudflare adds a range.
+	$cloudflare = array( '173.245.48.0/20', '103.21.244.0/22', '103.22.200.0/22', '103.31.4.0/22', '141.101.64.0/18', '108.162.192.0/18', '190.93.240.0/20', '188.114.96.0/20', '197.234.240.0/22', '198.41.128.0/17', '162.158.0.0/15', '104.16.0.0/13', '104.24.0.0/14', '172.64.0.0/13', '131.0.72.0/22', '2400:cb00::/32', '2606:4700::/32', '2803:f800::/32', '2405:b500::/32', '2405:8100::/32', '2a06:98c0::/29', '2c0f:f248::/32' );
+	$public     = FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE;
+	$cf         = isset( $_SERVER['HTTP_CF_CONNECTING_IP'] ) ? trim( sanitize_text_field( wp_unslash( $_SERVER['HTTP_CF_CONNECTING_IP'] ) ) ) : '';
+	if ( $cf && filter_var( $cf, FILTER_VALIDATE_IP ) && array_filter(
+		$cloudflare,
+		function ( $range ) use ( $ip ) {
+			return swiftdash_ip_in_cidr( $ip, $range );
+		}
+	) ) {
+		$ip = $cf;
+	} elseif ( filter_var( $ip, FILTER_VALIDATE_IP ) && ! filter_var( $ip, FILTER_VALIDATE_IP, $public ) && ! empty( $_SERVER['HTTP_X_FORWARDED_FOR'] ) ) {
+		foreach ( array_reverse( explode( ',', sanitize_text_field( wp_unslash( $_SERVER['HTTP_X_FORWARDED_FOR'] ) ) ) ) as $hop ) {
+			if ( filter_var( trim( $hop ), FILTER_VALIDATE_IP, $public ) ) {
+				$ip = trim( $hop );
+				break;
+			}
+		}
+	}
+	/**
+	 * Filters the client IP used for the (never stored) visitor hash, e.g. behind another proxy.
+	 *
+	 * @param string $ip Resolved IP.
+	 */
+	return (string) apply_filters( 'swiftdash_client_ip', $ip );
+}
+
+/**
+ * Hit array handed to add-ons (swiftdash_hit_confirmed, swiftdash_hit_events).
+ *
+ * @param array  $row   Hits row: token, visitor, new_session, created.
+ * @param string $ip    Client IP (not stored).
+ * @param string $ua    User agent (not stored).
+ * @param array  $extra path, referrer, utm_source, utm_medium, utm_campaign, title.
+ * @return array
+ */
+function swiftdash_hit_array( $row, $ip, $ua, $extra ) {
+	return array(
+		'id'          => (string) $row['token'],
+		'ts'          => (int) strtotime( $row['created'] . ' UTC' ),
+		'visitor'     => (string) $row['visitor'],
+		'new_session' => (bool) $row['new_session'],
+		'ip'          => $ip,
+		'ua'          => $ua,
+		'device'      => swiftdash_device_type( $ua ),
+	) + $extra + array(
+		'path'         => '',
+		'referrer'     => '',
+		'utm_source'   => '',
+		'utm_medium'   => '',
+		'utm_campaign' => '',
+		'title'        => '',
+	);
+}
+
+/**
+ * Record a beacon. Phase 1 (load) stores an automated hit; phase 2 (human) confirms it and counts the
+ * visit; phase 3 (events) hands add-on events over for confirmed hits only.
  *
  * @param WP_REST_Request $request Request.
  * @return WP_REST_Response
@@ -165,9 +256,31 @@ function swiftdash_rest_hit( $request ) {
 	}
 
 	$body = $request->get_body();
-	$data = strlen( $body ) < 2048 ? json_decode( $body, true ) : null;
+	$data = strlen( $body ) <= 65536 ? json_decode( $body, true ) : null;
+	if ( ! is_array( $data ) ) {
+		return new WP_REST_Response( null, 400 );
+	}
+	$token  = isset( $data['i'] ) && is_string( $data['i'] ) && preg_match( '/^[a-f0-9]{16}$/', $data['i'] ) ? $data['i'] : '';
+	$human  = ! empty( $data['h'] );
+	$events = isset( $data['e'] ) && is_array( $data['e'] ) ? array_values( array_filter( array_slice( $data['e'], 0, 50 ), 'is_array' ) ) : array();
+
+	$ip      = swiftdash_client_ip();
+	$visitor = swiftdash_visitor_hash( $ip, $ua );
+	$hits    = swiftdash_table( 'hits' );
+	$now     = gmdate( 'Y-m-d H:i:s' );
+
+	// Phase 3: events for a confirmed hit.
+	if ( '' !== $token && ! isset( $data['p'] ) ) {
+		$row = $wpdb->get_row( $wpdb->prepare( 'SELECT * FROM %i WHERE token = %s AND visitor = %s AND human = 1 ORDER BY id DESC LIMIT 1', $hits, $token, $visitor ), ARRAY_A ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		if ( $row && $events ) {
+			/** This action is documented in includes/tracker.php. */
+			do_action( 'swiftdash_hit_events', swiftdash_hit_array( $row, $ip, $ua, array() ), $events );
+		}
+		return $done;
+	}
+
 	// The page path is never stored with the visit, only in the daily per-page totals.
-	$path = is_array( $data ) && isset( $data['p'] ) && is_string( $data['p'] ) ? $data['p'] : '';
+	$path = isset( $data['p'] ) && is_string( $data['p'] ) ? $data['p'] : '';
 	$path = rawurldecode( (string) preg_split( '/[?#]/', $path, 2 )[0] );
 	if ( '' === $path || '/' !== $path[0] || strlen( $path ) > 255 || ! wp_check_invalid_utf8( $path ) || preg_match( '/[\x00-\x1f\x7f]/', $path ) ) {
 		return new WP_REST_Response( null, 400 );
@@ -177,38 +290,112 @@ function swiftdash_rest_hit( $request ) {
 	if ( strlen( $ref ) > 100 || ! preg_match( '/^[a-z0-9]([a-z0-9.-]*[a-z0-9])?$/', $ref ) || preg_replace( '/^www\./', '', (string) wp_parse_url( home_url(), PHP_URL_HOST ) ) === $ref ) {
 		$ref = '';
 	}
-	$utm = isset( $data['u'] ) && is_string( $data['u'] ) && preg_match( '/^[a-z0-9][a-z0-9._ -]{0,39}$/', $data['u'] ) ? $data['u'] : '';
+	$utm = array();
+	foreach ( array(
+		'u' => 'utm_source',
+		'm' => 'utm_medium',
+		'c' => 'utm_campaign',
+	) as $key => $name ) {
+		$utm[ $name ] = isset( $data[ $key ] ) && is_string( $data[ $key ] ) && preg_match( '/^[a-z0-9][a-z0-9._ -]{0,39}$/', $data[ $key ] ) ? $data[ $key ] : '';
+	}
+	$title = isset( $data['t'] ) && is_string( $data['t'] ) ? mb_substr( sanitize_text_field( $data['t'] ), 0, 200 ) : '';
 
-	$ip = isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : '';
-	/**
-	 * Filters the client IP used for the (never stored) visitor hash, e.g. behind a proxy.
-	 *
-	 * @param string $ip REMOTE_ADDR.
-	 */
-	$ip      = (string) apply_filters( 'swiftdash_client_ip', $ip );
-	$visitor = swiftdash_visitor_hash( $ip, $ua );
-	$hits    = swiftdash_table( 'hits' );
+	// Legacy body (old cached tracker.js): a pending hit that never confirms.
+	if ( '' === $token ) {
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		$wpdb->insert(
+			$hits,
+			array(
+				'visitor'     => $visitor,
+				'token'       => '',
+				'human'       => 0,
+				'new_session' => 0,
+				'created'     => $now,
+			),
+			array( '%s', '%s', '%d', '%d', '%s' )
+		);
+		return $done;
+	}
 
-	$recent = $wpdb->get_var( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+	$row = $wpdb->get_row( $wpdb->prepare( 'SELECT * FROM %i WHERE token = %s AND visitor = %s AND created > %s ORDER BY id DESC LIMIT 1', $hits, $token, $visitor, gmdate( 'Y-m-d H:i:s', time() - 12 * HOUR_IN_SECONDS ) ), ARRAY_A ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+	if ( ! $human ) {
+		if ( ! $row ) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery
+			$wpdb->insert(
+				$hits,
+				array(
+					'visitor'     => $visitor,
+					'token'       => $token,
+					'human'       => 0,
+					'new_session' => 0,
+					'created'     => $now,
+				),
+				array( '%s', '%s', '%d', '%d', '%s' )
+			);
+			// The human confirmation can overtake this request; if it already stored the hit, drop the duplicate.
+			if ( $wpdb->get_var( $wpdb->prepare( 'SELECT 1 FROM %i WHERE token = %s AND visitor = %s AND human = 1 LIMIT 1', $hits, $token, $visitor ) ) ) { // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+				$wpdb->delete( $hits, array( 'id' => (int) $wpdb->insert_id ), array( '%d' ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+			}
+		}
+		return $done;
+	}
+
+	// Phase 2: human confirmed.
+	$extra = array(
+		'path'     => $path,
+		'referrer' => $ref,
+		'title'    => $title,
+	) + $utm;
+	if ( $row && (int) $row['human'] ) {
+		do_action( 'swiftdash_hit_events', swiftdash_hit_array( $row, $ip, $ua, $extra ), $events );
+		return $done;
+	}
+	$created = $row ? $row['created'] : $now;
+	$recent  = $wpdb->get_var( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-		$wpdb->prepare( 'SELECT 1 FROM %i WHERE visitor = %s AND created > %s LIMIT 1', $hits, $visitor, gmdate( 'Y-m-d H:i:s', time() - 30 * MINUTE_IN_SECONDS ) )
+		$wpdb->prepare( 'SELECT 1 FROM %i WHERE visitor = %s AND human = 1 AND created > %s AND created <= %s LIMIT 1', $hits, $visitor, gmdate( 'Y-m-d H:i:s', strtotime( $created . ' UTC' ) - 30 * MINUTE_IN_SECONDS ), $created )
 	);
-	$wpdb->insert( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+	$fresh = $recent ? 0 : 1;
+	if ( $row ) {
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		$wpdb->update(
+			$hits,
+			array(
+				'human'       => 1,
+				'new_session' => $fresh,
+			),
+			array( 'id' => (int) $row['id'] ),
+			array( '%d', '%d' ),
+			array( '%d' )
+		);
+	} else {
+		$row = array(
+			'visitor'     => $visitor,
+			'token'       => $token,
+			'human'       => 1,
+			'new_session' => $fresh,
+			'created'     => $created,
+		);
+		$wpdb->insert( $hits, $row, array( '%s', '%s', '%d', '%d', '%s' ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+	}
+	// A load request racing this one may have stored a pending copy of the same hit: remove it.
+	$wpdb->delete( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 		$hits,
 		array(
-			'visitor'     => $visitor,
-			'new_session' => $recent ? 0 : 1,
-			'created'     => gmdate( 'Y-m-d H:i:s' ),
+			'token'   => $token,
+			'visitor' => $visitor,
+			'human'   => 0,
 		),
-		array( '%s', '%d', '%s' )
+		array( '%s', '%s', '%d' )
 	);
+	$row['new_session'] = $fresh;
 
 	// Daily totals: every view counts for its page; sources and devices count once per session.
 	$dims = array( 'page' => mb_substr( $path, 0, 191 ) );
-	if ( ! $recent ) {
+	if ( $fresh ) {
 		$dims['referrer'] = $ref;
 		$dims['device']   = swiftdash_device_type( $ua );
-		$dims['ai']       = swiftdash_ai_source( $ref, $utm );
+		$dims['ai']       = swiftdash_ai_source( $ref, $utm['utm_source'] );
 	}
 	$day = wp_date( 'Y-m-d' );
 	foreach ( array_filter( $dims ) as $kind => $item ) {
@@ -216,6 +403,14 @@ function swiftdash_rest_hit( $request ) {
 			$wpdb->prepare( 'INSERT INTO %i (day, kind, item, count) VALUES (%s, %s, %s, 1) ON DUPLICATE KEY UPDATE count = count + 1', swiftdash_table( 'dims' ), $day, $kind, $item )
 		);
 	}
+
+	/**
+	 * Fires once when a page view is confirmed as a real human (add-ons relay it).
+	 *
+	 * @param array $hit    id, path, referrer, utm_source, utm_medium, utm_campaign, title, ts, visitor, new_session, ip, ua, device.
+	 * @param array $events Add-on events sent with the confirmation (max 50).
+	 */
+	do_action( 'swiftdash_hit_confirmed', swiftdash_hit_array( $row, $ip, $ua, $extra ), $events );
 	return $done;
 }
 
@@ -300,7 +495,7 @@ function swiftdash_day_bounds( $date ) {
  * Counts for one site-local day from the raw hits.
  *
  * @param string $date Y-m-d.
- * @return int[] visitors, views, sessions.
+ * @return int[] visitors, views, sessions (human hits) and automated (unconfirmed hits).
  */
 function swiftdash_live_day( $date ) {
 	global $wpdb;
@@ -308,13 +503,14 @@ function swiftdash_live_day( $date ) {
 	$bounds = swiftdash_day_bounds( $date );
 	$row    = $wpdb->get_row( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-		$wpdb->prepare( 'SELECT COUNT(DISTINCT visitor) AS visitors, COUNT(*) AS views, COALESCE(SUM(new_session),0) AS sessions FROM %i WHERE created >= %s AND created < %s', $hits, $bounds[0], $bounds[1] ),
+		$wpdb->prepare( 'SELECT COUNT(DISTINCT IF(human = 1, visitor, NULL)) AS visitors, COALESCE(SUM(human = 1),0) AS views, COALESCE(SUM(IF(human = 1, new_session, 0)),0) AS sessions, COALESCE(SUM(human = 0),0) AS automated FROM %i WHERE created >= %s AND created < %s', $hits, $bounds[0], $bounds[1] ),
 		ARRAY_A
 	);
 	return array(
-		'visitors' => (int) $row['visitors'],
-		'views'    => (int) $row['views'],
-		'sessions' => (int) $row['sessions'],
+		'visitors'  => (int) $row['visitors'],
+		'views'     => (int) $row['views'],
+		'sessions'  => (int) $row['sessions'],
+		'automated' => (int) $row['automated'],
 	);
 }
 
@@ -330,8 +526,8 @@ function swiftdash_rollup() {
 	foreach ( array( $today, $today->modify( '-1 day' ) ) as $day ) {
 		$date   = $day->format( 'Y-m-d' );
 		$counts = swiftdash_live_day( $date );
-		if ( $counts['views'] > 0 ) {
-			$wpdb->replace( $daily, array( 'day' => $date ) + $counts, array( '%s', '%d', '%d', '%d' ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		if ( $counts['views'] > 0 || $counts['automated'] > 0 ) {
+			$wpdb->replace( $daily, array( 'day' => $date ) + $counts, array( '%s', '%d', '%d', '%d', '%d' ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 		} else {
 			$wpdb->delete( $daily, array( 'day' => $date ), array( '%s' ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 		}
@@ -341,9 +537,9 @@ function swiftdash_rollup() {
 	// Daily totals: 90 days (the longest period on the dashboard) plus the 90 days before it,
 	// which the "vs previous period" change on the KPI cards compares against. Nothing older is kept.
 	$wpdb->query( $wpdb->prepare( 'DELETE FROM %i WHERE day < %s', $daily, $today->modify( '-180 days' )->format( 'Y-m-d' ) ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
-	// Page, referrer and device totals: 90 days, the longest period they are shown for. AI visitor
-	// and AI bot totals: 180 days, for the "vs previous period" change of the longest period.
-	$wpdb->query( $wpdb->prepare( "DELETE FROM %i WHERE day < %s AND kind NOT IN ('ai', 'aibot')", swiftdash_table( 'dims' ), $today->modify( '-90 days' )->format( 'Y-m-d' ) ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+	// Page, referrer and device totals: 90 days, the longest period they are shown for. AI visitor,
+	// AI bot and search crawler totals: 180 days, for the "vs previous period" change of the longest period.
+	$wpdb->query( $wpdb->prepare( "DELETE FROM %i WHERE day < %s AND kind NOT IN ('ai', 'aibot', 'crawler')", swiftdash_table( 'dims' ), $today->modify( '-90 days' )->format( 'Y-m-d' ) ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 	$wpdb->query( $wpdb->prepare( 'DELETE FROM %i WHERE day < %s', swiftdash_table( 'dims' ), $today->modify( '-180 days' )->format( 'Y-m-d' ) ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 }
 add_action( 'swiftdash_rollup', 'swiftdash_rollup' );
@@ -372,7 +568,7 @@ function swiftdash_privacy_content() {
 	wp_add_privacy_policy_content(
 		'SwiftWebDev Dashboard',
 		wp_kses_post(
-			'<p>' . __( 'SwiftWebDev Dashboard counts visitors, page views and sessions without cookies and without storing IP addresses or user agents. Each visit is reduced to a one-way hash of the visitor IP address and browser, mixed with a secret salt that changes every day, so a visitor cannot be recognized from one day to the next.', 'swiftwebdev-dashboard-analytics' ) . '</p><p>' . __( 'Raw page-view rows are kept for 48 hours; daily visitor totals are kept for 180 days. Daily totals per page, referring website and device type (mobile, tablet or desktop) are kept for 90 days; daily totals per AI assistant are kept for 180 days. They are counts only, are not linked to any visitor, and still no IP address or user agent is stored. All data stays in the database of this site and is not sent to any third party.', 'swiftwebdev-dashboard-analytics' ) . '</p><p>' . __( 'Requests from known AI crawlers (for example GPTBot or ClaudeBot) are recognized by the name in their user agent and added to a daily total per crawler, kept for 180 days. The user agent, IP address and requested address are not stored.', 'swiftwebdev-dashboard-analytics' ) . '</p>'
+			'<p>' . __( 'SwiftWebDev Dashboard counts visitors, page views and sessions without cookies and without storing IP addresses or user agents. Each visit is reduced to a one-way hash of the visitor IP address and browser, mixed with a secret salt that changes every day, so a visitor cannot be recognized from one day to the next. A visit counts as a real visitor only after a sign of human activity (such as moving the mouse, scrolling, typing or touching the screen); other loads are only counted as automated visits.', 'swiftwebdev-dashboard-analytics' ) . '</p><p>' . __( 'Raw page-view rows, each with a random per-page-view id that identifies nothing, are kept for 48 hours; daily visitor totals are kept for 180 days. Daily totals per page, referring website and device type (mobile, tablet or desktop) are kept for 90 days; daily totals per AI assistant are kept for 180 days. They are counts only, are not linked to any visitor, and still no IP address or user agent is stored. All data stays in the database of this site and is not sent to any third party.', 'swiftwebdev-dashboard-analytics' ) . '</p><p>' . __( 'Requests from known AI crawlers and search crawlers (for example GPTBot, ClaudeBot or Googlebot) are recognized by the name in their user agent and added to a daily total per crawler, kept for 180 days. The user agent, IP address and requested address are not stored.', 'swiftwebdev-dashboard-analytics' ) . '</p>'
 		)
 	);
 }

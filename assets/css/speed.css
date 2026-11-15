@@ -154,9 +154,10 @@
 	color: var(--sd-text-2);
 }
 
-.swiftdash .sd-gauge__status.is-success { color: var(--sd-success); }
-.swiftdash .sd-gauge__status.is-warning { color: var(--sd-warning); }
-.swiftdash .sd-gauge__status.is-danger { color: var(--sd-danger); }
+/* Small text: the darker shades .sd-status uses, so each reads at 4.5:1 or more. */
+.swiftdash .sd-gauge__status.is-success { color: #047857; }
+.swiftdash .sd-gauge__status.is-warning { color: #b45309; }
+.swiftdash .sd-gauge__status.is-danger { color: #b91c1c; }
 
 .swiftdash .sd-gauge--sm .sd-gauge__ring {
 	--sd-gauge-size: 76px;

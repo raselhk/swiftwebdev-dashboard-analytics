@@ -1,9 +1,9 @@
 <?php
 /**
  * Plugin Name:       SwiftWebDev Dashboard & Analytics - Visitor Statistics, AI Traffic & PageSpeed Test
- * Plugin URI:        https://swiftwebdev.com/swiftwebdev-dashboard-docs/
+ * Plugin URI:        https://swiftwebdev.com/wordpress-visitor-statistics/docs/
  * Description:       Admin dashboard and cookieless analytics for WordPress: visitor stats, Google PageSpeed scores, site health and a modern admin menu.
- * Version:           1.1.0
+ * Version:           1.2.0
  * Requires at least: 6.5
  * Requires PHP:      7.4
  * Author:            Swift Web Dev
@@ -17,12 +17,12 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'SWIFTDASH_VERSION', '1.1.0' );
+define( 'SWIFTDASH_VERSION', '1.2.0' );
 define( 'SWIFTDASH_FILE', __FILE__ );
 define( 'SWIFTDASH_DIR', plugin_dir_path( __FILE__ ) );
 define( 'SWIFTDASH_URL', plugin_dir_url( __FILE__ ) );
-define( 'SWIFTDASH_ADDON_URL', 'https://swiftwebdev.com/swiftwebdev-dashboard-pro/' );
-define( 'SWIFTDASH_DOCS_URL', 'https://swiftwebdev.com/swiftwebdev-dashboard-docs/' );
+define( 'SWIFTDASH_ADDON_URL', 'https://swiftwebdev.com/wordpress-visitor-statistics/pro/' );
+define( 'SWIFTDASH_DOCS_URL', 'https://swiftwebdev.com/wordpress-visitor-statistics/docs/' );
 
 require_once SWIFTDASH_DIR . 'includes/install.php';
 require_once SWIFTDASH_DIR . 'includes/settings.php';
@@ -42,6 +42,7 @@ require_once SWIFTDASH_DIR . 'includes/toolbar.php';
 require_once SWIFTDASH_DIR . 'includes/brands.php';
 require_once SWIFTDASH_DIR . 'includes/insights.php';
 require_once SWIFTDASH_DIR . 'includes/ai-search.php';
+require_once SWIFTDASH_DIR . 'includes/crawlers.php';
 require_once SWIFTDASH_DIR . 'includes/report-email.php';
 require_once SWIFTDASH_DIR . 'includes/onboarding.php';
 

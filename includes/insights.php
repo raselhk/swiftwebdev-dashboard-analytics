@@ -72,7 +72,8 @@ function swiftdash_insights_empty( $days, $help ) {
  * Ranked list with a bar per row, proportional to the largest count.
  *
  * @param array[] $rows Each: label, meta ('' for none), icon (safe SVG markup or ''), count, value (display text),
- *                      optional brand (brand key for swiftdash_render_brand_tile(), '' for unknown).
+ *                      optional brand (brand key for swiftdash_render_brand_tile(), '' for unknown),
+ *                      optional ai (true adds an "AI" tag after the label).
  */
 function swiftdash_insights_list( $rows ) {
 	$max = max( 1, max( wp_list_pluck( $rows, 'count' ) ) );
@@ -85,7 +86,11 @@ function swiftdash_insights_list( $rows ) {
 		} elseif ( $row['icon'] ) {
 			echo '<span class="sd-in-row__icon">' . wp_kses( $row['icon'], swiftdash_insights_svg_kses() ) . '</span>';
 		}
-		echo '<span class="sd-in-row__text"><span class="sd-in-row__label">' . esc_html( $row['label'] ) . '</span>';
+		echo '<span class="sd-in-row__text"><span class="sd-in-row__label">' . esc_html( $row['label'] );
+		if ( ! empty( $row['ai'] ) ) {
+			printf( ' <span class="sd-badge sd-in-tag" title="%1$s" aria-hidden="true">%2$s</span><span class="screen-reader-text"> (%1$s)</span>', esc_attr__( 'AI assistant', 'swiftwebdev-dashboard-analytics' ), esc_html__( 'AI', 'swiftwebdev-dashboard-analytics' ) );
+		}
+		echo '</span>';
 		if ( '' !== $row['meta'] ) {
 			echo '<span class="sd-in-row__meta">' . esc_html( $row['meta'] ) . '</span>';
 		}
@@ -155,6 +160,22 @@ function swiftdash_path_title( $path ) {
 }
 
 /**
+ * A stored page path as people know it: relative to the site home, so a site in a subfolder
+ * shows "/shop/" rather than "/folder/shop/". Display only; stored paths keep the folder.
+ *
+ * @param string $path URL path.
+ * @return string
+ */
+function swiftdash_display_path( $path ) {
+	$home = untrailingslashit( (string) wp_parse_url( home_url(), PHP_URL_PATH ) );
+	if ( '' === $home || 0 !== strpos( $path . '/', $home . '/' ) ) {
+		return $path;
+	}
+	$rest = (string) substr( $path, strlen( $home ) );
+	return '' === $rest ? '/' : $rest;
+}
+
+/**
  * Top pages: path and post title (looked up for the shown rows only).
  *
  * @param array $widget Widget args (days).
@@ -169,9 +190,10 @@ function swiftdash_render_top_pages_widget( $widget ) {
 	$rows = array();
 	foreach ( $top as $t ) {
 		$title  = swiftdash_path_title( $t['item'] );
+		$path   = swiftdash_display_path( $t['item'] );
 		$rows[] = array(
-			'label' => '' !== $title ? $title : $t['item'],
-			'meta'  => '' !== $title ? $t['item'] : '',
+			'label' => '' !== $title ? $title : $path,
+			'meta'  => '' !== $title ? $path : '',
 			'icon'  => '',
 			'count' => $t['count'],
 			'value' => swiftdash_insights_count( $t['count'], true ),
@@ -201,6 +223,7 @@ function swiftdash_render_referrers_widget( $widget ) {
 			'meta'  => $brand ? $t['item'] : '',
 			'icon'  => '',
 			'brand' => $brand,
+			'ai'    => '' !== swiftdash_ai_source( $t['item'], '' ),
 			'count' => $t['count'],
 			'value' => swiftdash_insights_count( $t['count'], false ),
 		);
@@ -283,7 +306,7 @@ function swiftdash_render_wp_dashboard_widget() {
 			<ul>
 				<?php foreach ( $top as $t ) : ?>
 					<?php $title = swiftdash_path_title( $t['item'] ); ?>
-					<li><?php echo esc_html( '' !== $title ? $title : $t['item'] ); ?>: <strong><?php echo esc_html( swiftdash_insights_count( $t['count'], true ) ); ?></strong></li>
+					<li><?php echo esc_html( '' !== $title ? $title : swiftdash_display_path( $t['item'] ) ); ?>: <strong><?php echo esc_html( swiftdash_insights_count( $t['count'], true ) ); ?></strong></li>
 				<?php endforeach; ?>
 			</ul>
 		<?php else : ?>

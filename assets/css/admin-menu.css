@@ -502,8 +502,12 @@ body.swiftdash-screen #wpbody-content {
 	padding-bottom: 0;
 }
 
-body.swiftdash-screen #wpbody {
-	padding-top: 0;
+/* Phones keep the core 46px: there the toolbar scrolls with the page and would cover our header. */
+@media screen and (min-width: 601px) {
+
+	body.swiftdash-screen #wpbody {
+		padding-top: 0;
+	}
 }
 
 @media screen and (max-width: 782px) {

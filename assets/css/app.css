@@ -756,6 +756,7 @@
 
 .sd-field__error,
 .sd-form__error {
+	margin: 0;
 	font-size: var(--sd-fs-help);
 	color: var(--sd-danger);
 }
@@ -1637,7 +1638,8 @@
 /* ---------- Toasts: top right ---------- */
 .sd-toasts {
 	position: fixed;
-	top: var(--sd-space-4);
+	/* Below the WordPress toolbar and our header, so the account menus stay visible. */
+	top: calc(var(--wp-admin--admin-bar--height, 0px) + var(--sd-header-h) + var(--sd-space-4));
 	right: var(--sd-space-4);
 	z-index: 100000;
 	display: flex;
@@ -1714,6 +1716,11 @@
 	.sd-header {
 		top: 0;
 		gap: var(--sd-space-2);
+	}
+
+	/* Speed & Optimize and Quick Links are in the user menu too: give the search their room. */
+	.swiftdash .sd-header__shortcut {
+		display: none;
 	}
 
 	.sd-promo {

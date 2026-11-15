@@ -1,5 +1,5 @@
 // Builds the wp.org listing assets and the site media from the HTML sources here and the raw
-// UI shots in shots/ (made by youtube/_screens/_scripts/assets-cap.cjs).
+// UI shots in shots/ (wp.org screenshots: capture.cjs; site media: youtube/_screens/_scripts/assets-cap.cjs).
 //   node render.cjs              (everything)
 //   node render.cjs screenshots  (wp.org screenshots only)
 const { chromium } = require('D:/Simple Swift Email/app/node_modules/.pnpm/playwright@1.63.0/node_modules/playwright');
@@ -58,18 +58,18 @@ async function webp(input, out, width, max, extract) {
 	}
 
 	// wp.org screenshots, in readme.txt caption order, downscaled from 2x for crisp text.
-	// 1.1.0 set: raw 1440 css px captures at 2x (v11-*), demo site "Northwind".
+	// 1.2.0 set: raw 1440 css px captures at 2x (v12-*) by capture.cjs, which also crops them; demo site "Northwind".
 	const ss = [
-		['v11-overview-2x.png', 1600, { left: 0, top: 0, width: 2880, height: 3436 }], // Ends at the Quick Links row.
-		['v11-search-typed-2x.png'],
-		['v11-search-focus-2x.png'],
-		['v11-ai-2x.png'],
-		['v11-insights-2x.png'],
-		['v11-speed-full-2x.png', 1600, { left: 0, top: 0, width: 2880, height: 2824 }], // Scores, Core Web Vitals, first fix.
-		['v11-links-full-2x.png', 1600, { left: 0, top: 0, width: 2880, height: 1900 }], // Pinned + Content + Design.
-		['v11-email-2x.png', null, { left: 700, top: 0, width: 1480, height: 2936 }], // The email card, native size.
-		['v11-toolbar-live-2x.png'], // Live visitors panel over Posts.
-		['v11-toolbar-search-2x.png'], // Toolbar search over Pages.
+		['v12-overview-2x.png'], // Ends at the Speed scores / Quick Links row.
+		['v12-search-typed-2x.png'],
+		['v12-search-focus-2x.png'],
+		['v12-ai-2x.png'], // AI crawlers + Bots & automated visits + AI access check.
+		['v12-insights-2x.png'],
+		['v12-speed-2x.png'], // Scores, Core Web Vitals, first fix.
+		['v12-links-2x.png'], // Pinned + Content + Design.
+		['v12-email-2x.png', null], // The email at 740 css px, native size.
+		['v12-toolbar-live-2x.png'], // Live visitors panel on a post.
+		['v12-toolbar-search-2x.png'], // Toolbar search on a post.
 	];
 	for (let i = 0; i < ss.length; i++) {
 		const [f, w = 1600, ex] = ss[i];
