@@ -149,7 +149,7 @@ function swiftdash_render_header() {
 			);
 			foreach ( $shortcuts as $slug => $shortcut ) :
 				?>
-				<a class="sd-icon-btn" href="<?php echo esc_url( admin_url( 'admin.php?page=' . $slug ) ); ?>" aria-label="<?php echo esc_attr( $shortcut[0] ); ?>" title="<?php echo esc_attr( $shortcut[0] ); ?>"<?php echo $plugin_page === $slug ? ' aria-current="page"' : ''; ?>>
+				<a class="sd-icon-btn sd-header__shortcut" href="<?php echo esc_url( admin_url( 'admin.php?page=' . $slug ) ); ?>" aria-label="<?php echo esc_attr( $shortcut[0] ); ?>" title="<?php echo esc_attr( $shortcut[0] ); ?>"<?php echo $plugin_page === $slug ? ' aria-current="page"' : ''; ?>>
 					<?php echo wp_kses( swiftdash_icon( $shortcut[1] ), swiftdash_icon_kses() ); ?>
 				</a>
 			<?php endforeach; ?>

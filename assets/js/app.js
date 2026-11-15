@@ -335,15 +335,16 @@
 			reset.addEventListener( 'click', () => setLogo( 0, logo.dataset.default ) );
 		}
 
-		// Report address: empty (site admin email) or a valid email. Errors show in red under the form.
+		// Report address: empty (site admin email) or a valid email. The error shows in red under the field.
 		const email = form.querySelector( '[name="report_email"]' );
+		const emailError = form.querySelector( '#sd-report-email-error' );
 		const emailOk = () => {
 			const ok = ! email || ! email.value.trim() || email.checkValidity();
 			if ( email ) {
 				email.setAttribute( 'aria-invalid', ok ? 'false' : 'true' );
+				emailError.textContent = ok ? '' : __( 'Enter a valid email address for the weekly report, or leave it empty.', 'swiftwebdev-dashboard-analytics' );
+				emailError.hidden = ok;
 			}
-			error.textContent = ok ? '' : __( 'Enter a valid email address for the weekly report, or leave it empty.', 'swiftwebdev-dashboard-analytics' );
-			error.hidden = ok;
 			return ok;
 		};
 		if ( email ) {

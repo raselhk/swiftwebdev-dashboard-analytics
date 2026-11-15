@@ -1,7 +1,8 @@
 <?php
 /**
  * Toolbar (admin bar) items for permitted users: live visitors with a mini dashboard on hover,
- * and the navigation search. Shown in wp-admin and on the front end; each can be switched off.
+ * and the navigation search. Shown on the front end only (wp-admin has the dashboard for both);
+ * each can be switched off.
  *
  * @package SwiftWebDevDashboard
  */
@@ -9,29 +10,24 @@
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Whether a toolbar item shows for the current request.
- *
- * Search shows in wp-admin only: on the site, WordPress already puts its own search icon in the toolbar.
+ * Whether a toolbar item shows for the current request: front-end views only, never wp-admin.
  *
  * @param string $item live|search.
  * @return bool
  */
 function swiftdash_toolbar_on( $item ) {
-	if ( 'search' === $item && ! is_admin() ) {
-		return false;
-	}
-	return is_admin_bar_showing() && current_user_can( swiftdash_capability() ) && (bool) swiftdash_setting( 'toolbar_' . $item );
+	return ! is_admin() && is_admin_bar_showing() && current_user_can( swiftdash_capability() ) && (bool) swiftdash_setting( 'toolbar_' . $item );
 }
 
 /**
- * Distinct visitors with a hit in the last 5 minutes (uncached).
+ * Distinct human visitors with a hit in the last 5 minutes (uncached).
  *
  * @return int
  */
 function swiftdash_live_online() {
 	global $wpdb;
 	return (int) $wpdb->get_var( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
-		$wpdb->prepare( 'SELECT COUNT(DISTINCT visitor) FROM %i WHERE created > %s', swiftdash_table( 'hits' ), gmdate( 'Y-m-d H:i:s', time() - 5 * MINUTE_IN_SECONDS ) )
+		$wpdb->prepare( 'SELECT COUNT(DISTINCT visitor) FROM %i WHERE human = 1 AND created > %s', swiftdash_table( 'hits' ), gmdate( 'Y-m-d H:i:s', time() - 5 * MINUTE_IN_SECONDS ) )
 	);
 }
 
@@ -86,7 +82,7 @@ function swiftdash_live_full() {
 
 	$minutes = array_fill( 0, 30, 0 );
 	$rows    = $wpdb->get_results( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
-		$wpdb->prepare( 'SELECT TIMESTAMPDIFF(MINUTE, created, %s) AS ago, COUNT(DISTINCT visitor) AS n FROM %i WHERE created > %s GROUP BY ago', gmdate( $fmt, $now ), $hits, gmdate( $fmt, $now - 30 * MINUTE_IN_SECONDS ) ),
+		$wpdb->prepare( 'SELECT TIMESTAMPDIFF(MINUTE, created, %s) AS ago, COUNT(DISTINCT visitor) AS n FROM %i WHERE human = 1 AND created > %s GROUP BY ago', gmdate( $fmt, $now ), $hits, gmdate( $fmt, $now - 30 * MINUTE_IN_SECONDS ) ),
 		ARRAY_A
 	);
 	foreach ( (array) $rows as $row ) {
@@ -95,11 +91,11 @@ function swiftdash_live_full() {
 			$minutes[ 29 - $ago ] = (int) $row['n'];
 		}
 	}
-	$last = $wpdb->get_var( $wpdb->prepare( 'SELECT MAX(created) FROM %i', $hits ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+	$last = $wpdb->get_var( $wpdb->prepare( 'SELECT MAX(created) FROM %i WHERE human = 1', $hits ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 
-	$day       = swiftdash_live_day( $today->format( 'Y-m-d' ) );
+	$day       = swiftdash_get_stats( 1 )['totals']; // Today, from the same source as the top lists (PRO when active).
 	$yesterday = $wpdb->get_row( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
-		$wpdb->prepare( 'SELECT COUNT(DISTINCT visitor) AS visitors, COUNT(*) AS views FROM %i WHERE created >= %s AND created < %s', $hits, swiftdash_day_bounds( $today->modify( '-1 day' )->format( 'Y-m-d' ) )[0], gmdate( $fmt, $now - DAY_IN_SECONDS ) ),
+		$wpdb->prepare( 'SELECT COUNT(DISTINCT visitor) AS visitors, COUNT(*) AS views FROM %i WHERE human = 1 AND created >= %s AND created < %s', $hits, swiftdash_day_bounds( $today->modify( '-1 day' )->format( 'Y-m-d' ) )[0], gmdate( $fmt, $now - DAY_IN_SECONDS ) ),
 		ARRAY_A
 	);
 	$change    = function ( $current, $previous ) {
@@ -119,9 +115,10 @@ function swiftdash_live_full() {
 	$pages = array();
 	foreach ( swiftdash_get_top( 'page', 1, 3 ) as $top ) {
 		$title   = swiftdash_path_title( $top['item'] );
+		$path    = swiftdash_display_path( $top['item'] );
 		$pages[] = array(
-			'title' => '' !== $title ? $title : $top['item'],
-			'path'  => $top['item'],
+			'title' => '' !== $title ? $title : $path,
+			'path'  => $path,
 			'count' => $top['count'],
 		);
 	}
@@ -260,7 +257,8 @@ function swiftdash_search_commands_rest() {
  * Save the user's admin menu destinations for the toolbar search, only when they changed.
  */
 function swiftdash_toolbar_save_menu() {
-	if ( ! swiftdash_toolbar_on( 'search' ) ) {
+	// Runs in wp-admin, where the toolbar search itself is not shown.
+	if ( ! swiftdash_setting( 'toolbar_search' ) || ! current_user_can( swiftdash_capability() ) ) {
 		return;
 	}
 	$user = get_current_user_id();
@@ -317,6 +315,18 @@ function swiftdash_toolbar_search_node( $bar ) {
 	);
 }
 add_action( 'admin_bar_menu', 'swiftdash_toolbar_search_node', 3 );
+
+/**
+ * One search icon only: WordPress adds its own front-end site search at priority 9999; drop it while ours is on.
+ *
+ * @param WP_Admin_Bar $bar Toolbar.
+ */
+function swiftdash_toolbar_drop_core_search( $bar ) {
+	if ( swiftdash_toolbar_on( 'search' ) ) {
+		$bar->remove_node( 'search' );
+	}
+}
+add_action( 'admin_bar_menu', 'swiftdash_toolbar_drop_core_search', 10000 );
 
 /**
  * Magnifier icon.
@@ -412,5 +422,4 @@ function swiftdash_toolbar_assets() {
 		'before'
 	);
 }
-add_action( 'admin_enqueue_scripts', 'swiftdash_toolbar_assets' );
 add_action( 'wp_enqueue_scripts', 'swiftdash_toolbar_assets' );

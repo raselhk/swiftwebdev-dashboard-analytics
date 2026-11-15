@@ -441,6 +441,8 @@ function swiftdash_speed_parse_fixes( $lr ) {
  */
 function swiftdash_speed_plain( $text ) {
 	$text = preg_replace( '/\s*\[Learn[^\]]*\]\([^)]*\)\.?/i', '', (string) $text );
+	// Also "Learn more about [topic](url) and more." sentences, which read as a dead end without the link.
+	$text = preg_replace( '/\s*Learn more[^.\]]*\[[^\]]*\]\([^)]*\)[^.]*\.?/i', '', $text );
 	$text = preg_replace( '/\[([^\]]+)\]\([^)]*\)/', '$1', $text );
 	return trim( sanitize_text_field( str_replace( '`', '', $text ) ) );
 }

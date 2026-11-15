@@ -4,7 +4,7 @@ Tags: analytics, statistics, ai traffic, ai crawlers, cookieless analytics
 Requires at least: 6.5
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.1.0
+Stable tag: 1.2.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -18,10 +18,11 @@ SwiftWebDev Dashboard & Analytics adds a clean, colorful home screen to WordPres
 
 No cookies, no Google Analytics account and no API key for speed tests. Install, activate and your dashboard is ready.
 
-The plugin is lightweight by design. The front end gets one small counter script that runs after the page has loaded, and WordPress checks the browser name of each request for known AI bots. Everything else happens in the admin area.
+The plugin is lightweight by design. The front end gets one small counter script that runs after the page has loaded, and WordPress checks the browser name of each request for known AI bots and search crawlers. Everything else happens in the admin area.
 
 = 📊 Cookieless visitor stats =
 
+* Real people only: a visit counts once there is a sign of a person, so bots, crawlers and automated page loads never inflate your visitors
 * Visitors, page views and sessions for the last 7, 30 or 90 days
 * Visitors over time chart, busiest days of the week and engagement (pages per visit, visits per visitor, best day)
 * Trend versus the previous period, with a sparkline on every card
@@ -33,17 +34,18 @@ The plugin is lightweight by design. The front end gets one small counter script
 
 = 🤖 AI traffic and AI crawlers =
 
-* AI visitors: people who clicked a link to your site in ChatGPT, Perplexity, Gemini, Claude, Copilot and 6 more assistants, with their share of all visits and the change versus the previous period
 * AI crawlers: how often AI bots such as GPTBot, ClaudeBot, PerplexityBot, Meta and Amazon visit, by company, with the last day each was seen
 * Each bot visit is sorted by purpose: training, AI search, or asked by a user
-* AI bot visits and AI visitors side by side, so you see how much AI reads and how many people it sends
+* People from AI assistants in the same card: visitors who clicked a link to your site in ChatGPT, Perplexity, Gemini, Claude, Copilot and 6 more assistants, with the top assistants and the change versus the previous period, so you see how much AI reads and how many people it sends
+* AI assistants are tagged "AI" in your Referrers list
+* Bots & automated visits: automated browser visits, AI crawlers and search & SEO crawlers (such as Googlebot, Bingbot, AhrefsBot, social link previews and uptime monitors), each with its change versus the previous period. None of them count as visitors
 * AI access check: reads your robots.txt and shows, per AI company, whether AI search and training crawlers are allowed or blocked, with a clear warning when AI search is blocked
 * Shows whether your site has an llms.txt file
 * Counted on your own server; nothing is sent to AI companies or anyone else
 
 = ✉️ Weekly Site Report email =
 
-* One email every Monday: visitors, top pages, top referrers, AI visitors and AI bot visits with the change from the week before, speed scores, pending updates and Site Health
+* One email every Monday: visitors, top pages, top referrers and AI visitors with the change from the week before, bots and automated visits, speed scores, pending updates and Site Health
 * Sent from your own site with WordPress mail, to the address you choose
 * Off by default; turn it on in the plugin settings and send yourself a test first
 
@@ -74,7 +76,7 @@ The plugin is lightweight by design. The front end gets one small counter script
 * A matching modern style for the WordPress admin menu on every admin page
 * Your own logo and site name at the top of the menu
 * Search from the dashboard header: posts and pages in any status (drafts too), media, users and every admin screen, with icons, recent items and quick actions.
-* Live visitors in the WordPress toolbar on every admin page and on your site: how many people are online now, with today's visitors, page views, AI visits, top pages and sources on hover, plus the same search from a toolbar icon on every admin page. Both can be turned off in Settings.
+* Live visitors in the WordPress toolbar while you browse your site: how many people are online now, with today's visitors, page views, AI visits, top pages and sources on hover, plus the same search from a toolbar icon. Both can be turned off in Settings.
 * Show, hide and drag dashboard cards into your own order
 * Optionally open this dashboard after login, with the classic WordPress dashboard one click away
 * Administrators get the new look; other users keep the normal WordPress admin
@@ -85,9 +87,9 @@ Everything described above is included in this plugin, with no limits, license k
 
 = 🔒 Privacy =
 
-Free visitor stats are counted without cookies or browser storage. Each visit is identified by a one-way hash of the IP address and browser, combined with a random value that changes every day, so visitors cannot be followed from one day to the next. IP addresses and browser details are never saved. Raw visit records are deleted after 48 hours; daily totals are kept for 180 days (the longest period shown, plus the period before it for comparison). Daily counts per page, referring website and device type are kept for 90 days; daily counts per AI assistant are kept for 180 days.
+Free visitor stats are counted without cookies or browser storage. Each visit is identified by a one-way hash of the IP address and browser, combined with a random value that changes every day, so visitors cannot be followed from one day to the next. IP addresses and browser details are never saved. To tell people from bots, the counter script only notices that the mouse moved, the page scrolled, a key or the screen was pressed, or the page stayed open for 10 seconds; it records nothing about what was done. Raw visit records are deleted after 48 hours; daily totals of visitors and automated visits are kept for 180 days (the longest period shown, plus the period before it for comparison). Daily counts per page, referring website and device type are kept for 90 days; daily counts per AI assistant are kept for 180 days.
 
-AI crawlers are recognized by the name in their user agent (for example GPTBot). The plugin stores only a daily total per AI bot, kept for 180 days. No IP address, user agent or requested address is stored. All data stays in your WordPress database.
+AI crawlers and search, SEO, social and uptime crawlers are recognized by the name in their user agent (for example GPTBot or Googlebot). The plugin stores only a daily total per crawler, kept for 180 days. No IP address, user agent or requested address is stored. All data stays in your WordPress database.
 
 = More free plugins by the author =
 
@@ -129,7 +131,11 @@ All are bundled locally (nothing is loaded from a CDN) and GPL-compatible:
 
 = Does the plugin slow down my site? =
 
-The visitor counter is a small script that sends one request per page view after the page has loaded. The plugin adds nothing else to your front end.
+The visitor counter is a small script that sends one request when a page has loaded and one more when it sees a person (see the next question). The plugin adds nothing else to your front end.
+
+= How do you tell people from bots? =
+
+A visit counts once the visitor moves the mouse, scrolls, taps, types or keeps the page open for 10 seconds. Everything else is counted separately as automated: page loads with none of these signs (often headless browsers and scripts), AI crawlers such as GPTBot, and search and SEO crawlers such as Googlebot or AhrefsBot. You see all three on the Bots & automated visits card and in the weekly email. They never count as visitors, page views or sessions.
 
 = Why do the speed tests not work on my local site? =
 
@@ -145,7 +151,7 @@ Yes. The WordPress Dashboard menu item is not changed. You can also open your us
 
 = How do I see traffic from ChatGPT in WordPress? =
 
-Open the dashboard and look at the AI visitors card. A visit counts when it arrives from an AI assistant such as ChatGPT, Perplexity, Gemini, Claude or Copilot, either through the referring address or the utm_source tag some assistants add to their links (ChatGPT adds utm_source=chatgpt.com). It is counted once per visit, on your own site, without cookies.
+Open the dashboard and look at People from AI assistants in the AI crawlers card; AI assistants are also tagged "AI" in Referrers. A visit counts when it arrives from an AI assistant such as ChatGPT, Perplexity, Gemini, Claude or Copilot, either through the referring address or the utm_source tag some assistants add to their links (ChatGPT adds utm_source=chatgpt.com). It is counted once per visit, on your own site, without cookies.
 
 = Why does some ChatGPT traffic show as direct? =
 
@@ -169,22 +175,35 @@ It is your choice. Blocking training crawlers keeps your pages out of AI model t
 
 = What is in the weekly email? =
 
-Last week's visitors, page views and sessions compared with the week before, your top pages and referrers, AI traffic, the latest speed scores, pending updates and the Site Health status. It is off until you turn it on.
+Last week's visitors, page views and sessions compared with the week before, your top pages and referrers, AI traffic, bots and automated visits, the latest speed scores, pending updates and the Site Health status. It is off until you turn it on.
 
 == Screenshots ==
 
 1. The dashboard: a cookieless visitor counter, visitors over time, busiest days, engagement, PageSpeed scores and Quick Links on one screen.
 2. Header search: type to find posts, pages, drafts, media, users and admin screens from anywhere in the admin.
 3. Click the search bar to see your recent items and quick actions before you type.
-4. AI traffic: which AI crawlers read your site, visitors who came from ChatGPT, Perplexity or Gemini, and whether your robots.txt lets AI search in.
-5. Top pages, referrers and devices for the last 7, 30 or 90 days.
+4. AI and bot traffic: which AI crawlers read your site, people who came from AI assistants such as ChatGPT and Perplexity, bots and automated visits kept out of your visitor counts, and whether your robots.txt lets AI search in.
+5. Top pages, referrers and devices for the last 7, 30 or 90 days, with AI assistants such as ChatGPT and Perplexity tagged in Referrers.
 6. Speed & Optimize: mobile and desktop PageSpeed scores, Core Web Vitals and plain-English fixes to reach 90+.
 7. Quick Links: pin, reorder and search shortcuts to common WordPress tasks.
-8. The optional weekly email report: visitors, top pages, referrers, AI visits, speed scores and site status every Monday.
-9. Live visitors in the toolbar: see who is online right now on any admin screen, with today's visitors, top pages and traffic sources on hover.
-10. Toolbar search on any admin screen: find posts, pages, drafts, media, users and admin screens without leaving the page you are on.
+8. The optional weekly email report: visitors, top pages, referrers, AI visits, bots and automated visits, speed scores and site status every Monday.
+9. Live visitors in the toolbar while you browse your site: real people online right now, with today's visitors, top pages and traffic sources on hover.
+10. Toolbar search on your site: find posts, pages, drafts, media, users and admin screens without leaving the page you are on.
 
 == Changelog ==
+
+= 1.2.0 =
+* Improved: visitors are now real people only. A visit counts once the visitor moves the mouse, scrolls, taps, types or keeps the page open for 10 seconds; page loads without any of these are counted separately as automated visits.
+* New: Bots & automated visits card with automated browser visits, AI crawlers and search & SEO crawlers, each with the change versus the previous period. None of them count as visitors.
+* New: search, SEO, social and uptime crawlers (such as Googlebot, Bingbot, AhrefsBot, SemrushBot, link previews and UptimeRobot) are counted on your server like AI crawlers, as a daily total per crawler.
+* Changed: AI visitors moved into the AI crawlers card as "People from AI assistants", with the top AI assistants.
+* New: an "AI" tag marks AI assistants such as ChatGPT and Perplexity in Referrers.
+* New: the weekly email lists bots and automated visits: automated browser visits, AI crawlers and search & SEO crawlers.
+* Changed: the toolbar "online" count and search now show on your site only, not on admin pages, and the online count includes real people only.
+* Fixed: visitors behind Cloudflare or a proxy are counted from their own address, so they are no longer merged into one.
+* Fixed: on sites installed in a subfolder, page paths no longer show the folder name.
+* Improved: easier to read everywhere: darker secondary text, readable toolbar items, KPI numbers no longer cut off on tablets, and the dashboard header works on phones.
+* Improved: the weekly email shows its figures in an even grid and page titles in Top pages.
 
 = 1.1.0 =
 * New: top pages, referrers, devices and AI traffic cards on the dashboard.

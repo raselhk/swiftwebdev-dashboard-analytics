@@ -44,7 +44,7 @@ function swiftdash_screens() {
 		'swift-dash-settings' => array(
 			'key'         => 'settings',
 			'menu'        => __( 'SwiftWebDev Dashboard settings', 'swiftwebdev-dashboard-analytics' ),
-			'title'       => __( 'SwiftWebDev Dashboard Settings', 'swiftwebdev-dashboard-analytics' ),
+			'title'       => __( 'SwiftWebDev Dashboard settings', 'swiftwebdev-dashboard-analytics' ),
 			'description' => __( 'Choose how SwiftWebDev Dashboard behaves on this site.', 'swiftwebdev-dashboard-analytics' ),
 			'icon'        => 'gear-six',
 			'location'    => 'user',
@@ -340,7 +340,7 @@ function swiftdash_screen_settings( $screen ) {
 				<input type="checkbox" class="sd-switch" id="sd-toolbar-search" name="toolbar_search" aria-describedby="sd-toolbar-search-help" <?php checked( swiftdash_setting( 'toolbar_search' ) ); ?>>
 				<div>
 					<label class="sd-field__label" for="sd-toolbar-search"><?php esc_html_e( 'Show search in the toolbar', 'swiftwebdev-dashboard-analytics' ); ?></label>
-					<p class="sd-field__help" id="sd-toolbar-search-help"><?php esc_html_e( 'Adds a search icon next to your name in the top bar that finds posts, pages, media, users and admin screens from any admin page.', 'swiftwebdev-dashboard-analytics' ); ?></p>
+					<p class="sd-field__help" id="sd-toolbar-search-help"><?php esc_html_e( 'Adds a search icon next to your name in the top bar while you view your site. It finds posts, pages, media, users and admin screens, and replaces the WordPress site search there.', 'swiftwebdev-dashboard-analytics' ); ?></p>
 				</div>
 			</div>
 			<div class="sd-field">
@@ -375,7 +375,8 @@ function swiftdash_screen_settings( $screen ) {
 			</div>
 			<div class="sd-field">
 				<label class="sd-field__label" for="sd-report-email"><?php esc_html_e( 'Send the report to', 'swiftwebdev-dashboard-analytics' ); ?></label>
-				<input type="email" class="sd-input" id="sd-report-email" name="report_email" maxlength="100" placeholder="<?php echo esc_attr( get_option( 'admin_email' ) ); ?>" aria-describedby="sd-report-email-help" value="<?php echo esc_attr( swiftdash_setting( 'report_email' ) ); ?>">
+				<input type="email" class="sd-input" id="sd-report-email" name="report_email" maxlength="100" placeholder="<?php echo esc_attr( get_option( 'admin_email' ) ); ?>" aria-describedby="sd-report-email-error sd-report-email-help" value="<?php echo esc_attr( swiftdash_setting( 'report_email' ) ); ?>">
+				<p class="sd-field__error" id="sd-report-email-error" role="alert" hidden></p>
 				<p class="sd-field__help" id="sd-report-email-help">
 					<?php
 					/* translators: %s: site admin email address. */

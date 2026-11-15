@@ -8,7 +8,7 @@
 	--sdtb-primary: #4f5bff;
 	--sdtb-primary-hover: #3f49e8;
 	--sdtb-text: #111827;
-	--sdtb-text-2: #64748b;
+	--sdtb-text-2: #5f6e85;
 	--sdtb-border: #e5eaf2;
 	--sdtb-soft: #f5f7fb;
 	--sdtb-soft-2: #eef1f6;
@@ -54,7 +54,7 @@
 	flex: none;
 }
 
-/* ---------- Toolbar buttons (colors come from the admin color scheme via .ab-item) ---------- */
+/* ---------- Toolbar buttons (hover and focus colors come from core via .ab-item) ---------- */
 
 #wpadminbar .quicklinks .sdtb-live,
 #wpadminbar .quicklinks .sdtb-search__btn {
@@ -67,6 +67,8 @@
 	border: 0;
 	border-radius: 0;
 	background: none;
+	/* Core colors a.ab-item only; a button would keep the browser's black. */
+	color: #f0f0f1;
 	font-size: 13px;
 	white-space: nowrap;
 	cursor: pointer;
@@ -653,8 +655,8 @@
 #wpadminbar .sdtb-search .sd-search__chip {
 	display: grid;
 	place-items: center;
-	background: color-mix(in srgb, var(--sdtb-tone, #64748b) 10%, #fff);
-	color: var(--sdtb-tone, #64748b);
+	background: color-mix(in srgb, var(--sdtb-tone, #5f6e85) 10%, #fff);
+	color: var(--sdtb-tone, #5f6e85);
 }
 
 #wpadminbar .sdtb-search .sd-search__chip .sd-icon {

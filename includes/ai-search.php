@@ -1,7 +1,7 @@
 <?php
 /**
- * AI & Search: AI crawler counter (server side, by user agent), AI visitors, AI crawlers and
- * AI access check cards on the dashboard.
+ * AI & Search: AI bot and crawler counter (server side, by user agent), the AI crawlers card (with
+ * people from AI assistants), the Bots & automated visits card and the AI access check card.
  *
  * Free stores only what it shows: one daily total per AI bot in the swiftdash_dims table
  * (kind "aibot"). Each counted request also fires swiftdash_ai_bot_hit, so an add-on can keep
@@ -113,24 +113,27 @@ function swiftdash_ai_purposes() {
 }
 
 /**
- * Key of the counted AI bot a user agent claims to be, or ''.
+ * Key of the counted bot a user agent claims to be, or ''.
  *
- * @param string $ua User agent.
+ * @param string $ua   User agent.
+ * @param string $kind aibot (swiftdash_ai_bots() with count) or crawler (swiftdash_crawlers()).
  * @return string
  */
-function swiftdash_ai_bot_match( $ua ) {
-	static $regex = null, $keys = array();
-	if ( null === $regex ) {
+function swiftdash_bot_match( $ua, $kind = 'aibot' ) {
+	static $patterns = array();
+	if ( ! isset( $patterns[ $kind ] ) ) {
+		$keys   = array();
 		$tokens = array();
-		foreach ( swiftdash_ai_bots() as $key => $bot ) {
-			if ( ! empty( $bot['count'] ) && '' !== (string) $bot['token'] ) {
+		foreach ( 'crawler' === $kind ? swiftdash_crawlers() : swiftdash_ai_bots() as $key => $bot ) {
+			if ( ( ! isset( $bot['count'] ) || $bot['count'] ) && '' !== (string) $bot['token'] ) {
 				$keys[ strtolower( $bot['token'] ) ] = $key;
 				$tokens[]                            = preg_quote( $bot['token'], '/' );
 			}
 		}
-		$regex = $tokens ? '/' . implode( '|', $tokens ) . '/i' : '';
+		$patterns[ $kind ] = array( $tokens ? '/' . implode( '|', $tokens ) . '/i' : '', $keys );
 	}
-	// One compiled pattern for all tokens; no per-bot loop on ordinary visits.
+	list( $regex, $keys ) = $patterns[ $kind ];
+	// One compiled pattern per list; no per-bot loop on ordinary visits.
 	if ( '' === $regex || strlen( $ua ) < 5 || ! preg_match( $regex, $ua, $m ) ) {
 		return '';
 	}
@@ -138,8 +141,19 @@ function swiftdash_ai_bot_match( $ua ) {
 }
 
 /**
- * Count front-end requests from AI bots (pages, feeds, robots.txt and llms.txt when WordPress
- * serves them). Admin, AJAX, cron, CLI, XML-RPC, REST and login requests are skipped.
+ * Key of the counted AI bot a user agent claims to be, or ''.
+ *
+ * @param string $ua User agent.
+ * @return string
+ */
+function swiftdash_ai_bot_match( $ua ) {
+	return swiftdash_bot_match( $ua, 'aibot' );
+}
+
+/**
+ * Count front-end requests from AI bots and from search, SEO, social and uptime crawlers (pages,
+ * feeds, robots.txt and llms.txt when WordPress serves them). AI bots are matched first. Admin,
+ * AJAX, cron, CLI, XML-RPC, REST and login requests are skipped.
  */
 function swiftdash_ai_bot_detect() {
 	if ( is_admin() || wp_doing_ajax() || wp_doing_cron() || ( defined( 'WP_CLI' ) && WP_CLI ) || ( defined( 'XMLRPC_REQUEST' ) && XMLRPC_REQUEST ) ) {
@@ -148,8 +162,13 @@ function swiftdash_ai_bot_detect() {
 	if ( isset( $GLOBALS['pagenow'] ) && 'index.php' !== $GLOBALS['pagenow'] ) {
 		return;
 	}
-	$ua  = isset( $_SERVER['HTTP_USER_AGENT'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) ) : '';
-	$key = swiftdash_ai_bot_match( $ua );
+	$ua   = isset( $_SERVER['HTTP_USER_AGENT'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) ) : '';
+	$kind = 'aibot';
+	$key  = swiftdash_bot_match( $ua, $kind );
+	if ( '' === $key ) {
+		$kind = 'crawler';
+		$key  = swiftdash_bot_match( $ua, $kind );
+	}
 	if ( '' === $key ) {
 		return;
 	}
@@ -160,8 +179,12 @@ function swiftdash_ai_bot_detect() {
 	}
 	add_action(
 		'shutdown',
-		function () use ( $key, $uri ) {
-			swiftdash_ai_bot_record( $key, $uri );
+		function () use ( $kind, $key, $uri ) {
+			if ( 'aibot' === $kind ) {
+				swiftdash_ai_bot_record( $key, $uri );
+			} else {
+				swiftdash_crawler_record( $key );
+			}
 		}
 	);
 }
@@ -391,15 +414,22 @@ function swiftdash_ai_access() {
 /* ---------- Dashboard cards ---------- */
 
 /**
- * Register the AI & Search row: AI crawlers and AI visitors side by side, the access check below.
+ * Register the AI & Search row: AI crawlers and bots side by side, the access check below.
  */
 function swiftdash_ai_register_widgets() {
 	$range = swiftdash_analytics_range();
 	$cards = array(
-		'ai-crawlers' => array( __( 'AI crawlers', 'swiftwebdev-dashboard-analytics' ), __( 'Visits from AI bots that read your pages, by company and purpose.', 'swiftwebdev-dashboard-analytics' ), 8, 'swiftdash_render_ai_crawlers_widget', null ),
-		'insight-ai'  => array( __( 'AI visitors', 'swiftwebdev-dashboard-analytics' ), __( 'People who clicked a link to your site in an AI assistant answer.', 'swiftwebdev-dashboard-analytics' ), 4, 'swiftdash_render_ai_widget', null ),
+		'ai-crawlers' => array( __( 'AI crawlers', 'swiftwebdev-dashboard-analytics' ), __( 'Visits from AI bots that read your pages, by company and purpose, and people who came from AI assistants.', 'swiftwebdev-dashboard-analytics' ), 8, 'swiftdash_render_ai_crawlers_widget', null ),
+		'bots'        => array( __( 'Bots & automated visits', 'swiftwebdev-dashboard-analytics' ), __( 'Page loads with no sign of a person, AI crawlers and search crawlers. None of them count as visitors.', 'swiftwebdev-dashboard-analytics' ), 4, 'swiftdash_render_bots_widget', null ),
 		'ai-access'   => array( __( 'AI access check', 'swiftwebdev-dashboard-analytics' ), __( 'Which AI companies your robots.txt lets in, for AI search and for training.', 'swiftwebdev-dashboard-analytics' ), 12, 'swiftdash_render_ai_access_widget', 'swiftdash_render_ai_access_status' ),
 	);
+	// 1.2 moved the AI visitors card into AI crawlers: a saved card order gives its place to the bots card.
+	$layout = get_user_meta( get_current_user_id(), 'swiftdash_layout', true );
+	$slot   = isset( $layout['dashboard'] ) && is_array( $layout['dashboard'] ) ? array_search( 'insight-ai', $layout['dashboard'], true ) : false;
+	if ( false !== $slot ) {
+		$layout['dashboard'][ $slot ] = 'bots';
+		update_user_meta( get_current_user_id(), 'swiftdash_layout', $layout );
+	}
 	$order = 10;
 	foreach ( $cards as $id => $c ) {
 		swiftdash_register_widget(
@@ -476,20 +506,14 @@ function swiftdash_render_pro_tip( $text, $card ) {
 /**
  * Big number with its change versus the previous period.
  *
- * @param string $label    Label above the number ('' for none).
+ * @param string $label    Label above the number.
  * @param int    $total    This period.
  * @param int    $previous Period before.
  * @param int    $days     Period length.
- * @param int[]  $series   Daily values for a sparkline beside the number, or none.
  */
-function swiftdash_ai_figure( $label, $total, $previous, $days, $series = array() ) {
-	echo '<div class="sd-ai-figure">';
-	if ( '' !== $label ) {
-		echo '<span class="sd-ai-figure__label">' . esc_html( $label ) . '</span>';
-	}
-	echo '<span class="sd-ai-figure__row"><span class="sd-kpi__value">' . esc_html( number_format_i18n( $total ) ) . '</span>';
-	swiftdash_render_sparkline( $series );
-	echo '</span>';
+function swiftdash_ai_figure( $label, $total, $previous, $days ) {
+	echo '<div class="sd-ai-figure"><span class="sd-ai-figure__label">' . esc_html( $label ) . '</span>';
+	echo '<span class="sd-kpi__value">' . esc_html( number_format_i18n( $total ) ) . '</span>';
 	echo '<span class="sd-kpi__meta">';
 	swiftdash_render_trend( swiftdash_kpi_change( $total, $previous ), $days );
 	echo '</span></div>';
@@ -526,7 +550,8 @@ function swiftdash_ai_cache_note() {
 }
 
 /**
- * AI crawlers card: AI bot visits next to AI visitors, split by purpose and by company.
+ * AI crawlers card: AI bot visits split by purpose and by company, then the people who came
+ * from AI assistants.
  *
  * @param array $widget Widget args (days).
  */
@@ -547,6 +572,7 @@ function swiftdash_render_ai_crawlers_widget( $widget ) {
 		if ( $cache ) {
 			swiftdash_ai_cache_note();
 		}
+		swiftdash_render_ai_people( $days );
 		return;
 	}
 
@@ -575,16 +601,10 @@ function swiftdash_render_ai_crawlers_widget( $widget ) {
 			return $b['count'] <=> $a['count'];
 		}
 	);
-	$visitors = swiftdash_dims_period( 'ai', $days );
 	?>
 	<div class="sd-ai-split">
 		<div class="sd-ai-split__main">
-			<div class="sd-ai-pair">
-				<?php
-				swiftdash_ai_figure( __( 'AI bot visits', 'swiftwebdev-dashboard-analytics' ), $bots['total'], $bots['previous'], $days );
-				swiftdash_ai_figure( __( 'AI visitors', 'swiftwebdev-dashboard-analytics' ), $visitors['total'], $visitors['previous'], $days );
-				?>
-			</div>
+			<?php swiftdash_ai_figure( __( 'AI bot visits', 'swiftwebdev-dashboard-analytics' ), $bots['total'], $bots['previous'], $days ); ?>
 			<div class="sd-ai-daily">
 				<span class="sd-ai-figure__label"><?php esc_html_e( 'AI bot visits per day', 'swiftwebdev-dashboard-analytics' ); ?></span>
 				<?php swiftdash_render_sparkline( $bots['daily'] ); ?>
@@ -618,50 +638,68 @@ function swiftdash_render_ai_crawlers_widget( $widget ) {
 	if ( $cache ) {
 		swiftdash_ai_cache_note();
 	}
+	swiftdash_render_ai_people( $days );
 	swiftdash_render_pro_tip( __( 'Which pages did they read? See PRO', 'swiftwebdev-dashboard-analytics' ), 'ai-crawlers' );
 }
 
 /**
- * AI visitors card: visits from AI assistants, by referrer or utm_source tag.
+ * "People from AI assistants" section of the AI crawlers card: visits that came from an AI
+ * assistant (referrer or utm_source tag) and the top assistants.
+ *
+ * @param int $days Period length.
+ */
+function swiftdash_render_ai_people( $days ) {
+	$ai      = swiftdash_dims_period( 'ai', $days );
+	$sources = swiftdash_ai_sources();
+	echo '<div class="sd-ai-people">';
+	swiftdash_ai_figure( __( 'People from AI assistants', 'swiftwebdev-dashboard-analytics' ), $ai['total'], $ai['previous'], $days );
+	if ( $ai['total'] ) {
+		echo '<ul class="sd-ai-chips" aria-label="' . esc_attr__( 'Top AI assistants', 'swiftwebdev-dashboard-analytics' ) . '">';
+		foreach ( array_slice( $ai['items'], 0, 5, true ) as $key => $item ) {
+			echo '<li class="sd-ai-chip">';
+			swiftdash_render_brand_tile( swiftdash_ai_brand( $key ) );
+			echo esc_html( isset( $sources[ $key ] ) ? $sources[ $key ]['label'] : $key ) . ' <strong>' . esc_html( number_format_i18n( $item['count'] ) ) . '</strong></li>';
+		}
+		echo '</ul>';
+	} else {
+		/* translators: %s: number of other AI assistants. */
+		echo '<p class="sd-field__help">' . esc_html( sprintf( __( 'None yet. ChatGPT, Perplexity, Gemini, Claude, Copilot and %s more are counted as soon as someone clicks through.', 'swiftwebdev-dashboard-analytics' ), number_format_i18n( max( 0, count( $sources ) - 5 ) ) ) ) . '</p>';
+	}
+	echo '</div>';
+}
+
+/**
+ * Bots & automated visits card: page loads with no sign of a person, AI crawler requests and
+ * search crawler requests, each with its change versus the previous period.
  *
  * @param array $widget Widget args (days).
  */
-function swiftdash_render_ai_widget( $widget ) {
-	$days    = (int) $widget['days'];
-	$ai      = swiftdash_dims_period( 'ai', $days );
-	$sources = swiftdash_ai_sources();
-	if ( ! $ai['total'] ) {
-		swiftdash_render_empty_state(
-			'chats-circle-fill',
-			__( 'No visits from AI assistants yet', 'swiftwebdev-dashboard-analytics' ),
-			sprintf(
-				/* translators: %s: number of other AI assistants. */
-				__( 'Most sites get under 1 in 300 visits from AI. We count ChatGPT, Perplexity, Gemini, Claude, Copilot and %s more as soon as they arrive.', 'swiftwebdev-dashboard-analytics' ),
-				number_format_i18n( max( 0, count( $sources ) - 5 ) )
-			)
-		);
-		return;
+function swiftdash_render_bots_widget( $widget ) {
+	$days  = (int) $widget['days'];
+	$stats = swiftdash_analytics_stats( $days );
+	$rows  = array(
+		array( __( 'Automated browser visits', 'swiftwebdev-dashboard-analytics' ), (int) $stats['totals']['automated'], (int) $stats['previous']['automated'] ),
+	);
+	foreach ( array(
+		'aibot'   => __( 'AI crawlers', 'swiftwebdev-dashboard-analytics' ),
+		'crawler' => __( 'Search & SEO crawlers', 'swiftwebdev-dashboard-analytics' ),
+	) as $kind => $label ) {
+		$period = swiftdash_dims_period( $kind, $days );
+		$rows[] = array( $label, $period['total'], $period['previous'] );
 	}
-	$sessions = (int) swiftdash_analytics_stats( $days )['totals']['sessions'];
-	$share    = $sessions ? $ai['total'] / $sessions * 100 : 0;
-	swiftdash_ai_figure( '', $ai['total'], $ai['previous'], $days, $ai['daily'] );
-	if ( $sessions ) {
-		/* translators: %s: percentage number. */
-		echo '<p class="sd-ai-share">' . esc_html( sprintf( __( '%s%% of all visits', 'swiftwebdev-dashboard-analytics' ), number_format_i18n( $share, $share < 10 ? 1 : 0 ) ) ) . '</p>';
+	$max = max( 1, max( wp_list_pluck( $rows, 1 ) ) );
+	echo '<ul class="sd-bots">';
+	foreach ( $rows as $row ) {
+		$change = swiftdash_kpi_change( $row[1], $row[2] );
+		// More or fewer bots is neither good nor bad: neutral color, arrow kept.
+		$change['tone'] = 'flat';
+		echo '<li class="sd-bots__row"><span class="sd-bots__label">' . esc_html( $row[0] ) . '</span><span class="sd-bots__value">' . esc_html( number_format_i18n( $row[1] ) ) . '</span>';
+		printf( '<span class="sd-in-row__track" aria-hidden="true"><span class="sd-in-row__fill" style="width: %s%%"></span></span><span class="sd-kpi__meta">', esc_attr( round( $row[1] / $max * 100, 1 ) ) );
+		swiftdash_render_trend( $change, $days );
+		echo '</span></li>';
 	}
-	$rows = array();
-	foreach ( $ai['items'] as $key => $item ) {
-		$rows[] = array(
-			'label' => isset( $sources[ $key ] ) ? $sources[ $key ]['label'] : $key,
-			'meta'  => '',
-			'icon'  => '',
-			'brand' => swiftdash_ai_brand( $key ),
-			'count' => $item['count'],
-			'value' => swiftdash_insights_count( $item['count'], false ),
-		);
-	}
-	swiftdash_insights_list( $rows );
-	swiftdash_render_pro_tip( __( 'Which pages do they land on? See PRO', 'swiftwebdev-dashboard-analytics' ), 'ai-visitors' );
+	echo '</ul>';
+	printf( '<p class="sd-ai-note">%1$s<span>%2$s</span></p>', wp_kses( swiftdash_icon( 'info' ), swiftdash_icon_kses() ), esc_html__( 'Not counted as visitors.', 'swiftwebdev-dashboard-analytics' ) );
 }
 
 /**

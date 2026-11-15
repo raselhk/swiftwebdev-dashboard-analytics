@@ -1,7 +1,7 @@
 <?php
 /**
- * Weekly Site Report email (opt-in): last 7 full days vs the 7 before, top lists, speed,
- * updates and Site Health. Sent with wp_mail every Monday 08:00 site time.
+ * Weekly Site Report email (opt-in): last 7 full days vs the 7 before, top lists, bots and
+ * automated visits, speed, updates and Site Health. Sent with wp_mail every Monday 08:00 site time.
  *
  * @package SwiftWebDevDashboard
  */
@@ -84,9 +84,10 @@ function swiftdash_report_data() {
 	// 15 days oldest first, today last: days 7-13 are the last 7 full days, 0-6 the week before.
 	$daily = swiftdash_get_stats( 15 )['daily'];
 	$now   = array(
-		'visitors' => 0,
-		'views'    => 0,
-		'sessions' => 0,
+		'visitors'  => 0,
+		'views'     => 0,
+		'sessions'  => 0,
+		'automated' => 0,
 	);
 	$prev  = $now;
 	foreach ( array_slice( $daily, 0, 14 ) as $i => $day ) {
@@ -105,7 +106,7 @@ function swiftdash_report_data() {
 		$top[ $kind ] = function_exists( 'swiftdash_get_top' ) ? (array) swiftdash_get_top( $kind, 7, 5, true ) : array();
 	}
 	$ai = array();
-	foreach ( array( 'ai', 'aibot' ) as $kind ) {
+	foreach ( array( 'ai', 'aibot', 'crawler' ) as $kind ) {
 		$period      = swiftdash_dims_period( $kind, 7, true );
 		$ai[ $kind ] = array( $period['total'], $period['previous'] );
 	}
@@ -152,16 +153,16 @@ function swiftdash_report_data() {
 function swiftdash_report_change( $now, $prev ) {
 	if ( ! $prev ) {
 		return $now
-			? array( __( 'New this week', 'swiftwebdev-dashboard-analytics' ), '#059669' )
-			: array( __( 'No change', 'swiftwebdev-dashboard-analytics' ), '#64748b' );
+			? array( __( 'New this week', 'swiftwebdev-dashboard-analytics' ), '#047857' )
+			: array( __( 'No change', 'swiftwebdev-dashboard-analytics' ), '#5f6e85' );
 	}
 	$pct = (int) round( ( $now - $prev ) / $prev * 100 );
 	if ( 0 === $pct ) {
-		return array( __( 'No change', 'swiftwebdev-dashboard-analytics' ), '#64748b' );
+		return array( __( 'No change', 'swiftwebdev-dashboard-analytics' ), '#5f6e85' );
 	}
 	/* translators: %s: percentage change with sign, e.g. +12% or -5%. */
 	$text = sprintf( __( '%s vs last week', 'swiftwebdev-dashboard-analytics' ), ( $pct > 0 ? '+' : '&minus;' ) . number_format_i18n( abs( $pct ) ) . '%' );
-	return array( $text, $pct > 0 ? '#059669' : '#dc2626' );
+	return array( $text, $pct > 0 ? '#047857' : '#b91c1c' );
 }
 
 /**
@@ -173,7 +174,7 @@ function swiftdash_report_change( $now, $prev ) {
 function swiftdash_report_html( $data ) {
 	$font  = "font-family:'Plus Jakarta Sans',-apple-system,'Segoe UI',Roboto,Arial,sans-serif;";
 	$h2    = $font . 'margin:0 0 12px;font-size:16px;font-weight:700;color:#111827;';
-	$muted = $font . 'font-size:13px;color:#64748b;';
+	$muted = $font . 'font-size:13px;color:#5f6e85;';
 	$cell  = $font . 'padding:10px 0;border-top:1px solid #e5eaf2;font-size:14px;color:#111827;';
 	$fmt   = get_option( 'date_format' );
 	$day   = function ( $date ) use ( $fmt ) {
@@ -182,10 +183,12 @@ function swiftdash_report_html( $data ) {
 	$range = $data['from'] ? $day( $data['from'] ) . ' &ndash; ' . $day( $data['to'] ) : '';
 	$site  = get_bloginfo( 'name' );
 
+	// Two by two: label, this week, the week before.
 	$kpis  = array(
-		'visitors' => __( 'Visitors', 'swiftwebdev-dashboard-analytics' ),
-		'views'    => __( 'Page views', 'swiftwebdev-dashboard-analytics' ),
-		'sessions' => __( 'Sessions', 'swiftwebdev-dashboard-analytics' ),
+		array( __( 'Visitors', 'swiftwebdev-dashboard-analytics' ), $data['now']['visitors'], $data['prev']['visitors'] ),
+		array( __( 'Page views', 'swiftwebdev-dashboard-analytics' ), $data['now']['views'], $data['prev']['views'] ),
+		array( __( 'Sessions', 'swiftwebdev-dashboard-analytics' ), $data['now']['sessions'], $data['prev']['sessions'] ),
+		array( __( 'AI visitors', 'swiftwebdev-dashboard-analytics' ), $data['ai']['ai'][0], $data['ai']['ai'][1] ),
 	);
 	$lists = array(
 		'page'     => array( __( 'Top pages', 'swiftwebdev-dashboard-analytics' ), __( 'No page views this week.', 'swiftwebdev-dashboard-analytics' ) ),
@@ -209,39 +212,23 @@ function swiftdash_report_html( $data ) {
 		<?php endif; ?>
 	</td></tr>
 
-	<tr><td style="padding:24px 28px 8px;">
-		<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
-			<?php foreach ( $kpis as $key => $label ) : ?>
-				<?php list( $change, $color ) = swiftdash_report_change( $data['now'][ $key ], $data['prev'][ $key ] ); ?>
-				<td width="33%" valign="top" style="padding:0 4px;">
-					<div style="padding:14px;border:1px solid #e5eaf2;border-radius:12px;background:#f5f7fb;">
-						<p style="<?php echo esc_attr( $muted ); ?>margin:0;"><?php echo esc_html( $label ); ?></p>
-						<p style="<?php echo esc_attr( $font ); ?>margin:4px 0;font-size:26px;font-weight:800;color:#111827;"><?php echo esc_html( number_format_i18n( $data['now'][ $key ] ) ); ?></p>
-						<p style="<?php echo esc_attr( $font ); ?>margin:0;font-size:12px;font-weight:600;color:<?php echo esc_attr( $color ); ?>;"><?php echo wp_kses( $change, array() ); ?></p>
-					</div>
-				</td>
+	<tr><td style="padding:20px 24px 4px;">
+		<table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+			<?php foreach ( array_chunk( $kpis, 2 ) as $pair ) : ?>
+				<tr>
+					<?php foreach ( $pair as $kpi ) : ?>
+						<?php list( $change, $color ) = swiftdash_report_change( $kpi[1], $kpi[2] ); ?>
+						<td width="50%" valign="top" style="padding:4px;">
+							<div style="padding:14px;border:1px solid #e5eaf2;border-radius:12px;background:#f5f7fb;">
+								<p style="<?php echo esc_attr( $muted ); ?>margin:0;"><?php echo esc_html( $kpi[0] ); ?></p>
+								<p style="<?php echo esc_attr( $font ); ?>margin:4px 0;font-size:26px;font-weight:800;color:#111827;"><?php echo esc_html( number_format_i18n( $kpi[1] ) ); ?></p>
+								<p style="<?php echo esc_attr( $font ); ?>margin:0;font-size:12px;font-weight:600;color:<?php echo esc_attr( $color ); ?>;"><?php echo wp_kses( $change, array() ); ?></p>
+							</div>
+						</td>
+					<?php endforeach; ?>
+				</tr>
 			<?php endforeach; ?>
-		</tr></table>
-	</td></tr>
-
-	<tr><td style="padding:12px 28px 0;">
-		<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
-			<?php
-			foreach ( array(
-				'ai'    => __( 'AI visitors', 'swiftwebdev-dashboard-analytics' ),
-				'aibot' => __( 'AI bot visits', 'swiftwebdev-dashboard-analytics' ),
-			) as $key => $label ) :
-				list( $change, $color ) = swiftdash_report_change( $data['ai'][ $key ][0], $data['ai'][ $key ][1] );
-				?>
-				<td width="50%" valign="top" style="padding:0 4px;">
-					<div style="padding:14px;border:1px solid #e5eaf2;border-radius:12px;background:#f5f7fb;">
-						<p style="<?php echo esc_attr( $muted ); ?>margin:0;"><?php echo esc_html( $label ); ?></p>
-						<p style="<?php echo esc_attr( $font ); ?>margin:4px 0;font-size:22px;font-weight:800;color:#111827;"><?php echo esc_html( number_format_i18n( $data['ai'][ $key ][0] ) ); ?></p>
-						<p style="<?php echo esc_attr( $font ); ?>margin:0;font-size:12px;font-weight:600;color:<?php echo esc_attr( $color ); ?>;"><?php echo wp_kses( $change, array() ); ?></p>
-					</div>
-				</td>
-			<?php endforeach; ?>
-		</tr></table>
+		</table>
 	</td></tr>
 
 	<?php foreach ( $lists as $kind => $list ) : ?>
@@ -250,8 +237,19 @@ function swiftdash_report_html( $data ) {
 			<?php if ( $data['top'][ $kind ] ) : ?>
 				<table role="presentation" width="100%" cellpadding="0" cellspacing="0">
 					<?php foreach ( $data['top'][ $kind ] as $row ) : ?>
+						<?php
+						// Pages: the post title with its path below (relative to the site home), like the dashboard.
+						$label = $row['item'];
+						$sub   = '';
+						if ( 'page' === $kind ) {
+							$title = swiftdash_path_title( $row['item'] );
+							$path  = swiftdash_display_path( $row['item'] );
+							$label = '' !== $title ? $title : $path;
+							$sub   = '' !== $title ? $path : '';
+						}
+						?>
 						<tr>
-							<td style="<?php echo esc_attr( $cell ); ?>word-break:break-all;"><?php echo esc_html( $row['item'] ); ?></td>
+							<td style="<?php echo esc_attr( $cell ); ?>word-break:break-word;"><?php echo esc_html( $label ) . ( '' !== $sub ? '<br><span style="font-size:12px;color:#5f6e85;word-break:break-all;">' . esc_html( $sub ) . '</span>' : '' ); ?></td>
 							<td align="right" style="<?php echo esc_attr( $cell ); ?>padding-left:12px;font-weight:700;white-space:nowrap;"><?php echo esc_html( number_format_i18n( (int) $row['count'] ) ); ?></td>
 						</tr>
 					<?php endforeach; ?>
@@ -261,6 +259,27 @@ function swiftdash_report_html( $data ) {
 			<?php endif; ?>
 		</td></tr>
 	<?php endforeach; ?>
+
+	<tr><td style="padding:20px 28px 0;">
+		<h2 style="<?php echo esc_attr( $h2 ); ?>margin-bottom:4px;"><?php esc_html_e( 'Bots and automated visits', 'swiftwebdev-dashboard-analytics' ); ?></h2>
+		<p style="<?php echo esc_attr( $muted ); ?>margin:0 0 8px;"><?php esc_html_e( 'Not counted as visitors.', 'swiftwebdev-dashboard-analytics' ); ?></p>
+		<table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+			<?php
+			foreach ( array(
+				array( __( 'Automated browser visits', 'swiftwebdev-dashboard-analytics' ), $data['now']['automated'], $data['prev']['automated'] ),
+				array( __( 'AI crawlers', 'swiftwebdev-dashboard-analytics' ), $data['ai']['aibot'][0], $data['ai']['aibot'][1] ),
+				array( __( 'Search & SEO crawlers', 'swiftwebdev-dashboard-analytics' ), $data['ai']['crawler'][0], $data['ai']['crawler'][1] ),
+			) as $row ) :
+				// More or fewer bots is neither good nor bad: the change stays gray.
+				$change = swiftdash_report_change( $row[1], $row[2] )[0];
+				?>
+				<tr>
+					<td style="<?php echo esc_attr( $cell ); ?>"><?php echo esc_html( $row[0] ); ?></td>
+					<td align="right" style="<?php echo esc_attr( $cell ); ?>padding-left:12px;white-space:nowrap;"><strong><?php echo esc_html( number_format_i18n( (int) $row[1] ) ); ?></strong> <span style="font-size:12px;font-weight:600;color:#5f6e85;"><?php echo wp_kses( $change, array() ); ?></span></td>
+				</tr>
+			<?php endforeach; ?>
+		</table>
+	</td></tr>
 
 	<tr><td style="padding:20px 28px 0;">
 		<h2 style="<?php echo esc_attr( $h2 ); ?>"><?php esc_html_e( 'Site status', 'swiftwebdev-dashboard-analytics' ); ?></h2>
@@ -273,24 +292,24 @@ function swiftdash_report_html( $data ) {
 			) as $strategy => $label ) {
 				$score  = $data['speed'][ $strategy ];
 				$rows[] = null === $score
-					? array( $label, __( 'Not tested yet', 'swiftwebdev-dashboard-analytics' ), '#64748b' )
-					: array( $label, $score . ' / 100', $score >= 90 ? '#059669' : ( $score >= 50 ? '#d97706' : '#dc2626' ) );
+					? array( $label, __( 'Not tested yet', 'swiftwebdev-dashboard-analytics' ), '#5f6e85' )
+					: array( $label, $score . ' / 100', $score >= 90 ? '#047857' : ( $score >= 50 ? '#b45309' : '#b91c1c' ) );
 			}
 			$rows[] = $data['updates']
 				/* translators: %d: number of pending updates. */
-				? array( __( 'Updates', 'swiftwebdev-dashboard-analytics' ), sprintf( _n( '%d waiting', '%d waiting', $data['updates'], 'swiftwebdev-dashboard-analytics' ), $data['updates'] ), '#d97706' )
-				: array( __( 'Updates', 'swiftwebdev-dashboard-analytics' ), __( 'All up to date', 'swiftwebdev-dashboard-analytics' ), '#059669' );
+				? array( __( 'Updates', 'swiftwebdev-dashboard-analytics' ), sprintf( _n( '%d waiting', '%d waiting', $data['updates'], 'swiftwebdev-dashboard-analytics' ), $data['updates'] ), '#b45309' )
+				: array( __( 'Updates', 'swiftwebdev-dashboard-analytics' ), __( 'All up to date', 'swiftwebdev-dashboard-analytics' ), '#047857' );
 			$health = $data['health'];
 			if ( ! $health ) {
-				$rows[] = array( __( 'Site Health', 'swiftwebdev-dashboard-analytics' ), __( 'Not checked yet', 'swiftwebdev-dashboard-analytics' ), '#64748b' );
+				$rows[] = array( __( 'Site Health', 'swiftwebdev-dashboard-analytics' ), __( 'Not checked yet', 'swiftwebdev-dashboard-analytics' ), '#5f6e85' );
 			} elseif ( (int) $health['critical'] ) {
 				/* translators: %d: number of critical Site Health issues. */
-				$rows[] = array( __( 'Site Health', 'swiftwebdev-dashboard-analytics' ), sprintf( _n( '%d critical issue', '%d critical issues', (int) $health['critical'], 'swiftwebdev-dashboard-analytics' ), (int) $health['critical'] ), '#dc2626' );
+				$rows[] = array( __( 'Site Health', 'swiftwebdev-dashboard-analytics' ), sprintf( _n( '%d critical issue', '%d critical issues', (int) $health['critical'], 'swiftwebdev-dashboard-analytics' ), (int) $health['critical'] ), '#b91c1c' );
 			} elseif ( (int) $health['recommended'] ) {
 				/* translators: %d: number of recommended Site Health improvements. */
-				$rows[] = array( __( 'Site Health', 'swiftwebdev-dashboard-analytics' ), sprintf( _n( '%d recommended improvement', '%d recommended improvements', (int) $health['recommended'], 'swiftwebdev-dashboard-analytics' ), (int) $health['recommended'] ), '#d97706' );
+				$rows[] = array( __( 'Site Health', 'swiftwebdev-dashboard-analytics' ), sprintf( _n( '%d recommended improvement', '%d recommended improvements', (int) $health['recommended'], 'swiftwebdev-dashboard-analytics' ), (int) $health['recommended'] ), '#b45309' );
 			} else {
-				$rows[] = array( __( 'Site Health', 'swiftwebdev-dashboard-analytics' ), __( 'Good', 'swiftwebdev-dashboard-analytics' ), '#059669' );
+				$rows[] = array( __( 'Site Health', 'swiftwebdev-dashboard-analytics' ), __( 'Good', 'swiftwebdev-dashboard-analytics' ), '#047857' );
 			}
 			foreach ( $rows as $row ) :
 				?>
