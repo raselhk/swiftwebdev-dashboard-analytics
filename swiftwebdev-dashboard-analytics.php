@@ -1,9 +1,9 @@
 <?php
 /**
- * Plugin Name:       SwiftWebDev Dashboard & Analytics - Visitor Statistics, AI Traffic & PageSpeed Test
+ * Plugin Name:       Dashboard & Analytics - Visitor Statistics, AI Traffic & PageSpeed Test by Swift Web Dev
  * Plugin URI:        https://swiftwebdev.com/wordpress-visitor-statistics/docs/
  * Description:       Admin dashboard and cookieless analytics for WordPress: visitor stats, Google PageSpeed scores, site health and a modern admin menu.
- * Version:           1.2.0
+ * Version:           1.3.0
  * Requires at least: 6.5
  * Requires PHP:      7.4
  * Author:            Swift Web Dev
@@ -17,7 +17,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'SWIFTDASH_VERSION', '1.2.0' );
+define( 'SWIFTDASH_VERSION', '1.3.0' );
 define( 'SWIFTDASH_FILE', __FILE__ );
 define( 'SWIFTDASH_DIR', plugin_dir_path( __FILE__ ) );
 define( 'SWIFTDASH_URL', plugin_dir_url( __FILE__ ) );

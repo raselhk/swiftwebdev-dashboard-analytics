@@ -275,7 +275,7 @@ function swiftdash_render_devices_widget( $widget ) {
  */
 function swiftdash_wp_dashboard_setup() {
 	if ( current_user_can( swiftdash_capability() ) ) {
-		wp_add_dashboard_widget( 'swiftdash_summary', __( 'SwiftWebDev Dashboard', 'swiftwebdev-dashboard-analytics' ), 'swiftdash_render_wp_dashboard_widget' );
+		wp_add_dashboard_widget( 'swiftdash_summary', __( 'SWD Dashboard', 'swiftwebdev-dashboard-analytics' ), 'swiftdash_render_wp_dashboard_widget' );
 	}
 }
 add_action( 'wp_dashboard_setup', 'swiftdash_wp_dashboard_setup' );
@@ -313,7 +313,7 @@ function swiftdash_render_wp_dashboard_widget() {
 			<p><?php esc_html_e( 'No page views recorded yet.', 'swiftwebdev-dashboard-analytics' ); ?></p>
 		<?php endif; ?>
 	</div>
-	<p><a class="button" href="<?php echo esc_url( admin_url( 'admin.php?page=swift-dash' ) ); ?>"><?php esc_html_e( 'Open SwiftWebDev Dashboard', 'swiftwebdev-dashboard-analytics' ); ?></a></p>
+	<p><a class="button" href="<?php echo esc_url( admin_url( 'admin.php?page=swift-dash' ) ); ?>"><?php esc_html_e( 'Open SWD Dashboard', 'swiftwebdev-dashboard-analytics' ); ?></a></p>
 	<?php
 }
 

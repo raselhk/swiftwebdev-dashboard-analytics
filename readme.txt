@@ -1,10 +1,10 @@
-=== SwiftWebDev Dashboard & Analytics - Visitor Statistics, AI Traffic & PageSpeed Test ===
+=== Dashboard & Analytics - Visitor Statistics, AI Traffic & PageSpeed Test by Swift Web Dev ===
 Contributors: raselhk
 Tags: analytics, statistics, ai traffic, ai crawlers, cookieless analytics
 Requires at least: 6.5
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.2.0
+Stable tag: 1.3.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -83,7 +83,7 @@ The plugin is lightweight by design. The front end gets one small counter script
 
 = 🏆 PRO add-on =
 
-Everything described above is included in this plugin, with no limits, license keys or time restrictions. For extra reports, SwiftWebDev Dashboard PRO is a separate add-on plugin, sold and downloaded from our website: real-time visitors, countries and browsers, goals and conversions, UTM campaigns, AI assistant landing pages, traffic-spike email alerts, form and click tracking, session recordings, CSV export and weekly scheduled speed tests. [Learn more about the PRO add-on](https://swiftwebdev.com/swiftwebdev-dashboard-pro/)
+Everything described above is included in this plugin, with no limits, license keys or time restrictions. For extra reports, SwiftWebDev Dashboard PRO is a separate add-on plugin, sold and downloaded from our website: real-time visitors, countries and browsers, goals and conversions, UTM campaigns, AI assistant landing pages, traffic-spike email alerts, form and click tracking, session recordings, CSV export and weekly scheduled speed tests. [Learn more about the PRO add-on](https://swiftwebdev.com/wordpress-visitor-statistics/pro/)
 
 = 🔒 Privacy =
 
@@ -124,7 +124,7 @@ All are bundled locally (nothing is loaded from a CDN) and GPL-compatible:
 == Installation ==
 
 1. Install and activate SwiftWebDev Dashboard & Analytics from the Plugins screen.
-2. Open **SwiftWebDev** in the admin menu.
+2. Open **SWD Dashboard** in the admin menu.
 3. Optional: in the plugin settings (user menu, top right), set your own sidebar logo and name.
 
 == Frequently Asked Questions ==
@@ -147,7 +147,7 @@ No. Speed tests run through the SwiftWebDev speed test service with our own key.
 
 = Can I still use the normal WordPress dashboard? =
 
-Yes. The WordPress Dashboard menu item is not changed. You can also open your user menu in the plugin and choose "Classic WordPress dashboard". "Open SwiftWebDev Dashboard after login" is off by default; you can turn it on in the plugin settings.
+Yes. The WordPress Dashboard menu item is not changed. You can also open your user menu in the plugin and choose "Classic WordPress dashboard". "Open SWD Dashboard after login" is off by default; you can turn it on in the plugin settings.
 
 = How do I see traffic from ChatGPT in WordPress? =
 
@@ -179,18 +179,30 @@ Last week's visitors, page views and sessions compared with the week before, you
 
 == Screenshots ==
 
-1. The dashboard: a cookieless visitor counter, visitors over time, busiest days, engagement, PageSpeed scores and Quick Links on one screen.
+1. The dashboard: a cookieless visitor counter, your Quick Links in one row, visitors over time and busiest days, with engagement and PageSpeed scores further down.
 2. Header search: type to find posts, pages, drafts, media, users and admin screens from anywhere in the admin.
 3. Click the search bar to see your recent items and quick actions before you type.
 4. AI and bot traffic: which AI crawlers read your site, people who came from AI assistants such as ChatGPT and Perplexity, bots and automated visits kept out of your visitor counts, and whether your robots.txt lets AI search in.
 5. Top pages, referrers and devices for the last 7, 30 or 90 days, with AI assistants such as ChatGPT and Perplexity tagged in Referrers.
-6. Speed & Optimize: mobile and desktop PageSpeed scores, Core Web Vitals and plain-English fixes to reach 90+.
+6. Speed & Optimize: mobile and desktop scores for performance, accessibility, best practices and SEO, plus Core Web Vitals.
 7. Quick Links: pin, reorder and search shortcuts to common WordPress tasks.
 8. The optional weekly email report: visitors, top pages, referrers, AI visits, bots and automated visits, speed scores and site status every Monday.
 9. Live visitors in the toolbar while you browse your site: real people online right now, with today's visitors, top pages and traffic sources on hover.
 10. Toolbar search on your site: find posts, pages, drafts, media, users and admin screens without leaving the page you are on.
+11. Improvement areas: what to fix for Performance, Accessibility, Best practices and SEO, each in its own tab with plain-English advice.
 
 == Changelog ==
+
+= 1.3.0 =
+* New: "Improvement areas" on the Speed screen now has four tabs, Performance, Accessibility, Best practices and SEO, each with its own list of things to fix, a count and plain-English advice.
+* New: Quick Links is now a full-width row right under the visitor cards, with your shortcuts side by side.
+* New: the menu logo is cropped to a square with the WordPress crop screen when you choose it.
+* New: "Use the site icon as the menu logo" switch in the settings.
+* New: your profile picture in the header. Without a picture, the first letter of your first name is shown on a colored background.
+* Changed: the plugin is now called "SWD Dashboard" inside WordPress, and the listing name ends with "by Swift Web Dev".
+* Improved: the weekly report email field no longer shows the site admin email as its example.
+* Improved: titles of speed checks that mention HTML tags are now shown in full.
+* Improved: new look for the optional PRO add-on notice.
 
 = 1.2.0 =
 * Improved: visitors are now real people only. A visit counts once the visitor moves the mouse, scrolls, taps, types or keeps the page open for 10 seconds; page loads without any of these are counted separately as automated visits.

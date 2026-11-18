@@ -237,7 +237,7 @@ swiftdash_rollup();
 
 // Recent activity.
 $wpdb->query( "DELETE FROM {$wpdb->prefix}swiftdash_activity" );
-$rows = array( array( 'publish', 'Post published', 'Cold Brew at Home: A Simple Guide', $cold, 35 ), array( 'plugin', 'Plugin updated', 'SwiftWebDev Dashboard 1.2.0', 0, 130 ), array( 'user', 'New user registered', 'Maya Chen', 0, 260 ), array( 'publish', 'Page published', 'Subscriptions', 0, 420 ), array( 'theme', 'Theme updated', 'Twenty Twenty-Five 1.3', 0, 700 ), array( 'core', 'WordPress updated', 'WordPress ' . get_bloginfo( 'version' ), 0, 1500 ), array( 'publish', 'Post published', 'Ethiopia Yirgacheffe: Our Latest Roast', 35, 2300 ) );
+$rows = array( array( 'publish', 'Post published', 'Cold Brew at Home: A Simple Guide', $cold, 35 ), array( 'plugin', 'Plugin updated', 'SWD Dashboard 1.3.0', 0, 130 ), array( 'user', 'New user registered', 'Maya Chen', 0, 260 ), array( 'publish', 'Page published', 'Subscriptions', 0, 420 ), array( 'theme', 'Theme updated', 'Twenty Twenty-Five 1.3', 0, 700 ), array( 'core', 'WordPress updated', 'WordPress ' . get_bloginfo( 'version' ), 0, 1500 ), array( 'publish', 'Post published', 'Ethiopia Yirgacheffe: Our Latest Roast', 35, 2300 ) );
 foreach ( array_reverse( $rows ) as $r ) {
 	$wpdb->insert( "{$wpdb->prefix}swiftdash_activity", array( 'created' => gmdate( 'Y-m-d H:i:s', $now - $r[4] * 60 ), 'type' => $r[0], 'object_id' => $r[3], 'title' => $r[1], 'detail' => $r[2], 'user_id' => 1 ) );
 }
@@ -248,6 +248,18 @@ foreach ( array( 'mobile', 'desktop' ) as $dev ) {
 	if ( is_array( $o ) ) {
 		$o['url']       = home_url( '/' );
 		$o['tested_at'] = $now - 1200;
+		// 1.3.0 tabs: accessibility, best practices and SEO items from the sample report; performance stays the site's own list.
+		$nw_lr                  = json_decode( file_get_contents( dirname( __DIR__, 2 ) . '/tools/fixtures/psi-sample-mobile.json' ), true )['lighthouseResult'];
+		$o['fixes_by_category'] = array(
+			'performance'    => isset( $o['fixes'] ) ? $o['fixes'] : array(),
+			'accessibility'  => array_slice( swiftdash_speed_parse_checks( $nw_lr, 'accessibility' ), -2 ),
+			'best_practices' => array_slice( swiftdash_speed_parse_checks( $nw_lr, 'best-practices' ), -1 ),
+			'seo'            => array_slice( swiftdash_speed_parse_checks( $nw_lr, 'seo' ), 0, 1 ),
+		);
+		// Scores that match the listed items: 100 minus what the items cost.
+		foreach ( array( 'accessibility', 'best_practices', 'seo' ) as $nw_cat ) {
+			$o['scores'][ $nw_cat ] = 100 - array_sum( array_map( 'intval', array_column( $o['fixes_by_category'][ $nw_cat ], 'points' ) ) );
+		}
 		update_option( "swiftdash_speed_$dev", $o );
 	}
 }

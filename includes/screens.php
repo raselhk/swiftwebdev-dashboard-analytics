@@ -43,9 +43,9 @@ function swiftdash_screens() {
 		),
 		'swift-dash-settings' => array(
 			'key'         => 'settings',
-			'menu'        => __( 'SwiftWebDev Dashboard settings', 'swiftwebdev-dashboard-analytics' ),
-			'title'       => __( 'SwiftWebDev Dashboard settings', 'swiftwebdev-dashboard-analytics' ),
-			'description' => __( 'Choose how SwiftWebDev Dashboard behaves on this site.', 'swiftwebdev-dashboard-analytics' ),
+			'menu'        => __( 'SWD Dashboard settings', 'swiftwebdev-dashboard-analytics' ),
+			'title'       => __( 'SWD Dashboard settings', 'swiftwebdev-dashboard-analytics' ),
+			'description' => __( 'Choose how SWD Dashboard behaves on this site.', 'swiftwebdev-dashboard-analytics' ),
 			'icon'        => 'gear-six',
 			'location'    => 'user',
 		),
@@ -139,7 +139,10 @@ function swiftdash_enqueue_assets( $hook_suffix ) {
 	global $plugin_page;
 	$screens = swiftdash_screens();
 	if ( 'swift-dash-settings' === $plugin_page ) {
+		// Media frame plus core's crop tool (imgAreaSelect) for the square menu logo crop.
 		wp_enqueue_media();
+		wp_enqueue_script( 'imgareaselect' );
+		wp_enqueue_style( 'imgareaselect' );
 	}
 
 	/**
@@ -296,7 +299,7 @@ function swiftdash_screen_pending( $screen ) {
 	swiftdash_render_empty_state(
 		'clock',
 		__( 'This screen is not ready yet', 'swiftwebdev-dashboard-analytics' ),
-		__( 'It will be added in an upcoming version of SwiftWebDev Dashboard.', 'swiftwebdev-dashboard-analytics' )
+		__( 'It will be added in an upcoming version of SWD Dashboard.', 'swiftwebdev-dashboard-analytics' )
 	);
 }
 
@@ -306,10 +309,14 @@ function swiftdash_screen_pending( $screen ) {
  * @param array $screen Screen definition.
  */
 function swiftdash_screen_settings( $screen ) {
-	$brand   = swiftdash_brand();
-	$last    = (int) get_option( 'swiftdash_report_last', 0 );
-	$weekly  = swiftdash_setting( 'weekly_report' );
-	$help_id = $last ? 'sd-weekly-report-help sd-weekly-report-last' : 'sd-weekly-report-help';
+	$brand     = swiftdash_brand();
+	$site_icon = get_site_icon_url( 64 );
+	$use_icon  = swiftdash_setting( 'brand_use_site_icon' );
+	$logo_id   = swiftdash_setting( 'brand_logo' );
+	$logo_url  = $logo_id ? wp_get_attachment_image_url( $logo_id, 'thumbnail' ) : '';
+	$last      = (int) get_option( 'swiftdash_report_last', 0 );
+	$weekly    = swiftdash_setting( 'weekly_report' );
+	$help_id   = $last ? 'sd-weekly-report-help sd-weekly-report-last' : 'sd-weekly-report-help';
 	swiftdash_render_page_header( $screen['title'], $screen['description'] );
 	$welcome = swiftdash_render_welcome();
 	?>
@@ -318,8 +325,8 @@ function swiftdash_screen_settings( $screen ) {
 			<div class="sd-field sd-field--switch<?php echo $welcome ? ' sd-field--highlight' : ''; ?>">
 				<input type="checkbox" class="sd-switch" id="sd-open-after-login" name="open_after_login" aria-describedby="sd-open-after-login-help" <?php checked( swiftdash_setting( 'open_after_login' ) ); ?>>
 				<div>
-					<label class="sd-field__label" for="sd-open-after-login"><?php esc_html_e( 'Open SwiftWebDev Dashboard after login', 'swiftwebdev-dashboard-analytics' ); ?></label>
-					<p class="sd-field__help" id="sd-open-after-login-help"><?php esc_html_e( 'Shows SwiftWebDev Dashboard instead of the WordPress dashboard. The WordPress dashboard stays available from your user menu.', 'swiftwebdev-dashboard-analytics' ); ?></p>
+					<label class="sd-field__label" for="sd-open-after-login"><?php esc_html_e( 'Open SWD Dashboard after login', 'swiftwebdev-dashboard-analytics' ); ?></label>
+					<p class="sd-field__help" id="sd-open-after-login-help"><?php esc_html_e( 'Shows SWD Dashboard instead of the WordPress dashboard. The WordPress dashboard stays available from your user menu.', 'swiftwebdev-dashboard-analytics' ); ?></p>
 				</div>
 			</div>
 			<div class="sd-field sd-field--switch">
@@ -348,15 +355,21 @@ function swiftdash_screen_settings( $screen ) {
 				<input type="text" class="sd-input" id="sd-brand-name" name="brand_name" maxlength="40" aria-describedby="sd-brand-name-help" placeholder="<?php echo esc_attr( wp_strip_all_tags( get_bloginfo( 'name' ) ) ); ?>" value="<?php echo esc_attr( swiftdash_setting( 'brand_name' ) ); ?>">
 				<p class="sd-field__help" id="sd-brand-name-help"><?php esc_html_e( 'Shown next to the logo at the top of the left menu. Your site title is used by default.', 'swiftwebdev-dashboard-analytics' ); ?></p>
 			</div>
-			<div class="sd-field" data-sd-logo data-default="<?php echo esc_url( get_site_icon_url( 64 ) ? get_site_icon_url( 64 ) : SWIFTDASH_URL . 'assets/img/brand.svg' ); ?>">
+			<div class="sd-field sd-field--switch">
+				<input type="checkbox" class="sd-switch" id="sd-brand-site-icon" name="brand_use_site_icon" aria-describedby="sd-brand-site-icon-help" <?php checked( $use_icon ); ?>>
+				<div>
+					<label class="sd-field__label" for="sd-brand-site-icon"><?php esc_html_e( 'Use the site icon as the menu logo', 'swiftwebdev-dashboard-analytics' ); ?></label>
+					<p class="sd-field__help" id="sd-brand-site-icon-help"><?php echo esc_html( $site_icon ? __( 'Shows your WordPress site icon at the top of the left menu. Turn this off to choose a different image.', 'swiftwebdev-dashboard-analytics' ) : __( 'Your site has no site icon yet, so the default logo is shown. Add a site icon in Settings > General, or turn this off to choose an image.', 'swiftwebdev-dashboard-analytics' ) ); ?></p>
+				</div>
+			</div>
+			<div class="sd-field<?php echo $use_icon ? ' is-disabled' : ''; ?>" data-sd-logo data-default="<?php echo esc_url( $site_icon ? $site_icon : SWIFTDASH_URL . 'assets/img/brand.svg' ); ?>" data-logo="<?php echo esc_url( (string) $logo_url ); ?>">
 				<span class="sd-field__label" id="sd-brand-logo-label"><?php esc_html_e( 'Menu logo', 'swiftwebdev-dashboard-analytics' ); ?></span>
 				<div class="sd-logo-field">
 					<img class="sd-logo-field__preview" src="<?php echo esc_url( $brand['logo'] ); ?>" alt="" width="40" height="40">
-					<button type="button" class="sd-btn sd-btn--secondary" data-sd-logo-choose aria-describedby="sd-brand-logo-label"><?php esc_html_e( 'Choose image', 'swiftwebdev-dashboard-analytics' ); ?></button>
-					<button type="button" class="sd-btn sd-btn--tertiary" data-sd-logo-reset<?php echo swiftdash_setting( 'brand_logo' ) ? '' : ' hidden'; ?>><?php esc_html_e( 'Use default', 'swiftwebdev-dashboard-analytics' ); ?></button>
+					<button type="button" class="sd-btn sd-btn--secondary" data-sd-logo-choose aria-describedby="sd-brand-logo-label sd-brand-logo-help"<?php disabled( $use_icon ); ?>><?php esc_html_e( 'Choose image', 'swiftwebdev-dashboard-analytics' ); ?></button>
 				</div>
-				<input type="hidden" name="brand_logo" value="<?php echo esc_attr( (string) swiftdash_setting( 'brand_logo' ) ); ?>">
-				<p class="sd-field__help"><?php esc_html_e( 'A square image works best. It is shown at the top of the left menu on every admin page. Your site icon is used by default.', 'swiftwebdev-dashboard-analytics' ); ?></p>
+				<input type="hidden" name="brand_logo" value="<?php echo esc_attr( (string) $logo_id ); ?>">
+				<p class="sd-field__help" id="sd-brand-logo-help"><?php esc_html_e( 'Used while the site icon switch above is off. Images that are not square are cropped to a square after you choose them. Shown at the top of the left menu on every admin page.', 'swiftwebdev-dashboard-analytics' ); ?></p>
 			</div>
 			<div class="sd-field sd-field--switch">
 				<input type="checkbox" class="sd-switch" id="sd-weekly-report" name="weekly_report" aria-describedby="<?php echo esc_attr( $help_id ); ?>" <?php checked( $weekly ); ?>>
@@ -375,14 +388,9 @@ function swiftdash_screen_settings( $screen ) {
 			</div>
 			<div class="sd-field">
 				<label class="sd-field__label" for="sd-report-email"><?php esc_html_e( 'Send the report to', 'swiftwebdev-dashboard-analytics' ); ?></label>
-				<input type="email" class="sd-input" id="sd-report-email" name="report_email" maxlength="100" placeholder="<?php echo esc_attr( get_option( 'admin_email' ) ); ?>" aria-describedby="sd-report-email-error sd-report-email-help" value="<?php echo esc_attr( swiftdash_setting( 'report_email' ) ); ?>">
+				<input type="email" class="sd-input" id="sd-report-email" name="report_email" maxlength="100" placeholder="<?php /* translators: Example address shown in an empty email field. Keep it on example.com. */ esc_attr_e( 'name@example.com', 'swiftwebdev-dashboard-analytics' ); ?>" aria-describedby="sd-report-email-error sd-report-email-help" value="<?php echo esc_attr( swiftdash_setting( 'report_email' ) ); ?>">
 				<p class="sd-field__error" id="sd-report-email-error" role="alert" hidden></p>
-				<p class="sd-field__help" id="sd-report-email-help">
-					<?php
-					/* translators: %s: site admin email address. */
-					echo esc_html( sprintf( __( 'Leave empty to use the site admin email, %s. The test report goes to this address too.', 'swiftwebdev-dashboard-analytics' ), get_option( 'admin_email' ) ) );
-					?>
-				</p>
+				<p class="sd-field__help" id="sd-report-email-help"><?php esc_html_e( 'Leave empty to use the site admin email (Settings > General). The test report goes to this address too.', 'swiftwebdev-dashboard-analytics' ); ?></p>
 				<div>
 					<button type="button" class="sd-btn sd-btn--secondary" data-sd-report-test><?php esc_html_e( 'Send a test report now', 'swiftwebdev-dashboard-analytics' ); ?></button>
 				</div>

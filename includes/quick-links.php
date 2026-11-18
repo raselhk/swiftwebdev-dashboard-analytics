@@ -385,7 +385,8 @@ function swiftdash_render_link_item( $link, $index, $pinned ) {
 }
 
 /**
- * Register the dashboard widget.
+ * Register the dashboard widget: a full-width row right after the visitor KPI cards (order 100
+ * keeps it behind any KPI card an add-on adds to that area).
  */
 function swiftdash_register_links_widget() {
 	swiftdash_register_widget(
@@ -394,9 +395,9 @@ function swiftdash_register_links_widget() {
 			'title'       => __( 'Quick Links', 'swiftwebdev-dashboard-analytics' ),
 			'description' => __( 'Shortcuts to the WordPress tasks you pinned.', 'swiftwebdev-dashboard-analytics' ),
 			'screen'      => 'dashboard',
-			'area'        => 'performance',
-			'order'       => 30,
-			'span'        => 4,
+			'area'        => 'kpis',
+			'order'       => 100,
+			'span'        => 12,
 			'render'      => 'swiftdash_render_links_widget',
 			'actions'     => 'swiftdash_render_links_manage',
 		)
@@ -417,7 +418,7 @@ function swiftdash_render_links_manage() {
 }
 
 /**
- * Dashboard widget body: pinned shortcuts as pastel tiles.
+ * Dashboard widget body: pinned shortcuts as pastel tiles, side by side (links.css sets the columns).
  */
 function swiftdash_render_links_widget() {
 	$links = swiftdash_quick_links();

@@ -313,7 +313,7 @@ function swiftdash_render_recent_activity() {
 		swiftdash_render_empty_state(
 			'clock',
 			__( 'No activity recorded yet', 'swiftwebdev-dashboard-analytics' ),
-			__( 'New posts, users and updates will appear here. SwiftWebDev Dashboard records activity from the moment it was activated.', 'swiftwebdev-dashboard-analytics' )
+			__( 'New posts, users and updates will appear here. SWD Dashboard records activity from the moment it was activated.', 'swiftwebdev-dashboard-analytics' )
 		);
 		return;
 	}

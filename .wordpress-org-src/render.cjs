@@ -58,18 +58,19 @@ async function webp(input, out, width, max, extract) {
 	}
 
 	// wp.org screenshots, in readme.txt caption order, downscaled from 2x for crisp text.
-	// 1.2.0 set: raw 1440 css px captures at 2x (v12-*) by capture.cjs, which also crops them; demo site "Northwind".
+	// 1.3.0 set: raw 1440 x 900 css px viewport captures at 2x (v13-*) by capture.cjs, no crops; demo site "Northwind".
 	const ss = [
-		['v12-overview-2x.png'], // Ends at the Speed scores / Quick Links row.
-		['v12-search-typed-2x.png'],
-		['v12-search-focus-2x.png'],
-		['v12-ai-2x.png'], // AI crawlers + Bots & automated visits + AI access check.
-		['v12-insights-2x.png'],
-		['v12-speed-2x.png'], // Scores, Core Web Vitals, first fix.
-		['v12-links-2x.png'], // Pinned + Content + Design.
-		['v12-email-2x.png', null], // The email at 740 css px, native size.
-		['v12-toolbar-live-2x.png'], // Live visitors panel on a post.
-		['v12-toolbar-search-2x.png'], // Toolbar search on a post.
+		['v13-overview-2x.png'], // Dashboard top: visitor cards, Quick Links row, chart.
+		['v13-search-typed-2x.png'],
+		['v13-search-focus-2x.png'],
+		['v13-ai-2x.png'], // AI crawlers + Bots & automated visits + AI access check.
+		['v13-insights-2x.png'],
+		['v13-speed-2x.png'], // Scores, Core Web Vitals, first fix.
+		['v13-links-2x.png'], // Pinned + Content + Design.
+		['v13-email-2x.png'], // Top of the email in a 1440 x 900 view.
+		['v13-toolbar-live-2x.png'], // Live visitors panel on a post.
+		['v13-toolbar-search-2x.png'], // Toolbar search on a post.
+		['v13-speed-tabs-2x.png'], // Improvement areas tabs.
 	];
 	for (let i = 0; i < ss.length; i++) {
 		const [f, w = 1600, ex] = ss[i];

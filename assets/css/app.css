@@ -337,15 +337,36 @@
 	background: var(--sd-bg);
 }
 
+/* Letter avatar: one of 8 tones picked from the user id (white letter, 4.9:1 or more), photo on top. */
 .sd-user__avatar {
+	position: relative;
+	flex: none;
 	display: grid;
 	place-items: center;
 	width: 36px;
 	height: 36px;
+	overflow: hidden;
 	border-radius: 50%;
-	background: var(--sd-blue-50);
-	color: var(--sd-primary);
+	background: var(--sd-avatar, var(--sd-primary));
+	color: #fff;
 	font-weight: var(--sd-fw-bold);
+	text-transform: uppercase;
+}
+
+.sd-user__avatar--1 { --sd-avatar: var(--sd-purple); }
+.sd-user__avatar--2 { --sd-avatar: #0369a1; }
+.sd-user__avatar--3 { --sd-avatar: #0f766e; }
+.sd-user__avatar--4 { --sd-avatar: #047857; }
+.sd-user__avatar--5 { --sd-avatar: #c2410c; }
+.sd-user__avatar--6 { --sd-avatar: #be185d; }
+.sd-user__avatar--7 { --sd-avatar: #a21caf; }
+
+.sd-user__photo {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
 }
 
 .sd-user__text {
@@ -1233,7 +1254,9 @@
 	}
 }
 
-/* ---------- PRO add-on banner (middle of the Dashboard, dismissible) ---------- */
+/* ---------- PRO add-on banner (middle of the Dashboard, dismissible) ----------
+ * Sidebar navy lit by the primary and purple tokens, a dot grid behind the feature list and the
+ * product's gauge mark, whose needle revs once on load and again on hover or keyboard focus. */
 .sd-promo {
 	position: relative;
 	display: grid;
@@ -1241,39 +1264,38 @@
 	gap: var(--sd-space-6) var(--sd-space-8);
 	align-items: center;
 	margin-top: var(--sd-space-6);
-	padding: 44px var(--sd-space-8) var(--sd-space-8);
+	padding: 40px;
 	overflow: hidden;
 	isolation: isolate;
 	border-radius: var(--sd-radius-card);
-	background: linear-gradient(125deg, var(--sd-primary-hover) 0%, #5b3fe0 50%, var(--sd-purple) 100%);
+	background:
+		radial-gradient(75% 140% at 0% 0%, rgba(79, 91, 255, 0.62), transparent 62%),
+		radial-gradient(65% 130% at 100% 100%, rgba(124, 58, 237, 0.58), transparent 62%),
+		var(--sd-nav-bg);
 	color: #fff;
-	box-shadow: 0 12px 32px rgba(79, 91, 255, 0.28);
+	box-shadow: 0 1px 2px rgba(23, 36, 55, 0.08), 0 18px 40px rgba(23, 36, 55, 0.22);
 }
 
-/* Soft glow shapes, decorative only. */
+/* Decorative layers: dots fading out from the feature list, a hairline light edge on top. */
 .sd-promo::before,
 .sd-promo::after {
 	content: "";
 	position: absolute;
+	inset: 0;
 	z-index: -1;
-	border-radius: 50%;
+	border-radius: inherit;
 	pointer-events: none;
 }
 
 .sd-promo::before {
-	top: -120px;
-	right: -80px;
-	width: 320px;
-	height: 320px;
-	background: radial-gradient(circle, rgba(255, 255, 255, 0.16), transparent 70%);
+	background-image: radial-gradient(circle, rgba(255, 255, 255, 0.22) 1px, transparent 1.6px);
+	background-size: 18px 18px;
+	mask-image: radial-gradient(60% 85% at 80% 45%, #000, transparent 75%);
 }
 
 .sd-promo::after {
-	bottom: -140px;
-	left: 30%;
-	width: 280px;
-	height: 280px;
-	background: radial-gradient(circle, rgba(242, 194, 58, 0.28), transparent 70%);
+	border: var(--sd-border-w) solid rgba(255, 255, 255, 0.08);
+	background: linear-gradient(90deg, transparent 8%, rgba(255, 255, 255, 0.5) 45%, transparent 92%) top / 100% 1px no-repeat;
 }
 
 .sd-promo__intro {
@@ -1283,17 +1305,84 @@
 	gap: var(--sd-space-3);
 }
 
+/* Product mark: the gauge on a glass tile with the PRO pill on its corner, as in the PRO icon. */
+.sd-promo__logo {
+	position: relative;
+	display: grid;
+	place-items: center;
+	width: 64px;
+	height: 64px;
+	margin-bottom: var(--sd-space-2);
+	border: var(--sd-border-w) solid rgba(255, 255, 255, 0.16);
+	border-radius: var(--sd-radius-tile);
+	background: rgba(255, 255, 255, 0.08);
+	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14), 0 10px 24px rgba(10, 16, 30, 0.35);
+}
+
+.sd-promo__mark {
+	width: 46px;
+	height: 46px;
+}
+
+.sd-promo__badge {
+	position: absolute;
+	inset-block-end: -9px;
+	inset-inline-end: -16px;
+	padding: 1px var(--sd-space-2);
+	border-radius: var(--sd-radius-pill);
+	background: #f2c23a; /* Yellow of the gauge mark. */
+	color: var(--sd-nav-bg);
+	box-shadow: 0 4px 10px rgba(10, 16, 30, 0.35);
+	font-size: var(--sd-fs-help);
+	font-weight: var(--sd-fw-heavy);
+	letter-spacing: 0.06em;
+	line-height: 1.5;
+}
+
+/* The needle turns around the gauge hub (128, 140 in the 256 view box). */
+.sd-promo__needle,
+.sd-promo__needle path {
+	transform-box: view-box;
+	transform-origin: 50% 54.6875%;
+}
+
+.sd-promo__needle {
+	transition: transform 900ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.sd-promo__needle path {
+	animation: sd-promo-rev 1.6s var(--sd-ease) 0.3s both;
+}
+
+.sd-promo:is(:hover, :focus-within) .sd-promo__needle {
+	transform: rotate(78deg);
+}
+
+@keyframes sd-promo-rev {
+
+	from {
+		transform: rotate(-177deg);
+	}
+
+	60% {
+		transform: rotate(16deg);
+	}
+
+	to {
+		transform: none;
+	}
+}
+
 .sd-promo__eyebrow {
 	display: inline-flex;
 	align-items: center;
-	gap: var(--sd-space-1);
+	gap: 6px;
 	padding: 4px var(--sd-space-3);
+	border: var(--sd-border-w) solid rgba(255, 255, 255, 0.14);
 	border-radius: var(--sd-radius-pill);
-	background: rgba(255, 255, 255, 0.16);
-	font-size: var(--sd-fs-help);
+	background: rgba(255, 255, 255, 0.08);
+	font-size: var(--sd-fs-label);
 	font-weight: var(--sd-fw-semibold);
-	letter-spacing: 0.04em;
-	text-transform: uppercase;
 }
 
 .swiftdash .sd-promo__eyebrow .sd-icon {
@@ -1305,16 +1394,17 @@
 .swiftdash .sd-promo__title {
 	margin: 0;
 	color: #fff;
-	font-size: 24px;
+	font-size: 26px;
 	font-weight: var(--sd-fw-heavy);
-	line-height: 1.25;
+	letter-spacing: -0.01em;
+	line-height: 1.2;
 	text-wrap: balance;
 }
 
 .swiftdash .sd-promo__desc {
 	margin: 0;
 	max-width: 46ch;
-	color: #f4f5ff;
+	color: rgba(255, 255, 255, 0.82);
 }
 
 .sd-promo__actions {
@@ -1326,14 +1416,22 @@
 }
 
 .swiftdash .sd-promo .sd-btn--light {
-	box-shadow: 0 6px 16px rgba(17, 24, 39, 0.18);
+	box-shadow: 0 6px 16px rgba(10, 16, 30, 0.3);
 	transition: transform var(--sd-dur) var(--sd-ease), box-shadow var(--sd-dur) var(--sd-ease);
 }
 
 .swiftdash .sd-promo .sd-btn--light:hover {
 	transform: translateY(-1px);
-	box-shadow: 0 10px 22px rgba(17, 24, 39, 0.24);
+	box-shadow: 0 0 0 4px rgba(79, 91, 255, 0.45), 0 12px 26px rgba(10, 16, 30, 0.4);
 	color: var(--sd-primary-hover);
+}
+
+.swiftdash .sd-promo .sd-btn--light .sd-icon {
+	transition: transform var(--sd-dur) var(--sd-ease);
+}
+
+.swiftdash .sd-promo .sd-btn--light:hover .sd-icon {
+	transform: translate(2px, -2px);
 }
 
 .swiftdash .sd-promo .sd-btn--light:focus-visible,
@@ -1348,7 +1446,7 @@
 	padding: 0 var(--sd-space-2);
 	border: 0;
 	background: none;
-	color: #f4f5ff;
+	color: rgba(255, 255, 255, 0.82);
 	font: inherit;
 	font-weight: var(--sd-fw-medium);
 	text-decoration: underline;
@@ -1373,29 +1471,57 @@
 	display: flex;
 	align-items: center;
 	gap: var(--sd-space-3);
-	min-height: 48px;
+	min-height: 52px;
 	margin: 0;
-	padding: var(--sd-space-2) var(--sd-space-3);
-	border: var(--sd-border-w) solid rgba(255, 255, 255, 0.16);
+	padding: var(--sd-space-2);
+	padding-inline-end: var(--sd-space-3);
+	border: var(--sd-border-w) solid rgba(255, 255, 255, 0.1);
 	border-radius: 12px;
-	background: rgba(255, 255, 255, 0.1);
+	background: rgba(255, 255, 255, 0.06);
 	font-weight: var(--sd-fw-medium);
 	line-height: 1.35;
+	transition: background-color var(--sd-dur) var(--sd-ease), border-color var(--sd-dur) var(--sd-ease);
 }
 
-.swiftdash .sd-promo__list .sd-icon {
+.sd-promo__list li:hover {
+	border-color: rgba(255, 255, 255, 0.26);
+	background: rgba(255, 255, 255, 0.11);
+}
+
+/* Icon chips in the KPI tile colors, one per feature, cycling green, orange, purple, red, blue. */
+.sd-promo__chip {
+	display: grid;
+	flex: none;
+	place-items: center;
+	width: 36px;
+	height: 36px;
+	border-radius: 10px;
+	background: var(--sd-tile-blue);
+	color: var(--sd-primary);
+	transition: transform var(--sd-dur) var(--sd-ease);
+}
+
+.sd-promo__list li:nth-child(5n + 1) .sd-promo__chip { background: var(--sd-tile-green); color: var(--sd-success); }
+.sd-promo__list li:nth-child(5n + 2) .sd-promo__chip { background: var(--sd-tile-orange); color: var(--sd-orange); }
+.sd-promo__list li:nth-child(5n + 3) .sd-promo__chip { background: var(--sd-tile-purple); color: var(--sd-purple); }
+.sd-promo__list li:nth-child(5n + 4) .sd-promo__chip { background: var(--sd-tile-red); color: var(--sd-red); }
+
+.swiftdash .sd-promo__chip .sd-icon {
 	width: 20px;
 	height: 20px;
-	color: #6ee7b7;
+}
+
+.sd-promo__list li:hover .sd-promo__chip {
+	transform: scale(1.08) rotate(-6deg);
 }
 
 .swiftdash .sd-promo__close {
 	position: absolute;
 	top: var(--sd-space-3);
-	right: var(--sd-space-3);
+	inset-inline-end: var(--sd-space-3);
 	width: 32px;
 	height: 32px;
-	color: #f4f5ff;
+	color: rgba(255, 255, 255, 0.82);
 }
 
 .swiftdash .sd-promo__close:hover {
@@ -1532,9 +1658,16 @@
 @media (prefers-reduced-motion: reduce) {
 
 	.swiftdash .sd-promo .sd-btn--light,
-	.swiftdash .sd-promo .sd-btn--light:hover {
+	.swiftdash .sd-promo .sd-btn--light:hover,
+	.swiftdash .sd-promo .sd-btn--light:hover .sd-icon,
+	.sd-promo__list li:hover .sd-promo__chip,
+	.sd-promo:is(:hover, :focus-within) .sd-promo__needle {
 		transform: none;
 		transition: none;
+	}
+
+	.sd-promo__needle path {
+		animation: none;
 	}
 }
 
@@ -1724,11 +1857,11 @@
 	}
 
 	.sd-promo {
-		padding: 44px var(--sd-space-5) var(--sd-space-6);
+		padding: var(--sd-space-6) var(--sd-space-5);
 	}
 
 	.swiftdash .sd-promo__title {
-		font-size: 20px;
+		font-size: 22px;
 	}
 
 	.swiftdash .sd-promo__list {

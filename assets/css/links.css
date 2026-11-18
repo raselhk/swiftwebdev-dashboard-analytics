@@ -282,30 +282,19 @@
 }
 
 /* ---------- Dashboard widget ----------
- * Every tile is the same size: icon at a fixed spot, label area reserved for two lines. Rows
- * share the card height so the card fits its row without an empty block under the tiles. */
+ * A full-width row under the KPI cards: equal tiles side by side, eight across on a wide card,
+ * four on tablets, two on phones (icon beside the label there). Wraps, never scrolls sideways. */
 .swiftdash .sd-card__body:has(> .sd-ql-mini) {
-	display: flex;
-	flex-direction: column;
 	container-type: inline-size;
 }
 
 .swiftdash .sd-ql-mini {
 	display: grid;
-	flex: 1;
-	grid-template-columns: repeat(3, minmax(0, 1fr));
-	grid-auto-rows: minmax(96px, 1fr);
+	grid-template-columns: repeat(2, minmax(0, 1fr));
 	gap: var(--sd-space-3);
 	margin: 0;
 	padding: 0;
 	list-style: none;
-}
-
-@container (min-width: 420px) {
-
-	.swiftdash .sd-ql-mini {
-		grid-template-columns: repeat(4, minmax(0, 1fr));
-	}
 }
 
 .swiftdash .sd-ql-mini li {
@@ -315,19 +304,17 @@
 }
 
 .swiftdash .sd-ql-mini__tile {
-	display: grid;
+	display: flex;
 	flex: 1;
-	grid-template-rows: 30px calc(var(--sd-fs-help) * 2.6);
-	place-content: center;
-	justify-items: center;
+	align-items: center;
 	gap: var(--sd-space-2);
 	min-width: 0;
-	padding: var(--sd-space-3) var(--sd-space-2);
+	min-height: 56px;
+	padding: var(--sd-space-2) var(--sd-space-3);
 	border: var(--sd-border-w) solid transparent;
 	border-radius: var(--sd-radius-card);
 	background: var(--sd-ql-bg);
 	color: var(--sd-ql-fg);
-	text-align: center;
 	text-decoration: none;
 	transition: border-color var(--sd-dur-fast) var(--sd-ease);
 }
@@ -338,8 +325,14 @@
 }
 
 .swiftdash .sd-ql-mini__tile .sd-icon {
-	width: 30px;
-	height: 30px;
+	flex: none;
+	width: 26px;
+	height: 26px;
+	transition: transform var(--sd-dur) var(--sd-ease);
+}
+
+.swiftdash .sd-ql-mini__tile:hover .sd-icon {
+	transform: translateY(-2px);
 }
 
 .swiftdash .sd-ql-mini__label {
@@ -347,11 +340,41 @@
 	overflow: hidden;
 	-webkit-line-clamp: 2;
 	-webkit-box-orient: vertical;
-	font-size: var(--sd-fs-help);
+	font-size: var(--sd-fs-label);
 	font-weight: var(--sd-fw-semibold);
 	line-height: 1.3;
 	color: var(--sd-text);
-	overflow-wrap: anywhere;
+	overflow-wrap: break-word;
+}
+
+@container (min-width: 440px) {
+
+	.swiftdash .sd-ql-mini {
+		grid-template-columns: repeat(4, minmax(0, 1fr));
+	}
+
+	/* Icon above a label area reserved for two lines, so every tile is the same size. */
+	.swiftdash .sd-ql-mini__tile {
+		display: grid;
+		grid-template-rows: 30px calc(var(--sd-fs-label) * 2.6);
+		place-content: center;
+		justify-items: center;
+		min-height: 104px;
+		padding: var(--sd-space-3) var(--sd-space-2);
+		text-align: center;
+	}
+
+	.swiftdash .sd-ql-mini__tile .sd-icon {
+		width: 30px;
+		height: 30px;
+	}
+}
+
+@container (min-width: 880px) {
+
+	.swiftdash .sd-ql-mini {
+		grid-template-columns: repeat(8, minmax(0, 1fr));
+	}
 }
 
 .swiftdash .sd-ql-mini__manage {

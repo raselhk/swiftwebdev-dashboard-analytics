@@ -108,7 +108,8 @@ function swiftdash_kpi_card( $widget ) {
 /**
  * Saved card order per screen for the current user.
  *
- * @return array Card ids per screen key, e.g. { dashboard: string[] }.
+ * @return array Card ids per screen key, e.g. { dashboard: string[] }, plus `moved`: cards whose
+ *               new default place a saved order already follows.
  */
 function swiftdash_layout() {
 	$saved  = get_user_meta( get_current_user_id(), 'swiftdash_layout', true );
@@ -117,6 +118,13 @@ function swiftdash_layout() {
 		if ( is_array( $ids ) ) {
 			$layout[ sanitize_key( $screen ) ] = array_values( array_filter( array_map( 'sanitize_key', $ids ) ) );
 		}
+	}
+	// Quick Links became a full-width row under the KPI cards. An order saved before that forgets
+	// the card's old spot (it then follows its default neighbor); every other card keeps its place.
+	// The next save stores `moved`, so a spot the user picks later sticks.
+	if ( ! isset( $layout['moved'] ) || ! in_array( 'quick-links', $layout['moved'], true ) ) {
+		$layout['dashboard'] = array_values( array_diff( $layout['dashboard'], array( 'quick-links' ) ) );
+		$layout['moved'][]   = 'quick-links';
 	}
 	return $layout;
 }
@@ -172,11 +180,13 @@ function swiftdash_render_screen_widgets( $screen_key ) {
 	$defaults = wp_list_pluck( $widgets, 'id' );
 	$layout   = swiftdash_layout();
 	$saved    = isset( $layout[ $screen_key ] ) ? array_flip( $layout[ $screen_key ] ) : array();
-	$count    = count( $saved );
 	$rank     = array();
-	foreach ( $defaults as $i => $id ) {
-		// Saved cards keep their saved position; cards added later follow them in default order.
-		$rank[ $id ] = isset( $saved[ $id ] ) ? $saved[ $id ] : $count + $i;
+	$prev     = -1;
+	foreach ( $defaults as $id ) {
+		// Saved cards keep their saved position; a card the saved order does not know (new, or
+		// moved by an update) goes right after the card it follows by default.
+		$rank[ $id ] = isset( $saved[ $id ] ) ? $saved[ $id ] : $prev + 0.01;
+		$prev        = $rank[ $id ];
 	}
 	usort(
 		$widgets,
@@ -186,7 +196,8 @@ function swiftdash_render_screen_widgets( $screen_key ) {
 	);
 
 	$hidden = swiftdash_prefs()['hidden'];
-	// The dashboard's promo slot sits after the second full row of visible cards.
+	// The dashboard's promo slot sits after the third full row of visible cards (KPI cards, Quick
+	// Links, visitors over time by default), so the analytics come first.
 	$promo = 'dashboard' === $screen_key;
 	$spans = 0;
 	printf(
@@ -198,7 +209,7 @@ function swiftdash_render_screen_widgets( $screen_key ) {
 		$is_hidden = in_array( $widget['id'], $hidden, true );
 		swiftdash_render_widget( $widget, $is_hidden, true );
 		$spans += $is_hidden ? 0 : absint( $widget['span'] );
-		if ( $promo && $spans >= 24 && 0 === $spans % 12 ) {
+		if ( $promo && $spans >= 36 && 0 === $spans % 12 ) {
 			swiftdash_render_upgrade( $screen_key );
 			$promo = false;
 		}
@@ -340,7 +351,7 @@ function swiftdash_render_review() {
 		</button>
 		<div class="sd-promo__intro">
 			<span class="sd-promo__eyebrow"><?php echo wp_kses( swiftdash_icon( 'heart-fill' ), swiftdash_icon_kses() ); ?><?php esc_html_e( 'Quick favor', 'swiftwebdev-dashboard-analytics' ); ?></span>
-			<h2 class="sd-promo__title" id="sd-review-title"><?php esc_html_e( 'Enjoying SwiftWebDev Dashboard?', 'swiftwebdev-dashboard-analytics' ); ?></h2>
+			<h2 class="sd-promo__title" id="sd-review-title"><?php esc_html_e( 'Enjoying SWD Dashboard?', 'swiftwebdev-dashboard-analytics' ); ?></h2>
 			<p class="sd-promo__desc"><?php esc_html_e( 'An honest review on WordPress.org takes a minute and helps other site owners decide if it is right for them.', 'swiftwebdev-dashboard-analytics' ); ?></p>
 			<div class="sd-promo__actions">
 				<a class="sd-btn sd-btn--light" href="<?php echo esc_url( $url ); ?>" target="_blank" rel="noopener noreferrer" data-sd-review-done>
@@ -357,9 +368,10 @@ function swiftdash_render_review() {
 }
 
 /**
- * Banner in the middle of the dashboard (after the second row of cards) about the separate PRO add-on: what it adds, one link
+ * Banner in the middle of the dashboard (after the third row of cards) about the separate PRO add-on: what it adds, one link
  * to learn more. Dismissible for 30 days; never shown elsewhere. While the review request is
- * due it takes this slot instead (one promo at a time).
+ * due it takes this slot instead (one promo at a time). The logo is the product's gauge mark
+ * (brand/swd-dashboard-icon-dark.svg) inline, so its needle can move (CSS only, decorative).
  *
  * @param string $screen_key Screen the banner is on, for the link's campaign tag.
  */
@@ -371,23 +383,25 @@ function swiftdash_render_upgrade( $screen_key = 'dashboard' ) {
 	if ( ! swiftdash_show_upgrade() ) {
 		return;
 	}
-	$url      = add_query_arg(
+	$url = add_query_arg(
 		array(
 			'utm_source' => 'plugin',
 			'utm_medium' => sanitize_key( $screen_key ) . '-banner',
 		),
 		SWIFTDASH_ADDON_URL
 	);
+	// Label + icon. The chip colors cycle in CSS (green, orange, purple, red, blue).
 	$features = array(
-		__( 'Real-time visitors', 'swiftwebdev-dashboard-analytics' ),
-		__( 'Goals and conversion rates', 'swiftwebdev-dashboard-analytics' ),
-		__( 'UTM campaign reports', 'swiftwebdev-dashboard-analytics' ),
-		__( 'Traffic-spike email alerts', 'swiftwebdev-dashboard-analytics' ),
-		__( 'Countries, browsers and new visitors', 'swiftwebdev-dashboard-analytics' ),
-		__( 'Form and click tracking', 'swiftwebdev-dashboard-analytics' ),
-		__( 'Session recordings with private fields hidden', 'swiftwebdev-dashboard-analytics' ),
-		__( 'Custom date ranges and CSV export', 'swiftwebdev-dashboard-analytics' ),
-		__( 'Weekly speed tests with email alerts', 'swiftwebdev-dashboard-analytics' ),
+		array( __( 'Real-time visitors', 'swiftwebdev-dashboard-analytics' ), 'pulse-fill' ),
+		array( __( 'Goals and conversion rates', 'swiftwebdev-dashboard-analytics' ), 'target-fill' ),
+		array( __( 'UTM campaign reports', 'swiftwebdev-dashboard-analytics' ), 'megaphone-fill' ),
+		array( __( 'Traffic-spike email alerts', 'swiftwebdev-dashboard-analytics' ), 'trend-up-fill' ),
+		array( __( 'Countries, browsers and new visitors', 'swiftwebdev-dashboard-analytics' ), 'globe-hemisphere-west-fill' ),
+		array( __( 'Form and click tracking', 'swiftwebdev-dashboard-analytics' ), 'cursor-click-fill' ),
+		array( __( 'Session recordings with private fields hidden', 'swiftwebdev-dashboard-analytics' ), 'monitor-play-fill' ),
+		array( __( 'Custom date ranges and CSV export', 'swiftwebdev-dashboard-analytics' ), 'calendar-dots-fill' ),
+		array( __( 'Weekly speed tests with email alerts', 'swiftwebdev-dashboard-analytics' ), 'gauge-fill' ),
+		array( __( 'Bots and crawlers email alerts', 'swiftwebdev-dashboard-analytics' ), 'robot-fill' ),
 	);
 	$title_id = 'sd-promo-title-' . sanitize_key( $screen_key );
 	?>
@@ -396,9 +410,19 @@ function swiftdash_render_upgrade( $screen_key = 'dashboard' ) {
 			<?php echo wp_kses( swiftdash_icon( 'x' ), swiftdash_icon_kses() ); ?>
 		</button>
 		<div class="sd-promo__intro">
+			<span class="sd-promo__logo" aria-hidden="true">
+				<svg class="sd-promo__mark" viewBox="0 0 256 256" focusable="false">
+					<path fill="#E8672B" d="M47.5 212A108 108 0 0 1 26.1 104.3L70.5 122.7A60 60 0 0 0 81.5 178Z"/>
+					<path fill="#F2C23A" d="M30.7 93.2A108 108 0 0 1 122 32.2L122 80.3A60 60 0 0 0 75.1 111.6Z"/>
+					<path fill="#2E9E4C" d="M134 32.2A108 108 0 0 1 225.3 93.2L180.9 111.6A60 60 0 0 0 134 80.3Z"/>
+					<path fill="#4F5BFF" d="M229.9 104.3A108 108 0 0 1 208.5 212L174.5 178A60 60 0 0 0 185.5 122.7Z"/>
+					<g class="sd-promo__needle"><path fill="#FFFFFF" d="M119.5 131.5L166.2 101.8L136.5 148.5ZM109 140a19 19 0 1 1 38 0a19 19 0 1 1 -38 0Z"/></g>
+				</svg>
+				<span class="sd-promo__badge"><?php esc_html_e( 'PRO', 'swiftwebdev-dashboard-analytics' ); ?></span>
+			</span>
 			<span class="sd-promo__eyebrow"><?php echo wp_kses( swiftdash_icon( 'puzzle-piece-fill' ), swiftdash_icon_kses() ); ?><?php esc_html_e( 'Optional add-on', 'swiftwebdev-dashboard-analytics' ); ?></span>
 			<h2 class="sd-promo__title" id="<?php echo esc_attr( $title_id ); ?>"><?php esc_html_e( 'See the full story behind your visitors', 'swiftwebdev-dashboard-analytics' ); ?></h2>
-			<p class="sd-promo__desc"><?php esc_html_e( 'SwiftWebDev Dashboard PRO is a separate plugin that adds detailed reports to this dashboard. Everything you use today stays free.', 'swiftwebdev-dashboard-analytics' ); ?></p>
+			<p class="sd-promo__desc"><?php esc_html_e( 'SWD Dashboard PRO is a separate plugin that adds detailed reports to this dashboard. Everything you use today stays free.', 'swiftwebdev-dashboard-analytics' ); ?></p>
 			<div class="sd-promo__actions">
 				<a class="sd-btn sd-btn--light" href="<?php echo esc_url( $url ); ?>" target="_blank" rel="noopener noreferrer">
 					<?php esc_html_e( 'Explore PRO', 'swiftwebdev-dashboard-analytics' ); ?>
@@ -410,7 +434,7 @@ function swiftdash_render_upgrade( $screen_key = 'dashboard' ) {
 		</div>
 		<ul class="sd-promo__list" aria-label="<?php esc_attr_e( 'What PRO adds', 'swiftwebdev-dashboard-analytics' ); ?>">
 			<?php foreach ( $features as $feature ) : ?>
-				<li><?php echo wp_kses( swiftdash_icon( 'check-circle-fill' ), swiftdash_icon_kses() ); ?><span><?php echo esc_html( $feature ); ?></span></li>
+				<li><span class="sd-promo__chip"><?php echo wp_kses( swiftdash_icon( $feature[1] ), swiftdash_icon_kses() ); ?></span><span><?php echo esc_html( $feature[0] ); ?></span></li>
 			<?php endforeach; ?>
 		</ul>
 	</aside>

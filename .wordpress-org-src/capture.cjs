@@ -13,7 +13,7 @@ const path = require('path');
 const SITE = 'http://localhost/swift-email-wp/';
 const A = SITE + 'wp-admin/';
 const O = path.join(__dirname, 'shots') + path.sep;
-const V = 'v12';
+const V = 'v13'; // 1.3.0: every shot is one 1440 x 900 viewport (owner rule 2026-11-18), no tall crops.
 const only = process.argv.slice(2);
 
 // Hide third-party notices, keep the WP menu background full height, show the demo domain.
@@ -76,10 +76,10 @@ const toBottom = async (p, sel, pad = 12) => {
 		await p.waitForTimeout(1200);
 		await shot('toolbar-search');
 	}
-	// 1. Dashboard down to the Speed scores / Quick Links row.
+	// 1. Dashboard top: visitor cards, Quick Links row, visitors over time.
 	if (want('overview')) {
 		await go(A + 'admin.php?page=swift-dash');
-		await shot('overview', { fullPage: true, clip: await toBottom(p, '#sd-w-quick-links') });
+		await shot('overview');
 	}
 	// 2. Header search, typed. 3. Header search, focused (recent items and quick actions).
 	if (want('search-typed')) {
@@ -103,7 +103,7 @@ const toBottom = async (p, sel, pad = 12) => {
 	if (want('ai')) {
 		await go(A + 'admin.php?page=swift-dash');
 		await p.evaluate(onlyCards, ['ai-crawlers', 'bots', 'ai-access']);
-		await shot('ai', { fullPage: true, clip: await toBottom(p, '#sd-w-ai-access') });
+		await shot('ai');
 	}
 	// 5. Top pages, Referrers (AI tags), Devices.
 	if (want('insights')) {
@@ -115,22 +115,27 @@ const toBottom = async (p, sel, pad = 12) => {
 	if (want('speed')) {
 		await go(A + 'admin.php?page=swift-dash-speed');
 		await p.waitForSelector('.sd-fix');
-		await shot('speed', { fullPage: true, clip: await toBottom(p, '.sd-fix') });
+		await shot('speed');
+		// 11. Improvement areas: the four tabs, SEO open (needs fixes_by_category in the seeded results).
+		await p.click('#sd-speed-tab-seo');
+		await p.evaluate(() => { const c = document.querySelector('[data-sd-speed-fixes]').closest('section'); window.scrollTo(0, c.getBoundingClientRect().top + window.scrollY - 110); });
+		await p.waitForTimeout(500);
+		await shot('speed-tabs');
 	}
 	// 7. Quick Links: pinned, Content and Design.
 	if (want('links')) {
 		await go(A + 'admin.php?page=swift-dash-links');
-		await shot('links', { fullPage: true, clip: await toBottom(p, 'section[aria-labelledby="sd-ql-design-title"]') });
+		await shot('links');
 	}
 	// 8. Weekly email, as sent (rendered by the plugin through WP-CLI), at its own width.
 	if (want('email')) {
 		const wp = path.join(__dirname, '..', '..', 'tools', 'wp');
 		const html = execFileSync('sh', [wp, 'eval', 'echo swiftdash_report_html( swiftdash_report_data() );', '--user=1'], { encoding: 'utf8', maxBuffer: 1 << 24 });
-		const e = await br.newPage({ viewport: { width: 740, height: 900 }, deviceScaleFactor: 2 });
+		const e = await br.newPage({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 2 });
 		await e.setContent(html);
 		await e.evaluate(() => document.fonts.ready);
 		await e.evaluate(scrub);
-		await e.screenshot({ path: `${O}${V}-email-2x.png`, fullPage: true });
+		await e.screenshot({ path: `${O}${V}-email-2x.png` });
 		await e.close();
 		console.log('email');
 	}

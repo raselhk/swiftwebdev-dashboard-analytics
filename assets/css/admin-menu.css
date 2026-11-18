@@ -533,6 +533,13 @@ body.swiftdash-screen #wpbody-content {
 	border-radius: var(--sd-radius-control);
 	background: var(--sdm-bg, #172437);
 	object-fit: contain;
+	transition: opacity var(--sd-dur) var(--sd-ease);
+}
+
+/* Chooser off while "Use the site icon" is on: label and preview dim, the button is disabled, help stays readable. */
+.swiftdash [data-sd-logo].is-disabled .sd-field__label,
+.swiftdash [data-sd-logo].is-disabled .sd-logo-field__preview {
+	opacity: 0.45;
 }
 
 /* Header: Updates button count badge. */

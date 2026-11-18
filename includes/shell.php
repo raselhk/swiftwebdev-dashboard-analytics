@@ -100,9 +100,19 @@ function swiftdash_notifications() {
  * Print the top header.
  */
 function swiftdash_render_header() {
-	$user     = wp_get_current_user();
-	$notes    = swiftdash_notifications();
-	$initials = strtoupper( mb_substr( $user->display_name ? $user->display_name : $user->user_login, 0, 1 ) );
+	$user  = wp_get_current_user();
+	$notes = swiftdash_notifications();
+	// Avatar: first letter (CSS uppercases it) on a color picked from the user id; the profile photo
+	// goes on top. 'blank' makes users without a photo transparent, so the letter shows through.
+	$first  = trim( (string) $user->first_name );
+	$letter = mb_substr( '' !== $first ? $first : ( $user->display_name ? $user->display_name : $user->user_login ), 0, 1 );
+	$photo  = get_option( 'show_avatars' ) ? get_avatar_url(
+		$user->ID,
+		array(
+			'size'    => 64,
+			'default' => 'blank',
+		)
+	) : '';
 	?>
 	<header class="sd-header">
 
@@ -176,7 +186,12 @@ function swiftdash_render_header() {
 
 			<div class="sd-dropdown">
 				<button type="button" class="sd-user" data-sd-dropdown aria-expanded="false" aria-controls="sd-user-menu">
-					<span class="sd-user__avatar" aria-hidden="true"><?php echo esc_html( $initials ); ?></span>
+					<span class="sd-user__avatar sd-user__avatar--<?php echo esc_attr( (string) ( $user->ID % 8 ) ); ?>" aria-hidden="true">
+						<?php echo esc_html( $letter ); ?>
+						<?php if ( $photo ) : ?>
+							<img class="sd-user__photo" src="<?php echo esc_url( $photo ); ?>" alt="" width="36" height="36" loading="lazy" decoding="async">
+						<?php endif; ?>
+					</span>
 					<span class="sd-user__text">
 						<span class="sd-user__name"><?php echo esc_html( $user->display_name ); ?></span>
 						<span class="sd-user__role"><?php echo esc_html( swiftdash_role_label( $user ) ); ?></span>
