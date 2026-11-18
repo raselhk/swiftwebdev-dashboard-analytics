@@ -42,6 +42,7 @@ function swiftdash_register_settings() {
 				'report_email'        => '',
 				'toolbar_live'        => true,
 				'toolbar_search'      => true,
+				'share_usage'         => false,
 			),
 			'sanitize_callback' => 'swiftdash_sanitize_settings',
 			'show_in_rest'      => array(
@@ -66,6 +67,7 @@ function swiftdash_register_settings() {
 						),
 						'toolbar_live'        => array( 'type' => 'boolean' ),
 						'toolbar_search'      => array( 'type' => 'boolean' ),
+						'share_usage'         => array( 'type' => 'boolean' ),
 					),
 					'additionalProperties' => false,
 				),
@@ -171,6 +173,8 @@ function swiftdash_sanitize_settings( $value ) {
 		'report_email'        => isset( $value['report_email'] ) ? sanitize_email( (string) $value['report_email'] ) : '',
 		'toolbar_live'        => ! isset( $value['toolbar_live'] ) || ! empty( $value['toolbar_live'] ),
 		'toolbar_search'      => ! isset( $value['toolbar_search'] ) || ! empty( $value['toolbar_search'] ),
+		// Off unless the administrator turned it on: nothing is sent to Swift Web Dev without that choice.
+		'share_usage'         => ! empty( $value['share_usage'] ),
 	);
 }
 

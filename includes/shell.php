@@ -10,6 +10,8 @@ defined( 'ABSPATH' ) || exit;
 
 /**
  * Inline SVG icon from the bundled sprite. Decorative: hidden from assistive tech.
+ * The version in the URL makes browsers and CDNs fetch the new sprite after an update (1.3.0 shipped
+ * new icons without it, so sites that had the old sprite cached showed empty icon chips).
  *
  * @param string $name  Icon name (file name in tools/icons without .svg).
  * @param string $extra_class Extra class.
@@ -19,7 +21,7 @@ function swiftdash_icon( $name, $extra_class = '' ) {
 	return sprintf(
 		'<svg class="sd-icon %1$s" aria-hidden="true" focusable="false"><use href="%2$s"></use></svg>',
 		esc_attr( $extra_class ),
-		esc_url( SWIFTDASH_URL . 'assets/icons.svg' ) . '#sd-i-' . esc_attr( sanitize_key( $name ) )
+		esc_url( SWIFTDASH_URL . 'assets/icons.svg?ver=' . SWIFTDASH_VERSION ) . '#sd-i-' . esc_attr( sanitize_key( $name ) )
 	);
 }
 

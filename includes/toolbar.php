@@ -416,7 +416,7 @@ function swiftdash_toolbar_assets() {
 				'live'     => $live,
 				'search'   => $search,
 				'adminUrl' => admin_url(),
-				'iconUrl'  => SWIFTDASH_URL . 'assets/icons.svg',
+				'iconUrl'  => SWIFTDASH_URL . 'assets/icons.svg?ver=' . SWIFTDASH_VERSION,
 			)
 		) . ';',
 		'before'

@@ -63,6 +63,10 @@ function swiftdash_render_welcome() {
 				<input type="checkbox" data-sd-welcome-report checked>
 				<span><?php esc_html_e( 'Email me a weekly site report', 'swiftwebdev-dashboard-analytics' ); ?></span>
 			</label>
+			<label class="sd-check">
+				<input type="checkbox" data-sd-welcome-usage>
+				<span><?php esc_html_e( 'Tell Swift Web Dev this site uses the plugin (site address and plugin version only, once a week)', 'swiftwebdev-dashboard-analytics' ); ?></span>
+			</label>
 			<div class="sd-welcome__actions">
 				<button type="button" class="sd-btn sd-btn--primary" data-sd-welcome-answer="yes"><?php esc_html_e( 'Yes, make it my default', 'swiftwebdev-dashboard-analytics' ); ?></button>
 				<button type="button" class="sd-btn sd-btn--secondary" data-sd-welcome-answer="no"><?php esc_html_e( 'Keep the WordPress dashboard', 'swiftwebdev-dashboard-analytics' ); ?></button>
