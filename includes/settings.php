@@ -33,37 +33,39 @@ function swiftdash_register_settings() {
 		array(
 			'type'              => 'object',
 			'default'           => array(
-				'open_after_login' => false,
-				'exclude_admins'   => true,
-				'brand_name'       => '',
-				'brand_logo'       => 0,
-				'weekly_report'    => false,
-				'report_email'     => '',
-				'toolbar_live'     => true,
-				'toolbar_search'   => true,
+				'open_after_login'    => false,
+				'exclude_admins'      => true,
+				'brand_name'          => '',
+				'brand_logo'          => 0,
+				'brand_use_site_icon' => true,
+				'weekly_report'       => false,
+				'report_email'        => '',
+				'toolbar_live'        => true,
+				'toolbar_search'      => true,
 			),
 			'sanitize_callback' => 'swiftdash_sanitize_settings',
 			'show_in_rest'      => array(
 				'schema' => array(
 					'type'                 => 'object',
 					'properties'           => array(
-						'open_after_login' => array( 'type' => 'boolean' ),
-						'exclude_admins'   => array( 'type' => 'boolean' ),
-						'brand_name'       => array(
+						'open_after_login'    => array( 'type' => 'boolean' ),
+						'exclude_admins'      => array( 'type' => 'boolean' ),
+						'brand_name'          => array(
 							'type'      => 'string',
 							'maxLength' => 40,
 						),
-						'brand_logo'       => array(
+						'brand_logo'          => array(
 							'type'    => 'integer',
 							'minimum' => 0,
 						),
-						'weekly_report'    => array( 'type' => 'boolean' ),
-						'report_email'     => array(
+						'brand_use_site_icon' => array( 'type' => 'boolean' ),
+						'weekly_report'       => array( 'type' => 'boolean' ),
+						'report_email'        => array(
 							'type'      => 'string',
 							'maxLength' => 100,
 						),
-						'toolbar_live'     => array( 'type' => 'boolean' ),
-						'toolbar_search'   => array( 'type' => 'boolean' ),
+						'toolbar_live'        => array( 'type' => 'boolean' ),
+						'toolbar_search'      => array( 'type' => 'boolean' ),
 					),
 					'additionalProperties' => false,
 				),
@@ -159,14 +161,16 @@ add_action( 'init', 'swiftdash_register_settings' );
 function swiftdash_sanitize_settings( $value ) {
 	$value = is_array( $value ) ? $value : array();
 	return array(
-		'open_after_login' => ! empty( $value['open_after_login'] ),
-		'exclude_admins'   => ! isset( $value['exclude_admins'] ) || ! empty( $value['exclude_admins'] ),
-		'brand_name'       => isset( $value['brand_name'] ) ? mb_substr( sanitize_text_field( (string) $value['brand_name'] ), 0, 40 ) : '',
-		'brand_logo'       => isset( $value['brand_logo'] ) ? absint( $value['brand_logo'] ) : 0,
-		'weekly_report'    => ! empty( $value['weekly_report'] ),
-		'report_email'     => isset( $value['report_email'] ) ? sanitize_email( (string) $value['report_email'] ) : '',
-		'toolbar_live'     => ! isset( $value['toolbar_live'] ) || ! empty( $value['toolbar_live'] ),
-		'toolbar_search'   => ! isset( $value['toolbar_search'] ) || ! empty( $value['toolbar_search'] ),
+		'open_after_login'    => ! empty( $value['open_after_login'] ),
+		'exclude_admins'      => ! isset( $value['exclude_admins'] ) || ! empty( $value['exclude_admins'] ),
+		'brand_name'          => isset( $value['brand_name'] ) ? mb_substr( sanitize_text_field( (string) $value['brand_name'] ), 0, 40 ) : '',
+		'brand_logo'          => isset( $value['brand_logo'] ) ? absint( $value['brand_logo'] ) : 0,
+		// Not saved yet: on unless a logo was chosen, so existing sites keep the icon they show today.
+		'brand_use_site_icon' => isset( $value['brand_use_site_icon'] ) ? ! empty( $value['brand_use_site_icon'] ) : empty( $value['brand_logo'] ),
+		'weekly_report'       => ! empty( $value['weekly_report'] ),
+		'report_email'        => isset( $value['report_email'] ) ? sanitize_email( (string) $value['report_email'] ) : '',
+		'toolbar_live'        => ! isset( $value['toolbar_live'] ) || ! empty( $value['toolbar_live'] ),
+		'toolbar_search'      => ! isset( $value['toolbar_search'] ) || ! empty( $value['toolbar_search'] ),
 	);
 }
 
@@ -183,12 +187,14 @@ function swiftdash_setting( $key ) {
 
 /**
  * Sidebar brand: name and logo URL. Defaults to the site title and site icon.
+ * The chosen logo is used only while "Use the site icon" is off; without a site icon the bundled logo shows.
  *
  * @return array { name, logo }
  */
 function swiftdash_brand() {
 	$name = swiftdash_setting( 'brand_name' );
-	$logo = swiftdash_setting( 'brand_logo' ) ? wp_get_attachment_image_url( swiftdash_setting( 'brand_logo' ), 'thumbnail' ) : '';
+	$id   = swiftdash_setting( 'brand_use_site_icon' ) ? 0 : swiftdash_setting( 'brand_logo' );
+	$logo = $id ? wp_get_attachment_image_url( $id, 'thumbnail' ) : '';
 	$logo = $logo ? $logo : get_site_icon_url( 64 );
 	if ( '' === $name ) {
 		$name = wp_strip_all_tags( get_bloginfo( 'name' ) );

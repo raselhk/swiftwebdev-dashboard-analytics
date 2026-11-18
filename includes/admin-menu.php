@@ -28,7 +28,7 @@ function swiftdash_admin_menu() {
 	$screens = swiftdash_screens();
 	$render  = 'swiftdash_render_screen';
 
-	swiftdash_screen_hooks( add_menu_page( __( 'SwiftWebDev Dashboard', 'swiftwebdev-dashboard-analytics' ), __( 'SwiftWebDev', 'swiftwebdev-dashboard-analytics' ), $cap, 'swift-dash', $render, 'dashicons-chart-area' ) );
+	swiftdash_screen_hooks( add_menu_page( __( 'SWD Dashboard', 'swiftwebdev-dashboard-analytics' ), __( 'SWD Dashboard', 'swiftwebdev-dashboard-analytics' ), $cap, 'swift-dash', $render, 'dashicons-chart-area' ) );
 	foreach ( $screens as $slug => $screen ) {
 		$parent = 'left' === swiftdash_screen_location( $screen ) ? 'swift-dash' : '';
 		swiftdash_screen_hooks( add_submenu_page( $parent, $screen['title'], $screen['menu'], $cap, $slug, $render ) );

@@ -279,6 +279,18 @@
 		);
 	}
 
+	/* ---------- User avatar: a photo that fails to load is hidden so the letter shows ---------- */
+
+	const photo = app.querySelector( '.sd-user__photo' );
+	if ( photo ) {
+		const hidePhoto = () => ( photo.hidden = true );
+		if ( photo.complete && ! photo.naturalWidth ) {
+			hidePhoto();
+		} else {
+			photo.addEventListener( 'error', hidePhoto );
+		}
+	}
+
 	/* ---------- Settings form: Save disabled until changed, saved via core /wp/v2/settings ---------- */
 
 	const form = app.querySelector( '[data-sd-settings-form]' );
@@ -300,39 +312,96 @@
 		form.addEventListener( 'change', markDirty );
 		form.addEventListener( 'input', markDirty );
 
-		// Menu logo: media library chooser writes the attachment id into a hidden field.
+		// Menu logo: media library chooser with core's square crop step; the attachment id goes into a
+		// hidden field. While "Use the site icon" is on, the chooser is disabled and the preview shows the icon.
 		const logo = form.querySelector( '[data-sd-logo]' );
-		if ( logo ) {
+		const useIcon = form.querySelector( '[name="brand_use_site_icon"]' );
+		if ( logo && useIcon ) {
 			const field = logo.querySelector( 'input[name="brand_logo"]' );
 			const preview = logo.querySelector( '.sd-logo-field__preview' );
-			const reset = logo.querySelector( '[data-sd-logo-reset]' );
-			let frame = null;
-			const setLogo = ( id, url ) => {
-				field.value = String( id );
-				preview.src = url;
-				reset.hidden = ! id;
+			const choose = logo.querySelector( '[data-sd-logo-choose]' );
+			const LOGO_SIZE = 256; // Saved crop size: sharp at the 28px menu size on high-density screens.
+			const sync = () => {
+				logo.classList.toggle( 'is-disabled', useIcon.checked );
+				choose.disabled = useIcon.checked;
+				preview.src = useIcon.checked || ! logo.dataset.logo ? logo.dataset.default : logo.dataset.logo;
+			};
+			const setLogo = ( img ) => {
+				const sizes = img.sizes || {};
+				logo.dataset.logo = ( sizes.thumbnail || sizes.full || img ).url;
+				field.value = String( img.id );
+				sync();
 				field.dispatchEvent( new Event( 'input', { bubbles: true } ) );
 			};
-			logo.querySelector( '[data-sd-logo-choose]' ).addEventListener( 'click', () => {
-				// wp.media loads after this file, so look it up on click.
-				if ( ! frame && wp.media ) {
-					frame = wp.media( {
-						title: __( 'Choose a menu logo', 'swiftwebdev-dashboard-analytics' ),
-						button: { text: __( 'Use this image', 'swiftwebdev-dashboard-analytics' ) },
-						library: { type: 'image' },
-						multiple: false,
-					} );
-					frame.on( 'select', () => {
-						const img = frame.state().get( 'selection' ).first().toJSON();
-						const sizes = img.sizes || {};
-						setLogo( img.id, ( sizes.thumbnail || sizes.full || img ).url );
-					} );
+			// Largest centered square, like core's site icon crop.
+			const squareSelection = ( attachment ) => {
+				const w = attachment.get( 'width' );
+				const h = attachment.get( 'height' );
+				const side = Math.min( w, h );
+				const min = Math.min( 64, side );
+				return {
+					aspectRatio: '1:1',
+					handles: true,
+					keys: true,
+					instance: true,
+					persistent: true,
+					imageWidth: w,
+					imageHeight: h,
+					minWidth: min,
+					minHeight: min,
+					x1: ( w - side ) / 2,
+					y1: ( h - side ) / 2,
+					x2: ( w + side ) / 2,
+					y2: ( h + side ) / 2,
+				};
+			};
+			useIcon.addEventListener( 'change', sync );
+			choose.addEventListener( 'click', () => {
+				// wp.media loads after this file, so look it up on click. A fresh frame each time, as core does.
+				const media = wp.media;
+				if ( ! media ) {
+					return;
 				}
-				if ( frame ) {
-					frame.open();
-				}
+				const Cropper = media.controller.Cropper.extend( {
+					// Core crop-image AJAX; a custom context keeps the result an ordinary image in the library.
+					doCrop: ( attachment ) => {
+						const crop = attachment.get( 'cropDetails' );
+						crop.dst_width = crop.dst_height = Math.min( LOGO_SIZE, crop.width );
+						return wp.ajax.post( 'crop-image', {
+							nonce: attachment.get( 'nonces' ).edit,
+							id: attachment.get( 'id' ),
+							context: 'swiftdash-logo',
+							cropDetails: crop,
+						} );
+					},
+				} );
+				const frame = media( {
+					button: { text: __( 'Use this image', 'swiftwebdev-dashboard-analytics' ), close: false },
+					states: [
+						new media.controller.Library( {
+							title: __( 'Choose a menu logo', 'swiftwebdev-dashboard-analytics' ),
+							library: media.query( { type: 'image' } ),
+							date: false,
+							suggestedWidth: LOGO_SIZE,
+							suggestedHeight: LOGO_SIZE,
+						} ),
+						new Cropper( { imgSelectOptions: squareSelection } ),
+					],
+				} );
+				frame.on( 'select', () => {
+					const img = frame.state().get( 'selection' ).first();
+					const w = img.get( 'width' );
+					// Square images (and SVGs, which have no pixel size) skip the crop step.
+					if ( ! w || w === img.get( 'height' ) ) {
+						setLogo( img.toJSON() );
+						frame.close();
+					} else {
+						frame.setState( 'cropper' );
+					}
+				} );
+				frame.on( 'cropped', setLogo );
+				frame.open();
 			} );
-			reset.addEventListener( 'click', () => setLogo( 0, logo.dataset.default ) );
 		}
 
 		// Report address: empty (site admin email) or a valid email. The error shows in red under the field.
@@ -408,6 +477,12 @@
 			apiFetch( { path: '/wp/v2/settings', method: 'POST', data: { swiftdash_settings: values } } )
 				.then( () => {
 					saved = JSON.stringify( values );
+					// The logo preview always shows what the menu uses, so the menu can follow it right away.
+					const menuLogo = document.querySelector( '.sd-menu-brand__logo' );
+					const logoPreview = form.querySelector( '.sd-logo-field__preview' );
+					if ( menuLogo && logoPreview ) {
+						menuLogo.src = logoPreview.src;
+					}
 					toast( __( 'Settings saved.', 'swiftwebdev-dashboard-analytics' ), 'success' );
 				} )
 				.catch( ( err ) => {

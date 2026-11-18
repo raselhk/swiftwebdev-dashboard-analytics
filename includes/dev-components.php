@@ -15,7 +15,7 @@ add_filter(
 			'key'         => 'ui',
 			'menu'        => __( 'Components', 'swiftwebdev-dashboard-analytics' ),
 			'title'       => __( 'Component preview', 'swiftwebdev-dashboard-analytics' ),
-			'description' => __( 'Developer preview of every SwiftWebDev Dashboard component and state. Sample values only.', 'swiftwebdev-dashboard-analytics' ),
+			'description' => __( 'Developer preview of every SWD Dashboard component and state. Sample values only.', 'swiftwebdev-dashboard-analytics' ),
 			'icon'        => 'dots-six-vertical',
 			'nav'         => false,
 		);

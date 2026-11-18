@@ -5,7 +5,7 @@
 ( function () {
 	'use strict';
 
-	const { __, sprintf } = wp.i18n;
+	const { __, _n, sprintf } = wp.i18n;
 	const apiFetch = wp.apiFetch;
 	const sd = window.swiftdash;
 	const data = window.swiftdashSpeed || {};
@@ -30,6 +30,13 @@
 		medium: { label: __( 'Medium impact', 'swiftwebdev-dashboard-analytics' ), tone: 'warning' },
 		low: { label: __( 'Low impact', 'swiftwebdev-dashboard-analytics' ), tone: 'neutral' },
 	};
+	/** Lighthouse categories in score-tile order: [ key, label, line for a tab with nothing to fix ]. */
+	const CATEGORIES = [
+		[ 'performance', __( 'Performance', 'swiftwebdev-dashboard-analytics' ), __( 'Google found no failing speed checks in the last test.', 'swiftwebdev-dashboard-analytics' ) ],
+		[ 'accessibility', __( 'Accessibility', 'swiftwebdev-dashboard-analytics' ), __( 'Google found no failing accessibility checks in the last test.', 'swiftwebdev-dashboard-analytics' ) ],
+		[ 'best_practices', __( 'Best practices', 'swiftwebdev-dashboard-analytics' ), __( 'Google found no failing best practice checks in the last test.', 'swiftwebdev-dashboard-analytics' ) ],
+		[ 'seo', __( 'SEO', 'swiftwebdev-dashboard-analytics' ), __( 'Google found no failing SEO checks in the last test.', 'swiftwebdev-dashboard-analytics' ) ],
+	];
 
 	/* ---------- Helpers ---------- */
 
@@ -142,10 +149,17 @@
 		if ( fix.savings_ms ) {
 			facts.push( '<span><strong>' + esc( __( 'Estimated savings:', 'swiftwebdev-dashboard-analytics' ) ) + '</strong> ' + esc( fix.savings_ms >= 1000 ? seconds( fix.savings_ms ) : millis( fix.savings_ms ) ) + '</span>' );
 		}
+		if ( fix.points ) {
+			facts.push( '<span><strong>' + esc( __( 'Score impact:', 'swiftwebdev-dashboard-analytics' ) ) + '</strong> ' + esc( sprintf(
+				/* translators: %d: points this check costs its category score (0-100). */
+				_n( '%d point', '%d points', fix.points, 'swiftwebdev-dashboard-analytics' ),
+				fix.points
+			) ) + '</span>' );
+		}
 		if ( facts.length ) {
 			html += '<p class="sd-fix__evidence">' + facts.join( '' ) + '</p>';
 		}
-		return html + '<div class="sd-fix__advice">' + sd.icon( 'wrench' ) + '<p><strong>' + esc( __( 'What to do', 'swiftwebdev-dashboard-analytics' ) ) + '</strong> ' + esc( fix.advice ) + '</p></div></li>';
+		return html + ( fix.advice ? '<div class="sd-fix__advice">' + sd.icon( 'wrench' ) + '<p><strong>' + esc( __( 'What to do', 'swiftwebdev-dashboard-analytics' ) ) + '</strong> ' + esc( fix.advice ) + '</p></div>' : '' ) + '</li>';
 	}
 
 	/* ---------- Page boundary (the server checks again) ---------- */
@@ -253,11 +267,7 @@
 			el.innerHTML = notTested( strategy );
 			return;
 		}
-		el.innerHTML = '<div class="sd-gauges">' +
-			gauge( r.scores.performance, __( 'Performance', 'swiftwebdev-dashboard-analytics' ) ) +
-			gauge( r.scores.accessibility, __( 'Accessibility', 'swiftwebdev-dashboard-analytics' ) ) +
-			gauge( r.scores.best_practices, __( 'Best practices', 'swiftwebdev-dashboard-analytics' ) ) +
-			gauge( r.scores.seo, __( 'SEO', 'swiftwebdev-dashboard-analytics' ) ) +
+		el.innerHTML = '<div class="sd-gauges">' + CATEGORIES.map( ( [ key, label ] ) => gauge( r.scores[ key ], label ) ).join( '' ) +
 			'</div><p class="sd-speed-method">' + sd.icon( 'info' ) + esc( __( 'Lab test by Google Lighthouse', 'swiftwebdev-dashboard-analytics' ) ) + ' <span>' +
 			esc( new Date( r.tested_at * 1000 ).toLocaleString() ) + '</span></p>';
 	}
@@ -336,16 +346,44 @@
 		}
 		const report = '<a class="sd-btn sd-btn--tertiary sd-btn--sm" href="' + esc( reportUrl() ) + '" target="_blank" rel="noopener noreferrer">' +
 			esc( __( 'Open the full Google report', 'swiftwebdev-dashboard-analytics' ) ) + sd.icon( 'arrow-square-out' ) + '<span class="screen-reader-text"> ' + esc( __( '(opens in a new tab)', 'swiftwebdev-dashboard-analytics' ) ) + '</span></a>';
-		if ( ! r.fixes.length ) {
-			el.innerHTML = empty( 'check-circle', __( 'Nothing important to fix', 'swiftwebdev-dashboard-analytics' ), __( 'Google found no failing speed checks in the last test.', 'swiftwebdev-dashboard-analytics' ), report );
-			return;
-		}
+		// Results saved by 1.2.0 only hold the performance list.
+		const lists = r.fixes_by_category || { performance: r.fixes };
+		let tabs = '';
+		let panels = '';
+		CATEGORIES.forEach( ( [ key, label, none ], i ) => {
+			const list = lists[ key ];
+			const on = 0 === i;
+			const score = r.scores ? r.scores[ key ] : null;
+			const tone = null === score || undefined === score ? 'neutral' : BANDS[ band( score ) ].tone;
+			tabs += '<button type="button" class="sd-speed-tab" role="tab" id="sd-speed-tab-' + key + '" aria-controls="sd-speed-panel-' + key + '" aria-selected="' + on + '" tabindex="' + ( on ? '0' : '-1' ) + '">' +
+				esc( label ) + ( list ? '<span class="sd-badge sd-status--' + tone + '" aria-hidden="true">' + list.length + '</span><span class="screen-reader-text"> ' +
+				esc( sprintf( /* translators: %d: number of items to fix. */ _n( '%d item', '%d items', list.length, 'swiftwebdev-dashboard-analytics' ), list.length ) ) + '</span>' : '' ) + '</button>';
+			let body;
+			if ( ! list ) {
+				body = empty( 'arrow-clockwise', __( 'Run a new test to see these', 'swiftwebdev-dashboard-analytics' ), __( 'This test ran before accessibility, best practices and SEO items were added to SWD Dashboard.', 'swiftwebdev-dashboard-analytics' ) );
+			} else if ( ! list.length ) {
+				body = empty( 'check-circle', __( 'Nothing to fix here', 'swiftwebdev-dashboard-analytics' ), none );
+			} else {
+				body = '<ol class="sd-fixes">' + list.map( ( f ) => fixItem( f ) ).join( '' ) + '</ol>';
+			}
+			panels += '<div class="sd-speed-panel" role="tabpanel" id="sd-speed-panel-' + key + '" aria-labelledby="sd-speed-tab-' + key + '" tabindex="0"' + ( on ? '' : ' hidden' ) + '>' + body + '</div>';
+		} );
 		el.innerHTML = '<p class="sd-speed-note">' + esc( sprintf(
-			/* translators: 1: number of items, 2: device name. */
-			__( '%1$d items found in the last %2$s test, biggest impact first. SwiftWebDev Dashboard only reports; it never changes your site.', 'swiftwebdev-dashboard-analytics' ),
-			r.fixes.length,
+			/* translators: %s: device name, mobile or desktop. */
+			__( 'From the last %s test, biggest impact first. SWD Dashboard only reports; it never changes your site.', 'swiftwebdev-dashboard-analytics' ),
 			DEVICES[ device ].toLowerCase()
-		) ) + '</p><ol class="sd-fixes">' + r.fixes.map( ( f ) => fixItem( f ) ).join( '' ) + '</ol>' + '<div class="sd-speed-foot">' + report + '</div>';
+		) ) + '</p><div class="sd-speed-tabs" role="tablist" aria-label="' + esc( __( 'Improvement categories', 'swiftwebdev-dashboard-analytics' ) ) + '">' + tabs + '</div>' +
+			panels + '<div class="sd-speed-foot">' + report + '</div>';
+	}
+
+	/** Show one category tab (the others hide). Tabs live in the fixes card and are rebuilt by renderFixes(). */
+	function selectTab( tab ) {
+		tab.closest( '[role="tablist"]' ).querySelectorAll( '[role="tab"]' ).forEach( ( t ) => {
+			const on = t === tab;
+			t.setAttribute( 'aria-selected', String( on ) );
+			t.tabIndex = on ? 0 : -1;
+			document.getElementById( t.getAttribute( 'aria-controls' ) ).hidden = ! on;
+		} );
 	}
 
 	function renderView() {
@@ -384,6 +422,28 @@
 				device = btn.dataset.sdSpeedDevice;
 				renderFixes();
 			} );
+		} );
+
+		// Category tabs: click, or arrow keys / Home / End with automatic activation (roving tabindex).
+		const fixesBox = screen.querySelector( '[data-sd-speed-fixes]' );
+		fixesBox.addEventListener( 'click', ( e ) => {
+			const tab = e.target.closest( '[role="tab"]' );
+			if ( tab ) {
+				selectTab( tab );
+			}
+		} );
+		fixesBox.addEventListener( 'keydown', ( e ) => {
+			const tab = e.target.closest( '[role="tab"]' );
+			const all = tab ? [ ...tab.parentElement.children ] : [];
+			const i = all.indexOf( tab );
+			const to = { ArrowLeft: i - 1, ArrowRight: i + 1, Home: 0, End: all.length - 1 }[ e.key ];
+			if ( ! tab || undefined === to ) {
+				return;
+			}
+			e.preventDefault();
+			const next = all[ ( to + all.length ) % all.length ];
+			selectTab( next );
+			next.focus();
 		} );
 		screen.querySelector( '[data-sd-speed-view]' ).addEventListener( 'click', ( e ) => {
 			const btn = e.target.closest( '[data-sd-speed-show]' );

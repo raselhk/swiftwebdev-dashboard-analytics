@@ -57,7 +57,7 @@ function swiftdash_render_welcome() {
 	<section class="sd-card sd-welcome" aria-labelledby="sd-welcome-title" data-sd-welcome data-dashboard="<?php echo esc_url( admin_url( 'admin.php?page=swift-dash' ) ); ?>">
 		<div class="sd-welcome__text">
 			<span class="sd-status sd-status--info"><?php esc_html_e( 'Welcome', 'swiftwebdev-dashboard-analytics' ); ?></span>
-			<h2 class="sd-welcome__title" id="sd-welcome-title"><?php esc_html_e( 'Make SwiftWebDev Dashboard your home screen?', 'swiftwebdev-dashboard-analytics' ); ?></h2>
+			<h2 class="sd-welcome__title" id="sd-welcome-title"><?php esc_html_e( 'Make SWD Dashboard your home screen?', 'swiftwebdev-dashboard-analytics' ); ?></h2>
 			<p class="sd-welcome__desc"><?php esc_html_e( 'See visitors, speed scores, updates and Site Health the moment you log in. You can switch back to the WordPress dashboard any time from your user menu.', 'swiftwebdev-dashboard-analytics' ); ?></p>
 			<label class="sd-check">
 				<input type="checkbox" data-sd-welcome-report checked>

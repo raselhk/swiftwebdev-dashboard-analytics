@@ -360,6 +360,53 @@
 	color: var(--sd-primary);
 }
 
+/* Category tabs: underlined, a level below the outlined Mobile / Desktop toggle in the card head.
+   Every tab keeps the same weight, so selecting one never shifts the row. */
+.swiftdash .sd-speed-tabs {
+	display: flex;
+	gap: var(--sd-space-1);
+	margin-top: var(--sd-space-4);
+	border-bottom: var(--sd-border-w) solid var(--sd-border);
+}
+
+.swiftdash .sd-speed-tab {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--sd-space-2);
+	min-height: 44px;
+	margin: 0 0 calc(-1 * var(--sd-border-w));
+	padding: 0 var(--sd-space-3);
+	border: 0;
+	border-bottom: 2px solid transparent;
+	border-radius: var(--sd-radius-control) var(--sd-radius-control) 0 0;
+	background: none;
+	color: var(--sd-text-2);
+	font: inherit;
+	font-weight: var(--sd-fw-semibold);
+	white-space: nowrap;
+	cursor: pointer;
+	transition: color var(--sd-dur-fast) var(--sd-ease), background-color var(--sd-dur-fast) var(--sd-ease), border-color var(--sd-dur-fast) var(--sd-ease);
+}
+
+.swiftdash .sd-speed-tab:hover {
+	background: var(--sd-bg);
+	color: var(--sd-text);
+}
+
+.swiftdash .sd-speed-tab[aria-selected="true"] {
+	border-bottom-color: var(--sd-primary);
+	color: var(--sd-primary);
+}
+
+.swiftdash .sd-speed-tab .sd-badge {
+	justify-content: center;
+	min-width: 24px;
+}
+
+.swiftdash .sd-speed-panel > .sd-fixes {
+	margin-top: var(--sd-space-1);
+}
+
 .swiftdash .sd-fixes {
 	display: flex;
 	flex-direction: column;
@@ -468,5 +515,28 @@
 
 	.swiftdash .sd-speed-last {
 		width: 100%;
+	}
+
+	/* Four tabs do not fit one row on a phone: a 2 x 2 segmented grid keeps all of them in view. */
+	.swiftdash .sd-speed-tabs {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		padding: var(--sd-space-1);
+		border: var(--sd-border-w) solid var(--sd-border);
+		border-radius: var(--sd-radius-control);
+	}
+
+	.swiftdash .sd-speed-tab {
+		justify-content: space-between;
+		min-width: 0;
+		margin: 0;
+		padding: 0 var(--sd-space-2) 0 var(--sd-space-3);
+		border-bottom: 0;
+		border-radius: 6px;
+		font-size: var(--sd-fs-label);
+	}
+
+	.swiftdash .sd-speed-tab[aria-selected="true"] {
+		background: var(--sd-blue-50);
 	}
 }
