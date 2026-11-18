@@ -446,7 +446,7 @@
 			const buttons = welcome.querySelectorAll( '[data-sd-welcome-answer]' );
 			buttons.forEach( ( btn ) => {
 				btn.addEventListener( 'click', () => {
-					const values = Object.assign( JSON.parse( saved ), { weekly_report: welcome.querySelector( '[data-sd-welcome-report]' ).checked } );
+					const values = Object.assign( JSON.parse( saved ), { weekly_report: welcome.querySelector( '[data-sd-welcome-report]' ).checked, share_usage: welcome.querySelector( '[data-sd-welcome-usage]' ).checked } );
 					if ( 'yes' === btn.dataset.sdWelcomeAnswer ) {
 						values.open_after_login = true;
 					}

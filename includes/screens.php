@@ -350,6 +350,13 @@ function swiftdash_screen_settings( $screen ) {
 					<p class="sd-field__help" id="sd-toolbar-search-help"><?php esc_html_e( 'Adds a search icon next to your name in the top bar while you view your site. It finds posts, pages, media, users and admin screens, and replaces the WordPress site search there.', 'swiftwebdev-dashboard-analytics' ); ?></p>
 				</div>
 			</div>
+			<div class="sd-field sd-field--switch">
+				<input type="checkbox" class="sd-switch" id="sd-share-usage" name="share_usage" aria-describedby="sd-share-usage-help" <?php checked( swiftdash_setting( 'share_usage' ) ); ?>>
+				<div>
+					<label class="sd-field__label" for="sd-share-usage"><?php esc_html_e( 'Tell Swift Web Dev this site uses the plugin', 'swiftwebdev-dashboard-analytics' ); ?></label>
+					<p class="sd-field__help" id="sd-share-usage-help"><?php esc_html_e( 'Off by default. When on, the plugin sends your site address and the plugin version to Swift Web Dev once a week, so we know which sites use it. Nothing else is sent. Turn it off any time and your site is removed from our list.', 'swiftwebdev-dashboard-analytics' ); ?></p>
+				</div>
+			</div>
 			<div class="sd-field">
 				<label class="sd-field__label" for="sd-brand-name"><?php esc_html_e( 'Menu name', 'swiftwebdev-dashboard-analytics' ); ?></label>
 				<input type="text" class="sd-input" id="sd-brand-name" name="brand_name" maxlength="40" aria-describedby="sd-brand-name-help" placeholder="<?php echo esc_attr( wp_strip_all_tags( get_bloginfo( 'name' ) ) ); ?>" value="<?php echo esc_attr( swiftdash_setting( 'brand_name' ) ); ?>">

@@ -4,7 +4,7 @@ Tags: analytics, statistics, ai traffic, ai crawlers, cookieless analytics
 Requires at least: 6.5
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.3.0
+Stable tag: 1.3.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -97,7 +97,7 @@ AI crawlers and search, SEO, social and uptime crawlers are recognized by the na
 
 == External services ==
 
-This plugin connects to one external service, and only when an administrator asks it to.
+This plugin connects to the Swift Web Dev API for two things, and only when an administrator asks it to.
 
 **SwiftWebDev speed test service (swdashapi.swiftoutbox.com), which uses the Google PageSpeed Insights API**
 
@@ -108,6 +108,13 @@ Used to measure the speed scores shown on the Speed & Optimize screen and the da
 * Google PageSpeed Insights: https://developers.google.com/speed/docs/insights/v5/about
 * Google terms of service: https://developers.google.com/terms
 * Google privacy policy: https://policies.google.com/privacy
+
+**Optional: tell Swift Web Dev this site uses the plugin (swdashapi.swiftoutbox.com)**
+
+Off by default. Nothing is sent unless an administrator turns on "Tell Swift Web Dev this site uses the plugin" in the plugin settings or on the welcome screen. When it is on, the plugin sends your site address and the plugin version once a week, so we know which sites use the plugin. No visitor data, user data, email address or content is sent. Turning the setting off, or deactivating the plugin, asks the service to remove your site from the list.
+
+* Swift Web Dev terms of service: https://swiftwebdev.com/terms/
+* Swift Web Dev privacy policy: https://swiftwebdev.com/privacy-policy/
 
 **Your own robots.txt and llms.txt (not an external service)**
 
@@ -192,6 +199,10 @@ Last week's visitors, page views and sessions compared with the week before, you
 11. Improvement areas: what to fix for Performance, Accessibility, Best practices and SEO, each in its own tab with plain-English advice.
 
 == Changelog ==
+
+= 1.3.1 =
+* New: optional "Tell Swift Web Dev this site uses the plugin" setting. Off by default; when on, it sends only your site address and the plugin version once a week.
+* Fixed: after updating to 1.3.0, some icons could be missing (for example in the PRO add-on notice) until the browser cache was cleared.
 
 = 1.3.0 =
 * New: "Improvement areas" on the Speed screen now has four tabs, Performance, Accessibility, Best practices and SEO, each with its own list of things to fix, a count and plain-English advice.

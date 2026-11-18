@@ -26,6 +26,7 @@ function swiftdash_uninstall_site() {
 	delete_transient( 'swiftdash_live_full' );
 	wp_clear_scheduled_hook( 'swiftdash_rollup' );
 	wp_clear_scheduled_hook( 'swiftdash_weekly_report' );
+	wp_clear_scheduled_hook( 'swiftdash_usage_ping' );
 }
 
 if ( is_multisite() ) {
