@@ -1,0 +1,19 @@
+# Update readme.txt and the listing assets on WordPress.org WITHOUT a new plugin version.
+# Run by hand (Actions > "Update readme and assets on WordPress.org" > Run workflow, or `gh workflow run readme-update.yml`).
+# The action refuses to deploy when any file other than readme.txt or the .wordpress-org assets differs from WordPress.org,
+# so plugin code can never ship this way. Needs repo secrets SVN_USERNAME and SVN_PASSWORD.
+name: Update readme and assets on WordPress.org
+
+on:
+  workflow_dispatch:
+
+jobs:
+  readme:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: 10up/action-wordpress-plugin-asset-update@stable
+        env:
+          SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
+          SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
+          SLUG: swiftwebdev-dashboard-analytics
